@@ -50,7 +50,7 @@ func GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
 	return outPath
 }
 
-// ConfigGnmiPathToName converts a config gnmi path to a name where each element of the 
+// ConfigGnmiPathToName converts a config gnmi path to a name where each element of the
 // path is seperated by a "-"
 func ConfigGnmiPathToName(path *config.Path) string {
 	sb := strings.Builder{}
@@ -176,7 +176,7 @@ func XpathToGnmiPath(p string, offset int) (path *config.Path) {
 // For a leafRef path the last entry of the name should be a key in the previous element
 func TransformPathToLeafRefPath(path *config.Path) *config.Path {
 	key := path.GetElem()[len(path.GetElem())-1].Name
-	path.Elem = path.Elem[:(len(path.GetElem())-1)]
+	path.Elem = path.Elem[:(len(path.GetElem()) - 1)]
 	path.GetElem()[len(path.GetElem())-1].Key = make(map[string]string)
 	path.GetElem()[len(path.GetElem())-1].Key[key] = ""
 	return path
@@ -184,12 +184,11 @@ func TransformPathToLeafRefPath(path *config.Path) *config.Path {
 
 // TransformPathAsRelative2Resource returns a relative path
 func TransformPathAsRelative2Resource(localPath, activeResPath *config.Path) *config.Path {
-	localPath.Elem = localPath.Elem[(len(activeResPath.GetElem())-1):(len(localPath.GetElem()))]
+	localPath.Elem = localPath.Elem[(len(activeResPath.GetElem()) - 1):(len(localPath.GetElem()))]
 	return localPath
 }
 
-
-// AppendElemInPath adds a pathElem to the config gnmi path 
+// AppendElemInPath adds a pathElem to the config gnmi path
 func AppendElemInPath(path *config.Path, name, key string) *config.Path {
 	pathElem := &config.PathElem{
 		Name: name,
@@ -213,4 +212,29 @@ func RemoveFirstEntry(s string) string {
 		}
 	}
 	return p
+}
+
+// GetValueType return if a value is a slice or not
+func GetValueType(value interface{}) string {
+	switch v := value.(type) {
+	case map[string]interface{}:
+		for _, v1 := range v {
+			switch v1.(type) {
+			case []interface{}:
+				return Slice
+			}
+		}
+	}
+	return NonSlice
+}
+
+// GetKeyInfo returns all keys and values in a []slice
+func GetKeyInfo(keys map[string]string) ([]string, []string) {
+	keyName := make([]string, 0)
+	keyValue := make([]string, 0)
+	for k, v := range keys {
+		keyName = append(keyName, k)
+		keyValue = append(keyValue, v)
+	}
+	return keyName, keyValue
 }
