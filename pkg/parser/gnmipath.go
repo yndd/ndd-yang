@@ -26,7 +26,7 @@ import (
 )
 
 // GnmiPath2ConfigPath converts the gnmi path to config path
-func GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
+func (p *Parser) GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
 	outPath := &config.Path{}
 	outPath.Elem = make([]*config.PathElem, 0)
 	if inPath != nil {
@@ -53,7 +53,7 @@ func GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
 
 // ConfigGnmiPathToName converts a config gnmi path to a name where each element of the
 // path is seperated by a "-"
-func ConfigGnmiPathToName(path *config.Path) string {
+func (p *Parser) ConfigGnmiPathToName(path *config.Path) string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")
@@ -73,7 +73,7 @@ func ConfigGnmiPathToName(path *config.Path) string {
 }
 
 // GnmiPathToXPath converts a gnmi path with or withour keys to a string pointer
-func GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
+func (p *Parser) GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")
@@ -101,7 +101,7 @@ func GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
 }
 
 // ConfigGnmiPathToXPath converts a config gnmi path with or withour keys to a string pointer
-func ConfigGnmiPathToXPath(path *config.Path, keys bool) *string {
+func (p *Parser) ConfigGnmiPathToXPath(path *config.Path, keys bool) *string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")
@@ -129,8 +129,8 @@ func ConfigGnmiPathToXPath(path *config.Path, keys bool) *string {
 }
 
 // XpathToGnmiPath convertss a xpath string to a config gnmi path
-func XpathToGnmiPath(p string, offset int) (path *config.Path) {
-	split := strings.Split(p, "/")
+func (p *Parser) XpathToGnmiPath(xpath string, offset int) (path *config.Path) {
+	split := strings.Split(xpath, "/")
 	for i, element := range split {
 		// ignore the first element
 		//fmt.Printf("i = %d, element = %s\n", i, element)
@@ -175,7 +175,7 @@ func XpathToGnmiPath(p string, offset int) (path *config.Path) {
 
 // TransformPathToLeafRefPath returns a config gnmi path tailored for leafrefs
 // For a leafRef path the last entry of the name should be a key in the previous element
-func TransformPathToLeafRefPath(path *config.Path) *config.Path {
+func (p *Parser) TransformPathToLeafRefPath(path *config.Path) *config.Path {
 	key := path.GetElem()[len(path.GetElem())-1].Name
 	path.Elem = path.Elem[:(len(path.GetElem()) - 1)]
 	path.GetElem()[len(path.GetElem())-1].Key = make(map[string]string)
@@ -184,13 +184,13 @@ func TransformPathToLeafRefPath(path *config.Path) *config.Path {
 }
 
 // TransformPathAsRelative2Resource returns a relative path
-func TransformPathAsRelative2Resource(localPath, activeResPath *config.Path) *config.Path {
+func (p *Parser) TransformPathAsRelative2Resource(localPath, activeResPath *config.Path) *config.Path {
 	localPath.Elem = localPath.Elem[(len(activeResPath.GetElem()) - 1):(len(localPath.GetElem()))]
 	return localPath
 }
 
 // AppendElemInPath adds a pathElem to the config gnmi path
-func AppendElemInPath(path *config.Path, name, key string) *config.Path {
+func (p *Parser) AppendElemInPath(path *config.Path, name, key string) *config.Path {
 	pathElem := &config.PathElem{
 		Name: name,
 	}
@@ -204,19 +204,19 @@ func AppendElemInPath(path *config.Path, name, key string) *config.Path {
 }
 
 // RemoveFirstEntry removes the first entry of the xpath, so it trims the first element of the /
-func RemoveFirstEntry(s string) string {
+func (p *Parser) RemoveFirstEntry(s string) string {
 	split := strings.Split(s, "/")
-	var p string
+	var path string
 	for i, s := range split {
 		if i > 1 {
-			p += "/" + s
+			path += "/" + s
 		}
 	}
-	return p
+	return path
 }
 
 // GetValueType return if a value is a slice or not
-func GetValueType(value interface{}) string {
+func (p *Parser) GetValueType(value interface{}) string {
 	switch v := value.(type) {
 	case map[string]interface{}:
 		for _, v1 := range v {
@@ -230,7 +230,7 @@ func GetValueType(value interface{}) string {
 }
 
 // GetKeyInfo returns all keys and values in a []slice
-func GetKeyInfo(keys map[string]string) ([]string, []string) {
+func (p *Parser) GetKeyInfo(keys map[string]string) ([]string, []string) {
 	keyName := make([]string, 0)
 	keyValue := make([]string, 0)
 	for k, v := range keys {
@@ -241,7 +241,7 @@ func GetKeyInfo(keys map[string]string) ([]string, []string) {
 }
 
 // GetValue return the data of the gnmo typed value
-func GetValue(updValue *gnmi.TypedValue) (interface{}, error) {
+func (p *Parser) GetValue(updValue *gnmi.TypedValue) (interface{}, error) {
 	if updValue == nil {
 		return nil, nil
 	}

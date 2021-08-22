@@ -25,10 +25,10 @@ import (
 
 // ProcessLeafRef processes the leafref and returns if a leafref localPath, remotePath and if the leafRef is local or external to the resource
 // used for yang parser
-func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *config.Path) (*config.Path, *config.Path, bool) {
-	switch GetTypeName(e) {
+func (p *Parser) ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *config.Path) (*config.Path, *config.Path, bool) {
+	switch p.GetTypeName(e) {
 	default:
-		switch GetTypeKind(e) {
+		switch p.GetTypeKind(e) {
 		case "leafref":
 			//fmt.Println(e.Node.Statement().String())
 			splitData := strings.Split(e.Node.Statement().String(), "\n")
@@ -77,7 +77,7 @@ func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *config.Pat
 					if relativeIndex > 0 {
 						//fmt.Printf("leafRef Relative Path: %s, Element: %s, Key: %s, '/..' count %d\n", path, elem, k, relativeIndex)
 						// check if the final p contains relative indirection to the resourcePath -> "/.."
-						resSplitData := strings.Split(RemoveFirstEntry(resfullPath), "/")
+						resSplitData := strings.Split(p.RemoveFirstEntry(resfullPath), "/")
 						//fmt.Printf("ResPath Split Length: %d data: %v\n", len(resSplitData), resSplitData)
 						var addString string
 						for i := 1; i <= (len(resSplitData) - 1 - strings.Count(path, "/..")); i++ {
@@ -91,25 +91,25 @@ func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *config.Pat
 				}
 			}
 			//fmt.Printf("Path: %s, Elem: %s, Key: %s\n", path, elem, k)
-			remotePath := XpathToGnmiPath(path, 0)
-			AppendElemInPath(remotePath, elem, k)
+			remotePath := p.XpathToGnmiPath(path, 0)
+			p.AppendElemInPath(remotePath, elem, k)
 
 			// build a gnmi path and remove the first entry since the yang contains a duplicate path
-			localPath := XpathToGnmiPath(resfullPath, 1)
+			localPath := p.XpathToGnmiPath(resfullPath, 1)
 			// the last element hould be a key in the previous element
 			//localPath = TransformPathToLeafRefPath(localPath)
 
-			if strings.Contains(*ConfigGnmiPathToXPath(remotePath, false), *ConfigGnmiPathToXPath(activeResPath, false)) {
+			if strings.Contains(*p.ConfigGnmiPathToXPath(remotePath, false), *p.ConfigGnmiPathToXPath(activeResPath, false)) {
 				// if the remotePath and the active Path match exactly we classify this in the external leafref category
 				// since we dont allow multiple elments of the same key in the same resource
 				// E.g. interface ethernet-1/1 which reference a lag should be resolve to another interface in
 				// another resource and hence this should be classified as an external leafref
-				if *ConfigGnmiPathToXPath(remotePath, false) != *ConfigGnmiPathToXPath(activeResPath, false) {
+				if *p.ConfigGnmiPathToXPath(remotePath, false) != *p.ConfigGnmiPathToXPath(activeResPath, false) {
 					// this is a local leafref within the resource
 					// make the localPath and remotePath relative to the resource
 					//fmt.Printf("localPath: %v, remotePath %v, activePath %v\n", localPath, remotePath, activeResPath)
-					localPath = TransformPathAsRelative2Resource(localPath, activeResPath)
-					remotePath = TransformPathAsRelative2Resource(remotePath, activeResPath)
+					localPath = p.TransformPathAsRelative2Resource(localPath, activeResPath)
+					remotePath = p.TransformPathAsRelative2Resource(remotePath, activeResPath)
 					//fmt.Printf("localPath: %v, remotePath %v\n", localPath, remotePath)
 					return localPath, remotePath, true
 				}
@@ -118,7 +118,7 @@ func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *config.Pat
 			// leafref is external to the resource
 			//fmt.Printf("localPath: %v, remotePath %v, activePath %v\n", localPath, remotePath, activeResPath)
 			// make the localPath relative to the resource
-			localPath = TransformPathAsRelative2Resource(localPath, activeResPath)
+			localPath = p.TransformPathAsRelative2Resource(localPath, activeResPath)
 			//fmt.Printf("localPath: %v, remotePath %v\n", localPath, remotePath)
 
 			return localPath, remotePath, false

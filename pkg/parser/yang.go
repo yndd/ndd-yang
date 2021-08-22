@@ -24,7 +24,7 @@ import (
 )
 
 // GetypeName return a string of the type of the  yang entry
-func GetTypeName(e *yang.Entry) string {
+func (p *Parser) GetTypeName(e *yang.Entry) string {
 	if e == nil || e.Type == nil {
 		return ""
 	}
@@ -35,7 +35,7 @@ func GetTypeName(e *yang.Entry) string {
 }
 
 // GetTypeKind return a string of the kind of the yang entry
-func GetTypeKind(e *yang.Entry) string {
+func (p *Parser) GetTypeKind(e *yang.Entry) string {
 	if e == nil || e.Type == nil {
 		return ""
 	}
@@ -46,7 +46,7 @@ func GetTypeKind(e *yang.Entry) string {
 }
 
 // CreatePathElem returns a config path element from a yang Entry
-func CreatePathElem(e *yang.Entry) *config.PathElem {
+func (p *Parser) CreatePathElem(e *yang.Entry) *config.PathElem {
 	pathElem := &config.PathElem{
 		Name: e.Name,
 		Key:  make(map[string]string),
@@ -54,9 +54,9 @@ func CreatePathElem(e *yang.Entry) *config.PathElem {
 
 	if e.Key != "" {
 		var keyType string
-		switch GetTypeName(e.Dir[e.Key]) {
+		switch p.GetTypeName(e.Dir[e.Key]) {
 		case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
-			keyType = GetTypeName(e.Dir[e.Key])
+			keyType = p.GetTypeName(e.Dir[e.Key])
 		case "boolean":
 			keyType = "bool"
 		case "enumeration":

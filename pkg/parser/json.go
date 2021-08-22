@@ -30,7 +30,7 @@ import (
 )
 
 // Make a deep copy from in into out object.
-func DeepCopy(in interface{}) (interface{}, error) {
+func (p *Parser) DeepCopy(in interface{}) (interface{}, error) {
 	if in == nil {
 		return nil, errors.New("in cannot be nil")
 	}
@@ -49,7 +49,7 @@ func DeepCopy(in interface{}) (interface{}, error) {
 }
 
 // RemoveHierarchicalKeys removes the hierarchical keys from the data
-func RemoveHierarchicalKeys(d []byte, hids []string) ([]byte, error) {
+func (p *Parser) RemoveHierarchicalKeys(d []byte, hids []string) ([]byte, error) {
 	var x map[string]interface{}
 	json.Unmarshal(d, &x)
 
@@ -68,10 +68,10 @@ func RemoveHierarchicalKeys(d []byte, hids []string) ([]byte, error) {
 
 // CleanConfig2String returns a clean config and a string
 // clean means removing the prefixes in the json elements
-func CleanConfig2String(cfg map[string]interface{}) (map[string]interface{}, *string, error) {
+func (p *Parser) CleanConfig2String(cfg map[string]interface{}) (map[string]interface{}, *string, error) {
 	// trim the first map
 	for _, v := range cfg {
-		cfg = cleanConfig(v.(map[string]interface{}))
+		cfg = p.CleanConfig(v.(map[string]interface{}))
 	}
 	fmt.Printf("cleanConfig Config %v\n", cfg)
 
@@ -82,7 +82,7 @@ func CleanConfig2String(cfg map[string]interface{}) (map[string]interface{}, *st
 	return cfg, utils.StringPtr(string(jsonConfigStr)), nil
 }
 
-func cleanConfig(x1 map[string]interface{}) map[string]interface{} {
+func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 	x2 := make(map[string]interface{})
 	for k1, v1 := range x1 {
 		fmt.Printf("cleanConfig Key: %s, Value: %v\n", k1, v1)
@@ -92,7 +92,7 @@ func cleanConfig(x1 map[string]interface{}) map[string]interface{} {
 			for _, v3 := range x3 {
 				switch x3 := v3.(type) {
 				case map[string]interface{}:
-					x4 := cleanConfig(x3)
+					x4 := p.CleanConfig(x3)
 					x = append(x, x4)
 				default:
 					// clean the data
@@ -107,7 +107,7 @@ func cleanConfig(x1 map[string]interface{}) map[string]interface{} {
 			}
 			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x
 		case map[string]interface{}:
-			x4 := cleanConfig(x3)
+			x4 := p.CleanConfig(x3)
 			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x4
 		case string:
 			// for string values there can be also a header in the values e.g. type, Value: srl_nokia-network-instance:ip-vrf
@@ -121,12 +121,12 @@ func cleanConfig(x1 map[string]interface{}) map[string]interface{} {
 	return x2
 }
 
-// ParseTreeWithAction parses various actions on a json object in a recursive way
+// p.ParseTreeWithAction parses various actions on a json object in a recursive way
 // actions can be Get, Update, Delete and Create
-func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
+func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 	// idx is a local counter that will stay local, after the recurssive function calls it remains the same
 	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
-	fmt.Printf("ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
+	fmt.Printf("p.ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
 	tc.Msg = append(tc.Msg, "entry")
 	switch x1 := x1.(type) {
 	case map[string]interface{}:
@@ -140,9 +140,9 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]
 					switch tc.Action {
 					case ConfigTreeActionGet:
-						return ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 					case ConfigTreeActionDelete:
-						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						// if this is the last element in the slice we can delete the key from the list
 						// e.g. delete subinterface[index=0] from interface[name=x] and it was the last subinterface in the interface
 						switch x2 := x1[tc.Path.GetElem()[idx].GetName()].(type) {
@@ -154,7 +154,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 						}
 						return x1
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						return x1
 					}
 				} else {
@@ -181,7 +181,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 						}
 						return x1
 					case ConfigTreeActionCreate:
-						x1[tc.Path.GetElem()[idx].GetName()] = copyAndCleanTxValues(tc.Value)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
 						return x1
 					}
 
@@ -192,12 +192,12 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]/subinterface[index=100]
 					switch tc.Action {
 					case ConfigTreeActionGet:
-						return ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 					case ConfigTreeActionDelete:
-						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						return x1
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						return x1
 					}
 				} else {
@@ -206,9 +206,9 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 					tc.Msg = append(tc.Msg, "end of path without key")
 					switch tc.Action {
 					case ConfigTreeActionGet:
-						return ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
 					case ConfigTreeActionDelete, ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
 						return x1
 					}
 				}
@@ -238,7 +238,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 					// e.g. add subinterface[index=0] with value: admin-state: enable
 					x2 := make([]interface{}, 0)
 					// copy the values
-					x3 := copyAndCleanTxValues(tc.Value)
+					x3 := p.CopyAndCleanTxValues(tc.Value)
 					// add the keys to the list
 					switch x4 := x3.(type) {
 					case map[string]interface{}:
@@ -253,7 +253,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 				} else {
 					// create an mtu in
 					tc.Msg = append(tc.Msg, "without key")
-					x1[tc.Path.GetElem()[idx].GetName()] = copyAndCleanTxValues(tc.Value)
+					x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
 				}
 				return x1
 			} else {
@@ -264,18 +264,18 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 				tc.Idx++
 				// create a new map string interface which will be recursively filled
 				x1[tc.Path.GetElem()[idx].GetName()] = make(map[string]interface{})
-				x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+				x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
 				return x1
 			}
 		}
 	case []interface{}:
-		//fmt.Printf("ParseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
+		//fmt.Printf("p.ParseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
 		tc.Msg = append(tc.Msg, "[]interface{}")
 		for n, v := range x1 {
 			switch x2 := v.(type) {
 			case map[string]interface{}:
 				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
-					pathElemKeyNames, pathElemKeyValues := GetKeyInfo(tc.Path.GetElem()[idx].GetKey())
+					pathElemKeyNames, pathElemKeyValues := p.GetKeyInfo(tc.Path.GetElem()[idx].GetKey())
 					tc.Msg = append(tc.Msg, fmt.Sprintf("pathElemKeyNames %v, pathElemKeyValues%v", pathElemKeyNames, pathElemKeyValues))
 					// loop over all pathElemKeyNames
 					// TODO multiple keys and values need to be updated !
@@ -301,7 +301,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 											x1 = append(x1[:n], x1[n+1:]...)
 											return x1
 										case ConfigTreeActionUpdate:
-											x1[n] = copyAndCleanTxValues(tc.Value)
+											x1[n] = p.CopyAndCleanTxValues(tc.Value)
 											return x1
 										case ConfigTreeActionCreate:
 											// TODO if we ever come here
@@ -321,7 +321,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 											x1 = append(x1[:n], x1[n+1:]...)
 											return x1
 										case ConfigTreeActionUpdate:
-											x1[n] = copyAndCleanTxValues(tc.Value)
+											x1[n] = p.CopyAndCleanTxValues(tc.Value)
 											return x1
 										case ConfigTreeActionCreate:
 											// TODO if we ever come here
@@ -341,7 +341,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 											x1 = append(x1[:n], x1[n+1:]...)
 											return x1
 										case ConfigTreeActionUpdate:
-											x1[n] = copyAndCleanTxValues(tc.Value)
+											x1[n] = p.CopyAndCleanTxValues(tc.Value)
 											return x1
 										case ConfigTreeActionCreate:
 											// TODO if we ever come here
@@ -367,9 +367,9 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 										tc.Msg = append(tc.Msg, fmt.Sprintf("pathElemKeyValue found: %s string", pathElemKeyValues[i]))
 										switch tc.Action {
 										case ConfigTreeActionGet:
-											return ParseTreeWithAction(x1[n], tc, idx+1)
+											return p.ParseTreeWithAction(x1[n], tc, idx+1)
 										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = ParseTreeWithAction(x1[n], tc, idx+1)
+											x1[n] = p.ParseTreeWithAction(x1[n], tc, idx+1)
 											return x1
 										}
 									}
@@ -379,9 +379,9 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 										tc.Msg = append(tc.Msg, fmt.Sprintf("pathElemKeyValue found: %s uint32", pathElemKeyValues[i]))
 										switch tc.Action {
 										case ConfigTreeActionGet:
-											return ParseTreeWithAction(x1[n], tc, idx+1)
+											return p.ParseTreeWithAction(x1[n], tc, idx+1)
 										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = ParseTreeWithAction(x1[n], tc, idx+1)
+											x1[n] = p.ParseTreeWithAction(x1[n], tc, idx+1)
 											return x1
 										}
 									}
@@ -391,9 +391,9 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 										tc.Msg = append(tc.Msg, fmt.Sprintf("pathElemKeyValue found: %s float64", pathElemKeyValues[i]))
 										switch tc.Action {
 										case ConfigTreeActionGet:
-											return ParseTreeWithAction(x1[n], tc, idx+1)
+											return p.ParseTreeWithAction(x1[n], tc, idx+1)
 										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = ParseTreeWithAction(x1[n], tc, idx+1)
+											x1[n] = p.ParseTreeWithAction(x1[n], tc, idx+1)
 											return x1
 										}
 									}
@@ -432,7 +432,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 				tc.Msg = append(tc.Msg, "add element in an existing list")
 				// copy the data of the information
 				// add the key of the path to the data
-				x3 := copyAndCleanTxValues(tc.Value)
+				x3 := p.CopyAndCleanTxValues(tc.Value)
 				// add the keys to the list
 				switch x4 := x3.(type) {
 				case map[string]interface{}:
@@ -465,7 +465,7 @@ func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 	}
 }
 
-func copyAndCleanTxValues(value interface{}) interface{} {
+func (p *Parser) CopyAndCleanTxValues(value interface{}) interface{} {
 	switch vv := value.(type) {
 	case map[string]interface{}:
 		x := make(map[string]interface{})
@@ -485,12 +485,12 @@ func copyAndCleanTxValues(value interface{}) interface{} {
 }
 
 // CompareValues compares the 2 values and provides a json diff result
-func CompareValues(path *config.Path, cacheValue, deviceValue interface{}, valueType string) (jsondiff.Patch, error) {
-	x1, err := CleanCacheValueForComparison(path, cacheValue, valueType)
+func (p *Parser) CompareValues(path *config.Path, cacheValue, deviceValue interface{}, valueType string) (jsondiff.Patch, error) {
+	x1, err := p.CleanCacheValueForComparison(path, cacheValue, valueType)
 	if err != nil {
 		return nil, err
 	}
-	x2, err := CleanDeviceValueForComparison(deviceValue)
+	x2, err := p.CleanDeviceValueForComparison(deviceValue)
 	if err != nil {
 		return nil, err
 	}
@@ -507,7 +507,7 @@ func CompareValues(path *config.Path, cacheValue, deviceValue interface{}, value
 
 // CleanDeviceValueForComparison cleans the data coming from the device
 // it cleans the prefixes of the yang value; key and value
-func CleanDeviceValueForComparison(deviceValue interface{}) (interface{}, error) {
+func (p *Parser) CleanDeviceValueForComparison(deviceValue interface{}) (interface{}, error) {
 	var x1 interface{}
 	switch x := deviceValue.(type) {
 	case map[string]interface{}:
@@ -539,14 +539,14 @@ func CleanDeviceValueForComparison(deviceValue interface{}) (interface{}, error)
 // 2. any key in the path can be removed since this is part of the path iso data comparison
 // 3. if the value is a slice we should remove all strings/int/floats, if the data is not a slice we remove all slices
 // -> the gnmi server splits slice data and non slice data
-func CleanCacheValueForComparison(path *config.Path, cacheValue interface{}, valueType string) (x1 interface{}, err error) {
+func (p *Parser) CleanCacheValueForComparison(path *config.Path, cacheValue interface{}, valueType string) (x1 interface{}, err error) {
 	// delete all leaftlists and keys of the cache data for comparison
 	keyNames := make([]string, 0)
 	if path.GetElem()[len(path.GetElem())-1].GetKey() != nil {
-		keyNames, _ = GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
+		keyNames, _ = p.GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
 	}
 	if cacheValue != nil {
-		x1, err = DeepCopy(cacheValue)
+		x1, err = p.DeepCopy(cacheValue)
 		if err != nil {
 			return nil, err
 		}

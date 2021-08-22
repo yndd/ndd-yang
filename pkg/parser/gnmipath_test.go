@@ -66,7 +66,8 @@ func TestConfigGnmiPathToXPath(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		ret := ConfigGnmiPathToXPath(tt.inp, true)
+		parser := NewParser()
+		ret := parser.ConfigGnmiPathToXPath(tt.inp, true)
 		if !reflect.DeepEqual(*ret, tt.exp) {
 			t.Errorf("sortedVals(%v) = got %v, want %v", tt.inp, *ret, tt.exp)
 		}
@@ -122,7 +123,8 @@ func TestXpathToGnmiPath(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		ret := XpathToGnmiPath(tt.inp, 0)
+		parser := NewParser()
+		ret := parser.XpathToGnmiPath(tt.inp, 0)
 		if !reflect.DeepEqual(ret, tt.exp) {
 			t.Errorf("sortedVals(%v) = got %v, want %v", tt.inp, ret, tt.exp)
 		}
