@@ -19,7 +19,10 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strings"
 
+	"github.com/netw-device-driver/ndd-runtime/pkg/utils"
 	"github.com/pkg/errors"
 )
 
@@ -58,4 +61,59 @@ func RemoveHierarchicalKeys(d []byte, hids []string) ([]byte, error) {
 	}
 	fmt.Printf("data after hierarchical key removal: %v\n", x)
 	return json.Marshal(x)
+}
+
+// CleanConfig2String returns a clean config and a string
+// clean means removing the prefixes in the json elements
+func CleanConfig2String(cfg map[string]interface{}) (map[string]interface{}, *string, error) {
+	// trim the first map
+	for _, v := range cfg {
+		cfg = cleanConfig(v.(map[string]interface{}))
+	}
+	fmt.Printf("cleanConfig Config %v\n", cfg)
+
+	jsonConfigStr, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+	return cfg, utils.StringPtr(string(jsonConfigStr)), nil
+}
+
+func cleanConfig(x1 map[string]interface{}) map[string]interface{} {
+	x2 := make(map[string]interface{})
+	for k1, v1 := range x1 {
+		fmt.Printf("cleanConfig Key: %s, Value: %v\n", k1, v1)
+		switch x3 := v1.(type) {
+		case []interface{}:
+			x := make([]interface{}, 0)
+			for _, v3 := range x3 {
+				switch x3 := v3.(type) {
+				case map[string]interface{}:
+					x4 := cleanConfig(x3)
+					x = append(x, x4)
+				default:
+					// clean the data
+					switch v4 := v3.(type) {
+					case string:
+						x = append(x, strings.Split(v4, ":")[len(strings.Split(v4, ":"))-1])
+					default:
+						fmt.Printf("type in []interface{}: %v\n", reflect.TypeOf(v4))
+						x = append(x, v4)
+					}
+				}
+			}
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x
+		case map[string]interface{}:
+			x4 := cleanConfig(x3)
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x4
+		case string:
+			// for string values there can be also a header in the values e.g. type, Value: srl_nokia-network-instance:ip-vrf
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = strings.Split(x3, ":")[len(strings.Split(x3, ":"))-1]
+		default:
+			// for other values like bool, float64, uint32 we dont do anything
+			fmt.Printf("type in main: %v\n", reflect.TypeOf(x3))
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = v1
+		}
+	}
+	return x2
 }
