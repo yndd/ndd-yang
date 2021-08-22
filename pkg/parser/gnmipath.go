@@ -52,7 +52,28 @@ func GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
 
 // GnmiPathToName converts a config gnmi path to a name where each element of the 
 // path is seperated by a "-"
-func GnmiPathToName(path *config.Path) string {
+func GnmiPathToName(path *gnmi.Path) string {
+	sb := strings.Builder{}
+	for i, pElem := range path.GetElem() {
+		pes := strings.Split(pElem.GetName(), ":")
+		var pe string
+		if len(pes) > 1 {
+			pe = pes[1]
+		} else {
+			pe = pes[0]
+		}
+		sb.WriteString(pe)
+
+		if i+1 != len(path.GetElem()) {
+			sb.WriteString("-")
+		}
+	}
+	return sb.String()
+}
+
+// ConfigGnmiPathToName converts a config gnmi path to a name where each element of the 
+// path is seperated by a "-"
+func ConfigGnmiPathToName(path *config.Path) string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")
