@@ -50,27 +50,6 @@ func GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
 	return outPath
 }
 
-// GnmiPathToName converts a config gnmi path to a name where each element of the 
-// path is seperated by a "-"
-func GnmiPathToName(path *gnmi.Path) string {
-	sb := strings.Builder{}
-	for i, pElem := range path.GetElem() {
-		pes := strings.Split(pElem.GetName(), ":")
-		var pe string
-		if len(pes) > 1 {
-			pe = pes[1]
-		} else {
-			pe = pes[0]
-		}
-		sb.WriteString(pe)
-
-		if i+1 != len(path.GetElem()) {
-			sb.WriteString("-")
-		}
-	}
-	return sb.String()
-}
-
 // ConfigGnmiPathToName converts a config gnmi path to a name where each element of the 
 // path is seperated by a "-"
 func ConfigGnmiPathToName(path *config.Path) string {
@@ -92,8 +71,36 @@ func ConfigGnmiPathToName(path *config.Path) string {
 	return sb.String()
 }
 
-// GnmiPathToXPath converts a config gnmi path with or withour keys to a string pointer
+// GnmiPathToXPath converts a gnmi path with or withour keys to a string pointer
 func GnmiPathToXPath(path *config.Path, keys bool) *string {
+	sb := strings.Builder{}
+	for i, pElem := range path.GetElem() {
+		pes := strings.Split(pElem.GetName(), ":")
+		var pe string
+		if len(pes) > 1 {
+			pe = pes[1]
+		} else {
+			pe = pes[0]
+		}
+		sb.WriteString(pe)
+		if keys {
+			for k, v := range pElem.GetKey() {
+				sb.WriteString("[")
+				sb.WriteString(k)
+				sb.WriteString("=")
+				sb.WriteString(v)
+				sb.WriteString("]")
+			}
+		}
+		if i+1 != len(path.GetElem()) {
+			sb.WriteString("/")
+		}
+	}
+	return utils.StringPtr("/" + sb.String())
+}
+
+// ConfigGnmiPathToXPath converts a config gnmi path with or withour keys to a string pointer
+func ConfigGnmiPathToXPath(path *config.Path, keys bool) *string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")
