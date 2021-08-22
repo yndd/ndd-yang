@@ -121,10 +121,12 @@ func cleanConfig(x1 map[string]interface{}) map[string]interface{} {
 	return x2
 }
 
-func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
+// ParseTreeWithAction parses various actions on a json object in a recursive way
+// actions can be Get, Update, Delete and Create
+func ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 	// idx is a local counter that will stay local, after the recurssive function calls it remains the same
 	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
-	fmt.Printf("parseTreeWithAction: %v, path: %v\n", tc, tc.Path)
+	fmt.Printf("ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
 	tc.Msg = append(tc.Msg, "entry")
 	switch x1 := x1.(type) {
 	case map[string]interface{}:
@@ -138,9 +140,9 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]
 					switch tc.Action {
 					case ConfigTreeActionGet:
-						return parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 					case ConfigTreeActionDelete:
-						x1[tc.Path.GetElem()[idx].GetName()] = parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						// if this is the last element in the slice we can delete the key from the list
 						// e.g. delete subinterface[index=0] from interface[name=x] and it was the last subinterface in the interface
 						switch x2 := x1[tc.Path.GetElem()[idx].GetName()].(type) {
@@ -152,7 +154,7 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 						}
 						return x1
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						return x1
 					}
 				} else {
@@ -190,12 +192,12 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]/subinterface[index=100]
 					switch tc.Action {
 					case ConfigTreeActionGet:
-						return parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 					case ConfigTreeActionDelete:
-						x1[tc.Path.GetElem()[idx].GetName()] = parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						return x1
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
 						return x1
 					}
 				} else {
@@ -204,9 +206,9 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 					tc.Msg = append(tc.Msg, "end of path without key")
 					switch tc.Action {
 					case ConfigTreeActionGet:
-						return parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						return ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
 					case ConfigTreeActionDelete, ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
 						return x1
 					}
 				}
@@ -262,12 +264,12 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 				tc.Idx++
 				// create a new map string interface which will be recursively filled
 				x1[tc.Path.GetElem()[idx].GetName()] = make(map[string]interface{})
-				x1[tc.Path.GetElem()[idx].GetName()] = parseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+				x1[tc.Path.GetElem()[idx].GetName()] = ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
 				return x1
 			}
 		}
 	case []interface{}:
-		//fmt.Printf("parseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
+		//fmt.Printf("ParseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
 		tc.Msg = append(tc.Msg, "[]interface{}")
 		for n, v := range x1 {
 			switch x2 := v.(type) {
@@ -365,9 +367,9 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 										tc.Msg = append(tc.Msg, fmt.Sprintf("pathElemKeyValue found: %s string", pathElemKeyValues[i]))
 										switch tc.Action {
 										case ConfigTreeActionGet:
-											return parseTreeWithAction(x1[n], tc, idx+1)
+											return ParseTreeWithAction(x1[n], tc, idx+1)
 										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = parseTreeWithAction(x1[n], tc, idx+1)
+											x1[n] = ParseTreeWithAction(x1[n], tc, idx+1)
 											return x1
 										}
 									}
@@ -377,9 +379,9 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 										tc.Msg = append(tc.Msg, fmt.Sprintf("pathElemKeyValue found: %s uint32", pathElemKeyValues[i]))
 										switch tc.Action {
 										case ConfigTreeActionGet:
-											return parseTreeWithAction(x1[n], tc, idx+1)
+											return ParseTreeWithAction(x1[n], tc, idx+1)
 										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = parseTreeWithAction(x1[n], tc, idx+1)
+											x1[n] = ParseTreeWithAction(x1[n], tc, idx+1)
 											return x1
 										}
 									}
@@ -389,9 +391,9 @@ func parseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 										tc.Msg = append(tc.Msg, fmt.Sprintf("pathElemKeyValue found: %s float64", pathElemKeyValues[i]))
 										switch tc.Action {
 										case ConfigTreeActionGet:
-											return parseTreeWithAction(x1[n], tc, idx+1)
+											return ParseTreeWithAction(x1[n], tc, idx+1)
 										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = parseTreeWithAction(x1[n], tc, idx+1)
+											x1[n] = ParseTreeWithAction(x1[n], tc, idx+1)
 											return x1
 										}
 									}
