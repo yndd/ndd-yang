@@ -72,7 +72,7 @@ func ConfigGnmiPathToName(path *config.Path) string {
 }
 
 // GnmiPathToXPath converts a gnmi path with or withour keys to a string pointer
-func GnmiPathToXPath(path *config.Path, keys bool) *string {
+func GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")

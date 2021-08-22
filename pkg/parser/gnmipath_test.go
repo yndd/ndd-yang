@@ -23,7 +23,7 @@ import (
 	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
 )
 
-func TestGnmiPathToXPath(t *testing.T) {
+func TestConfigGnmiPathToXPath(t *testing.T) {
 	tests := []struct {
 		inp *config.Path
 		exp string
@@ -66,7 +66,7 @@ func TestGnmiPathToXPath(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		ret := GnmiPathToXPath(tt.inp, true)
+		ret := ConfigGnmiPathToXPath(tt.inp, true)
 		if !reflect.DeepEqual(*ret, tt.exp) {
 			t.Errorf("sortedVals(%v) = got %v, want %v", tt.inp, *ret, tt.exp)
 		}
