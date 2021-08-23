@@ -785,3 +785,21 @@ func (p *Parser) RemoveLeafsFromJSONData(x interface{}, leafStrings []string) in
 	}
 	return x
 }
+
+// AddJSONDataToList adds the JSON data to a list
+func (p *Parser) AddJSONDataToList(x interface{}) (interface{}, error) {
+	x1 := make(map[string]interface{})
+	switch x := x.(type) {
+	case map[string]interface{}:
+		for k1, v1 := range x {
+			x2 := make([]interface{}, 0)
+			x2 = append(x2, v1)
+			x1[k1] = x2
+		}
+		return x1, nil
+	}
+	
+	// wrong data input
+	return x1, errors.New(fmt.Sprintf("data tarnsformation, wrong data input %v", x))
+	
+}
