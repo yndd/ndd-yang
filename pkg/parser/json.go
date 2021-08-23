@@ -316,6 +316,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					case ConfigTreeActionDelete:
 						delete(x1, tc.Path.GetElem()[idx].GetName())
 						return x1
+						/*
 					case ConfigTreeActionUpdate:
 						switch vv := tc.Value.(type) {
 						case map[string]interface{}:
@@ -329,7 +330,8 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 							}
 						}
 						return x1
-					case ConfigTreeActionCreate:
+						*/
+					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
 						x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
 						return x1
 					}
