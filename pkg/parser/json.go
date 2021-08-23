@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -613,56 +614,160 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 	}
 }
 
-/*
-func (p *Parser) ParseJSONData2UpdatePaths(path *config.Path, x1 interface{}) []*config.Update {
+func (p *Parser) GetUpdatesFromJSONData(path *config.Path, x1 interface{}, refPaths []*config.Path) []*config.Update {
 	updates := make([]*config.Update, 0)
-
-	// not sure this is needed still if we convert to updates
-	//x1 = p.prepareJSONData(path, x1)
-
-	updates = 
-
+	tc := &TraceCtxt{}
+	updates, tc = p.ParseJSONData2ConfigUpdates(tc, path, x1, 0, updates, refPaths)
+	updates = p.PostProcessUpdates(updates)
+	p.log.Debug("GetUpdatesFromJSONData", "Trace Msg", tc.Msg)
+	return updates
 }
 
-func (p *Parser) parseJSOnData(path *config.Path, x interface{}, updates []*config.Update) []*config.Update {
-	currentPath := DeepCopyPath(path)
-	switch x := xx.(type) {
+// ParseJSONData2UpdatePaths returns config.Updates according to the gnmi spec based on JSON input data
+// These updates are used prepared so they can be send to a GNMI capable device
+func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x1 interface{}, idx int, updates []*config.Update, refPaths []*config.Path) ([]*config.Update, *TraceCtxt) {
+	updateValue := false
+	tc.Msg = append(tc.Msg, fmt.Sprintf("entry, idx: %d", idx))
+	switch x := x1.(type) {
 	case map[string]interface{}:
-		var value map[string]interface{}
+		value := make(map[string]interface{})
 		for k, v := range x {
+			tc.Msg = append(tc.Msg, fmt.Sprintf("type: %v\n", reflect.TypeOf(v)))
+			tc.Msg = append(tc.Msg, fmt.Sprintf("k: %s, v: %v\n", k, v))
 			switch x1 := v.(type) {
 			case []interface{}:
+				for i, vv := range x1 {
+					tc.Msg = append(tc.Msg, fmt.Sprintf("type: %v, i: %d\n", reflect.TypeOf(v), i))
+					newPath := p.DeepCopyPath(path)
+					keys := p.GetKeyNamesFromConfigPaths(newPath, k, refPaths)
+					if len(keys) != 0 {
+						newPath = p.AppendElemInPath(newPath, k, keys[0])
+					} else {
+						// we should never come here, otherwise some preprocessing was wrong
+						newPath = p.AppendElemInPath(newPath, k, fmt.Sprintf("key-not-found-%d", i))
+					}
+					updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, vv, idx+1, updates, refPaths)
+				}
+				//return updates
 			case map[string]interface{}:
+				newPath := p.DeepCopyPath(path)
+				// add pathElem if idx > 0
+				if idx != 0 {
+					// add p
+					newPath = p.AppendElemInPath(newPath, k, "")
+				}
+				updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, x1, idx+1, updates, refPaths)
+				//return updates
 			case nil:
-				value = value
+				tc.Msg = append(tc.Msg, "nil")
 			default:
+				tc.Msg = append(tc.Msg, "default")
+				// string, other types
 				// we are at the end of the path
 				value[k] = v
+				updateValue = true
 			}
 		}
-		
-	case []interface{}:
-	}
-} 
+		if updateValue {
+			// if the path contains a key we need to remove the element from the value and add it in the path
+			if len(path.GetElem()[len(path.GetElem())-1].GetKey()) != 0 {
+				keyNames, _ := p.GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
+				for _, keyName := range keyNames {
+					if v, ok := value[keyName]; ok {
+						// add Value to path
+						switch v := v.(type) {
+						case string:
+							path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = string(v)
+						case uint32:
+							path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = strconv.Itoa(int(v))
+						case float64:
+							path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = fmt.Sprintf("%.0f", v)
+						}
+						// delete element from the value
+						delete(value, keyName)
+					}
+				}
+			}
+			v, _ := json.Marshal(value)
+			update := &config.Update{
+				Path:  path,
+				Value: v,
+			}
+			updates = append(updates, update)
+		}
+		//return updates, tc
 
-func (p *Parser) prepareJSONData(path *config.Path, x1 interface{}) interface{} {
-	// we get interface{name:x,admin-state:enable} we want []interface{name:x,admin-state:enable}
-	if len(path.GetElem()[len(path.GetElem())-1].GetKey()) != 0 {
-		x := make(map[string]interface{})
-		switch x1 := x1.(type) {
-		case map[string]interface{}:
-			// e.g. k1 is interface
-			// e.g. v1 is the data
-			for k1, v1 := range x1 {
-				xx := make([]interface{}, 0)
-				xx = append(xx, v1)
-				x[k1] = xx
+	case []interface{}:
+		tc.Msg = append(tc.Msg, "DO WE COME HERE ?")
+	}
+	return updates, tc
+}
+
+// GetKeyNamesFromConfigPaths returns the keyNames for a path based on a
+// reference path list (predetermined path list, coming from yang processing)
+// due to yang processing this should always return keys, if not something was not configured properly
+func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, refPaths []*config.Path) []string {
+	// create a dummy path which adds the last pathElem to the path
+	// the result will be used for comparison
+	dummyPath := p.DeepCopyPath(path)
+	dummyPath = p.AppendElemInPath(dummyPath, lastElem, "")
+	//p.log.Debug("FindKeyInPath", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
+	// loop over all reference paths
+	for _, refPath := range refPaths {
+		// take only the paths on which the lengths are equal
+		if len(refPath.GetElem()) == len(dummyPath.GetElem()) {
+			// loop over the path elements and if they all match we have a match
+			found := false
+			for i, pathElem := range dummyPath.GetElem() {
+				//log.Printf("FindKeyInPath: i: %d,pathElemName: %s, pathElemName: %s\n", i, refPath.GetElem()[i].GetName(), pathElem.GetName())
+				if refPath.GetElem()[i].GetName() == pathElem.GetName() {
+					found = true
+				} else {
+					found = false
+				}
 			}
-		default:
-			// wrong data input
-			p.log.Debug("Wrong input", "Error", errors.New(fmt.Sprintf("data tarnsformation, wrong data input %v", x1)))
+			if found {
+				// get the key of the last element of the reference path that matched
+				key := refPath.GetElem()[(len(refPath.GetElem()) - 1)].GetKey()
+				keys := make([]string, 0)
+				for k := range key {
+					keys = append(keys, k)
+				}
+				return keys
+			}
 		}
 	}
-	return x1
+	p.log.Debug("GetKeyNamesFromConfigPaths return nil, this is very strange", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
+	return nil
 }
-*/
+
+func (p *Parser) PostProcessUpdates(updates []*config.Update) []*config.Update {
+	// order them such that the smallest one starts first
+	sort.Slice(updates, func(i, j int) bool {
+		return len(updates[i].Path.GetElem()) < len(updates[j].Path.GetElem())
+	})
+
+	// add all the values in the keys
+	objKeyValues := make(map[int][]map[string]string)
+	for _, update := range updates {
+		for i, pathElem := range update.Path.GetElem() {
+			if len(pathElem.GetKey()) != 0 {
+				_, keyValues := p.GetKeyInfo(pathElem.GetKey())
+				if keyValues[0] != "" {
+					// the value is filled if one of the keys is filled
+					if _, ok := objKeyValues[i]; !ok {
+						objKeyValues[i] = make([]map[string]string, 0)
+					}
+					objKeyValues[i] = append(objKeyValues[i], pathElem.GetKey())
+				} else {
+					// the value is empty
+					for k := range pathElem.GetKey() {
+						pathElem.GetKey()[k] = objKeyValues[i][0][k]
+					}
+				}
+			}
+		}
+	}
+	//p.log.Debug("PostProcessUpdates", "objKeyValues", objKeyValues)
+	return updates
+}
