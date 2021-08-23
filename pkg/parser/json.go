@@ -368,8 +368,8 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 		tc.Msg = append(tc.Msg, "map[string]interface{} not found")
 		// this branch is mainly used for object creation
 		switch tc.Action {
-		case ConfigTreeActionDelete, ConfigTreeActionUpdate:
-			// when the data is not found we just return x1 since nothing can get deleted or updated
+		case ConfigTreeActionDelete:
+			// when the data is not found we just return x1 since nothing can get deleted 
 			tc.Found = false
 			tc.Data = x1
 			return x1
@@ -377,7 +377,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 			tc.Found = false
 			tc.Data = x1
 			return x1
-		case ConfigTreeActionCreate:
+		case ConfigTreeActionCreate, ConfigTreeActionUpdate:
 			// this branch is used to insert leafs, leaflists in the tree when object get created
 			tc.Found = false
 			if idx == len(tc.Path.GetElem())-1 {
