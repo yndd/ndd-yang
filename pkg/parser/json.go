@@ -614,6 +614,8 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 	}
 }
 
+// GetUpdatesFromJSONData returns config.Updates based on the JSON input data and config.Path/reference Paths
+// These updates are used prepared so they can be send to a GNMI capable device
 func (p *Parser) GetUpdatesFromJSONData(path *config.Path, x1 interface{}, refPaths []*config.Path) []*config.Update {
 	updates := make([]*config.Update, 0)
 	tc := &TraceCtxt{}
@@ -624,7 +626,6 @@ func (p *Parser) GetUpdatesFromJSONData(path *config.Path, x1 interface{}, refPa
 }
 
 // ParseJSONData2UpdatePaths returns config.Updates according to the gnmi spec based on JSON input data
-// These updates are used prepared so they can be send to a GNMI capable device
 func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x1 interface{}, idx int, updates []*config.Update, refPaths []*config.Path) ([]*config.Update, *TraceCtxt) {
 	// this is a recursive function which parses all the data till the end, hence return is only at the end
 	updateValue := false
@@ -739,6 +740,7 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 	return nil
 }
 
+// PostProcessUpdates sorts the update list and adds the key values in the config.Paths that could not be processed
 func (p *Parser) PostProcessUpdates(updates []*config.Update) []*config.Update {
 	// order them such that the smallest one starts first
 	sort.Slice(updates, func(i, j int) bool {
