@@ -571,12 +571,12 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 		// this is used to add an element to a list that already exists
 		// e.g. interface[name=ethernet-1/49]/subinterface[index=0] exists and we add interface[name=ethernet-1/49]/subinterface[index=1]
 		switch tc.Action {
-		case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionGet:
+		case ConfigTreeActionDelete, ConfigTreeActionGet:
 			// when the data is not found we just return x1 since nothing can get deleted or updated
 			tc.Found = false
 			tc.Data = x1
 			return x1
-		case ConfigTreeActionCreate:
+		case ConfigTreeActionCreate, ConfigTreeActionUpdate:
 			if idx == len(tc.Path.GetElem())-1 {
 				tc.Found = false
 				tc.Data = x1
