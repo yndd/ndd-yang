@@ -124,7 +124,7 @@ func TestXpathToGnmiPath(t *testing.T) {
 
 	for _, tt := range tests {
 		parser := NewParser()
-		ret := parser.XpathToGnmiPath(tt.inp, 0)
+		ret := parser.XpathToConfigGnmiPath(tt.inp, 0)
 		if !reflect.DeepEqual(ret, tt.exp) {
 			t.Errorf("sortedVals(%v) = got %v, want %v", tt.inp, ret, tt.exp)
 		}

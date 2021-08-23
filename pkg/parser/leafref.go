@@ -91,11 +91,11 @@ func (p *Parser) ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath
 				}
 			}
 			//fmt.Printf("Path: %s, Elem: %s, Key: %s\n", path, elem, k)
-			remotePath := p.XpathToGnmiPath(path, 0)
+			remotePath := p.XpathToConfigGnmiPath(path, 0)
 			p.AppendElemInPath(remotePath, elem, k)
 
 			// build a gnmi path and remove the first entry since the yang contains a duplicate path
-			localPath := p.XpathToGnmiPath(resfullPath, 1)
+			localPath := p.XpathToConfigGnmiPath(resfullPath, 1)
 			// the last element hould be a key in the previous element
 			//localPath = TransformPathToLeafRefPath(localPath)
 

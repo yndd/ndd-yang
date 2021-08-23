@@ -121,6 +121,154 @@ func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 	return x2
 }
 
+func (p *Parser) CopyAndCleanTxValues(value interface{}) interface{} {
+	switch vv := value.(type) {
+	case map[string]interface{}:
+		x := make(map[string]interface{})
+		for k, v := range vv {
+			switch vvv := v.(type) {
+			case string:
+				x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
+			default:
+				x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+			}
+		}
+		return x
+	case string:
+		return strings.Split(vv, ":")[len(strings.Split(vv, ":"))-1]
+	}
+	return value
+}
+
+// CompareValues compares the 2 values and provides a json diff result
+func (p *Parser) CompareValues(path *config.Path, cacheValue, deviceValue interface{}, valueType string) (jsondiff.Patch, error) {
+	x1, err := p.CleanCacheValueForComparison(path, cacheValue, valueType)
+	if err != nil {
+		return nil, err
+	}
+	x2, err := p.CleanDeviceValueForComparison(deviceValue)
+	if err != nil {
+		return nil, err
+	}
+	//fmt.Printf("Data Comparison:\nx1: %v\nx2: %v\n", x1, x2)
+	patch, err := jsondiff.Compare(x1, x2)
+	if err != nil {
+		return nil, errors.Wrap(err, ErrJSONCompare)
+	}
+	if len(patch) != 0 {
+		fmt.Printf("Data Comparison failed:\nx1: %v\nx2: %v\n", x1, x2)
+	}
+	return patch, nil
+}
+
+// CleanDeviceValueForComparison cleans the data coming from the device
+// it cleans the prefixes of the yang value; key and value
+func (p *Parser) CleanDeviceValueForComparison(deviceValue interface{}) (interface{}, error) {
+	var x1 interface{}
+	switch x := deviceValue.(type) {
+	case map[string]interface{}:
+		for k, v := range x {
+			// if a string contains a : we return the last string after the :
+			sk := strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
+			if k != sk {
+				switch v.(type) {
+				case string:
+					v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
+				}
+				delete(x, k)
+				x[sk] = v
+			} else {
+				switch v.(type) {
+				case string:
+					v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
+				}
+				x[sk] = v
+			}
+		}
+		x1 = x
+	}
+	return x1, nil
+}
+
+// we update the cache value for comparison
+// 1. any map[string]interface{} -> will come from another subscription
+// 2. any key in the path can be removed since this is part of the path iso data comparison
+// 3. if the value is a slice we should remove all strings/int/floats, if the data is not a slice we remove all slices
+// -> the gnmi server splits slice data and non slice data
+func (p *Parser) CleanCacheValueForComparison(path *config.Path, cacheValue interface{}, valueType string) (x1 interface{}, err error) {
+	// delete all leaftlists and keys of the cache data for comparison
+	keyNames := make([]string, 0)
+	if path.GetElem()[len(path.GetElem())-1].GetKey() != nil {
+		keyNames, _ = p.GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
+	}
+	if cacheValue != nil {
+		x1, err = p.DeepCopy(cacheValue)
+		if err != nil {
+			return nil, err
+		}
+	}
+	switch x := x1.(type) {
+	case map[string]interface{}:
+		for k, v := range x {
+			switch v.(type) {
+			// delete maps since they come with a different xpath if present
+			case map[string]interface{}:
+				delete(x, k)
+			// delete lists since they come with a different xpath if present
+			case []interface{}:
+				//fmt.Printf("cleanCacheValueForComparison valueType: %s", valueType)
+				// if valuetype is a slice we should keep the slices, but delete the non slice information
+				if valueType != Slice {
+					delete(x, k)
+				}
+			case string:
+				//fmt.Printf("cleanCacheValueForComparison valueType: %s", valueType)
+				// loop over multiple keys
+				if valueType != Slice {
+					for _, keyName := range keyNames {
+						if k == keyName {
+							delete(x, k)
+						}
+					}
+				} else {
+					// when valuetype is a slice we should delete all regular entries
+					delete(x, k)
+				}
+			case float64:
+				// loop over multiple keys
+				if valueType != Slice {
+					for _, keyName := range keyNames {
+						if k == keyName {
+							delete(x, k)
+						}
+					}
+				} else {
+					// when valuetype is a slice we should delete all regular entries
+					delete(x, k)
+				}
+			case bool:
+				// loop over multiple keys
+				if valueType != Slice {
+					for _, keyName := range keyNames {
+						if k == keyName {
+							delete(x, k)
+						}
+					}
+				} else {
+					// when valuetype is a slice we should delete all regular entries
+					delete(x, k)
+				}
+			case nil:
+			default:
+				// TODO add better logging
+				fmt.Printf("cleanCacheValueForComparison Unknown type: %v\n", reflect.TypeOf(v))
+			}
+		}
+		x1 = x
+	}
+	return x1, nil
+}
+
 // p.ParseTreeWithAction parses various actions on a json object in a recursive way
 // actions can be Get, Update, Delete and Create
 func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
@@ -465,150 +613,56 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 	}
 }
 
-func (p *Parser) CopyAndCleanTxValues(value interface{}) interface{} {
-	switch vv := value.(type) {
-	case map[string]interface{}:
-		x := make(map[string]interface{})
-		for k, v := range vv {
-			switch vvv := v.(type) {
-			case string:
-				x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
-			default:
-				x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
-			}
-		}
-		return x
-	case string:
-		return strings.Split(vv, ":")[len(strings.Split(vv, ":"))-1]
-	}
-	return value
+/*
+func (p *Parser) ParseJSONData2UpdatePaths(path *config.Path, x1 interface{}) []*config.Update {
+	updates := make([]*config.Update, 0)
+
+	// not sure this is needed still if we convert to updates
+	//x1 = p.prepareJSONData(path, x1)
+
+	updates = 
+
 }
 
-// CompareValues compares the 2 values and provides a json diff result
-func (p *Parser) CompareValues(path *config.Path, cacheValue, deviceValue interface{}, valueType string) (jsondiff.Patch, error) {
-	x1, err := p.CleanCacheValueForComparison(path, cacheValue, valueType)
-	if err != nil {
-		return nil, err
-	}
-	x2, err := p.CleanDeviceValueForComparison(deviceValue)
-	if err != nil {
-		return nil, err
-	}
-	//fmt.Printf("Data Comparison:\nx1: %v\nx2: %v\n", x1, x2)
-	patch, err := jsondiff.Compare(x1, x2)
-	if err != nil {
-		return nil, errors.Wrap(err, ErrJSONCompare)
-	}
-	if len(patch) != 0 {
-		fmt.Printf("Data Comparison failed:\nx1: %v\nx2: %v\n", x1, x2)
-	}
-	return patch, nil
-}
-
-// CleanDeviceValueForComparison cleans the data coming from the device
-// it cleans the prefixes of the yang value; key and value
-func (p *Parser) CleanDeviceValueForComparison(deviceValue interface{}) (interface{}, error) {
-	var x1 interface{}
-	switch x := deviceValue.(type) {
+func (p *Parser) parseJSOnData(path *config.Path, x interface{}, updates []*config.Update) []*config.Update {
+	currentPath := DeepCopyPath(path)
+	switch x := xx.(type) {
 	case map[string]interface{}:
+		var value map[string]interface{}
 		for k, v := range x {
-			// if a string contains a : we return the last string after the :
-			sk := strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
-			if k != sk {
-				switch v.(type) {
-				case string:
-					v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
-				}
-				delete(x, k)
-				x[sk] = v
-			} else {
-				switch v.(type) {
-				case string:
-					v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
-				}
-				x[sk] = v
-			}
-		}
-		x1 = x
-	}
-	return x1, nil
-}
-
-// we update the cache value for comparison
-// 1. any map[string]interface{} -> will come from another subscription
-// 2. any key in the path can be removed since this is part of the path iso data comparison
-// 3. if the value is a slice we should remove all strings/int/floats, if the data is not a slice we remove all slices
-// -> the gnmi server splits slice data and non slice data
-func (p *Parser) CleanCacheValueForComparison(path *config.Path, cacheValue interface{}, valueType string) (x1 interface{}, err error) {
-	// delete all leaftlists and keys of the cache data for comparison
-	keyNames := make([]string, 0)
-	if path.GetElem()[len(path.GetElem())-1].GetKey() != nil {
-		keyNames, _ = p.GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
-	}
-	if cacheValue != nil {
-		x1, err = p.DeepCopy(cacheValue)
-		if err != nil {
-			return nil, err
-		}
-	}
-	switch x := x1.(type) {
-	case map[string]interface{}:
-		for k, v := range x {
-			switch v.(type) {
-			// delete maps since they come with a different xpath if present
-			case map[string]interface{}:
-				delete(x, k)
-			// delete lists since they come with a different xpath if present
+			switch x1 := v.(type) {
 			case []interface{}:
-				//fmt.Printf("cleanCacheValueForComparison valueType: %s", valueType)
-				// if valuetype is a slice we should keep the slices, but delete the non slice information
-				if valueType != Slice {
-					delete(x, k)
-				}
-			case string:
-				//fmt.Printf("cleanCacheValueForComparison valueType: %s", valueType)
-				// loop over multiple keys
-				if valueType != Slice {
-					for _, keyName := range keyNames {
-						if k == keyName {
-							delete(x, k)
-						}
-					}
-				} else {
-					// when valuetype is a slice we should delete all regular entries
-					delete(x, k)
-				}
-			case float64:
-				// loop over multiple keys
-				if valueType != Slice {
-					for _, keyName := range keyNames {
-						if k == keyName {
-							delete(x, k)
-						}
-					}
-				} else {
-					// when valuetype is a slice we should delete all regular entries
-					delete(x, k)
-				}
-			case bool:
-				// loop over multiple keys
-				if valueType != Slice {
-					for _, keyName := range keyNames {
-						if k == keyName {
-							delete(x, k)
-						}
-					}
-				} else {
-					// when valuetype is a slice we should delete all regular entries
-					delete(x, k)
-				}
+			case map[string]interface{}:
 			case nil:
+				value = value
 			default:
-				// TODO add better logging
-				fmt.Printf("cleanCacheValueForComparison Unknown type: %v\n", reflect.TypeOf(v))
+				// we are at the end of the path
+				value[k] = v
 			}
 		}
-		x1 = x
+		
+	case []interface{}:
 	}
-	return x1, nil
+} 
+
+func (p *Parser) prepareJSONData(path *config.Path, x1 interface{}) interface{} {
+	// we get interface{name:x,admin-state:enable} we want []interface{name:x,admin-state:enable}
+	if len(path.GetElem()[len(path.GetElem())-1].GetKey()) != 0 {
+		x := make(map[string]interface{})
+		switch x1 := x1.(type) {
+		case map[string]interface{}:
+			// e.g. k1 is interface
+			// e.g. v1 is the data
+			for k1, v1 := range x1 {
+				xx := make([]interface{}, 0)
+				xx = append(xx, v1)
+				x[k1] = xx
+			}
+		default:
+			// wrong data input
+			p.log.Debug("Wrong input", "Error", errors.New(fmt.Sprintf("data tarnsformation, wrong data input %v", x1)))
+		}
+	}
+	return x1
 }
+*/

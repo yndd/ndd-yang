@@ -129,7 +129,7 @@ func (p *Parser) ConfigGnmiPathToXPath(path *config.Path, keys bool) *string {
 }
 
 // XpathToGnmiPath convertss a xpath string to a config gnmi path
-func (p *Parser) XpathToGnmiPath(xpath string, offset int) (path *config.Path) {
+func (p *Parser) XpathToConfigGnmiPath(xpath string, offset int) (path *config.Path) {
 	split := strings.Split(xpath, "/")
 	for i, element := range split {
 		// ignore the first element
@@ -282,4 +282,23 @@ func (p *Parser) GetValue(updValue *gnmi.TypedValue) (interface{}, error) {
 		}
 	}
 	return value, nil
+}
+
+func (p *Parser) DeepCopyPath(in *config.Path) *config.Path {
+	out := new(config.Path)
+	if in != nil {
+		out.Elem = make([]*config.PathElem, 0)
+		for _, v := range in.GetElem() {
+			elem := &config.PathElem{}
+			elem.Name = v.Name
+			if len(v.GetKey()) != 0 {
+				elem.Key = make(map[string]string)
+				for key, value := range v.Key {
+					elem.Key[key] = value
+				}
+			}
+			out.Elem = append(out.Elem, elem)
+		}
+	}
+	return out
 }
