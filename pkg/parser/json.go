@@ -775,16 +775,13 @@ func (p *Parser) PostProcessUpdates(updates []*config.Update) []*config.Update {
 }
 
 
-// RemoveHierarchicalKeys removes the hierarchical keys from the data
-func (p *Parser) RemoveLeafs(x interface{}, leafStrings []string) interface{} {
-	fmt.Printf("data before leaf removal: %v\n", x)
-
+// RemoveLeafsFromJSONData removes the leaf keys from the data
+func (p *Parser) RemoveLeafsFromJSONData(x interface{}, leafStrings []string) interface{} {
 	switch x := x.(type) {
 	case map[string]interface{}:
 		for _, leafString := range leafStrings {
 			delete(x, leafString)
 		}
 	}
-
 	return x
 }
