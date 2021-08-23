@@ -50,6 +50,7 @@ func (p *Parser) DeepCopy(in interface{}) (interface{}, error) {
 }
 
 // RemoveHierarchicalKeys removes the hierarchical keys from the data
+/*
 func (p *Parser) RemoveHierarchicalKeys(d []byte, hids []string) ([]byte, error) {
 	var x map[string]interface{}
 	json.Unmarshal(d, &x)
@@ -66,6 +67,7 @@ func (p *Parser) RemoveHierarchicalKeys(d []byte, hids []string) ([]byte, error)
 	fmt.Printf("data after hierarchical key removal: %v\n", x)
 	return json.Marshal(x)
 }
+*/
 
 // CleanConfig2String returns a clean config and a string
 // clean means removing the prefixes in the json elements
