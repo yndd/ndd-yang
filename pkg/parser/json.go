@@ -620,11 +620,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 
 // GetUpdatesFromJSONData returns config.Updates based on the JSON input data and config.Path/reference Paths
 // These updates are used prepared so they can be send to a GNMI capable device
-func (p *Parser) GetUpdatesFromJSONData(path *config.Path, x1 interface{}, refPaths []*config.Path) []*config.Update {
+func (p *Parser) GetUpdatesFromJSONData(rootPath, path *config.Path, x1 interface{}, refPaths []*config.Path) []*config.Update {
 	updates := make([]*config.Update, 0)
 	tc := &TraceCtxt{}
 	updates, tc = p.ParseJSONData2ConfigUpdates(tc, path, x1, 0, updates, refPaths)
-	updates = p.PostProcessUpdates(updates)
+	updates = p.PostProcessUpdates(rootPath, updates)
 	p.log.Debug("GetUpdatesFromJSONData", "Trace Msg", tc.Msg)
 	return updates
 }
@@ -745,7 +745,7 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 }
 
 // PostProcessUpdates sorts the update list and adds the key values in the config.Paths that could not be processed
-func (p *Parser) PostProcessUpdates(updates []*config.Update) []*config.Update {
+func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Update) []*config.Update {
 	// order them such that the smallest one starts first
 	sort.Slice(updates, func(i, j int) bool {
 		return len(updates[i].Path.GetElem()) < len(updates[j].Path.GetElem())
@@ -771,6 +771,14 @@ func (p *Parser) PostProcessUpdates(updates []*config.Update) []*config.Update {
 				}
 			}
 		}
+	}
+	// add the elements of the rootPath to the updates
+	// we prepend all elements of the path except the last one
+	if len(rootPath.GetElem()) > 1 {
+		for _, update := range updates {
+			update.Path.Elem = append(rootPath.GetElem()[:len(rootPath.GetElem())-1], update.Path.Elem...)
+		}
+
 	}
 	//p.log.Debug("PostProcessUpdates", "objKeyValues", objKeyValues)
 	return updates
