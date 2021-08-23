@@ -626,6 +626,7 @@ func (p *Parser) GetUpdatesFromJSONData(path *config.Path, x1 interface{}, refPa
 // ParseJSONData2UpdatePaths returns config.Updates according to the gnmi spec based on JSON input data
 // These updates are used prepared so they can be send to a GNMI capable device
 func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x1 interface{}, idx int, updates []*config.Update, refPaths []*config.Path) ([]*config.Update, *TraceCtxt) {
+	// this is a recursive function which parses all the data till the end, hence return is only at the end
 	updateValue := false
 	tc.Msg = append(tc.Msg, fmt.Sprintf("entry, idx: %d", idx))
 	switch x := x1.(type) {
@@ -636,6 +637,7 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 			tc.Msg = append(tc.Msg, fmt.Sprintf("k: %s, v: %v\n", k, v))
 			switch x1 := v.(type) {
 			case []interface{}:
+				// a list with a key, for each list entry we create a new path with its dedicated keys
 				for i, vv := range x1 {
 					tc.Msg = append(tc.Msg, fmt.Sprintf("type: %v, i: %d\n", reflect.TypeOf(v), i))
 					newPath := p.DeepCopyPath(path)
@@ -648,14 +650,11 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 					}
 					updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, vv, idx+1, updates, refPaths)
 				}
-				//return updates
 			case map[string]interface{}:
+				// a list without a key, we create a dedicated path for this
 				newPath := p.DeepCopyPath(path)
-				// add pathElem if idx > 0
-				if idx != 0 {
-					// add p
-					newPath = p.AppendElemInPath(newPath, k, "")
-				}
+				newPath = p.AppendElemInPath(newPath, k, "")
+				
 				updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, x1, idx+1, updates, refPaths)
 				//return updates
 			case nil:
@@ -696,7 +695,6 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 			updates = append(updates, update)
 		}
 		//return updates, tc
-
 	case []interface{}:
 		tc.Msg = append(tc.Msg, "DO WE COME HERE ?")
 	}
