@@ -773,3 +773,18 @@ func (p *Parser) PostProcessUpdates(updates []*config.Update) []*config.Update {
 	//p.log.Debug("PostProcessUpdates", "objKeyValues", objKeyValues)
 	return updates
 }
+
+
+// RemoveHierarchicalKeys removes the hierarchical keys from the data
+func (p *Parser) RemoveLeafs(x interface{}, leafStrings []string) interface{} {
+	fmt.Printf("data before leaf removal: %v\n", x)
+
+	switch x := x.(type) {
+	case map[string]interface{}:
+		for _, leafString := range leafStrings {
+			delete(x, leafString)
+		}
+	}
+
+	return x
+}
