@@ -275,7 +275,7 @@ func (p *Parser) CleanCacheValueForComparison(path *config.Path, cacheValue inte
 func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 	// idx is a local counter that will stay local, after the recurssive function calls it remains the same
 	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
-	fmt.Printf("p.ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
+	//fmt.Printf("p.ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
 	tc.Msg = append(tc.Msg, "entry")
 	switch x1 := x1.(type) {
 	case map[string]interface{}:
@@ -571,12 +571,12 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 		// this is used to add an element to a list that already exists
 		// e.g. interface[name=ethernet-1/49]/subinterface[index=0] exists and we add interface[name=ethernet-1/49]/subinterface[index=1]
 		switch tc.Action {
-		case ConfigTreeActionDelete, ConfigTreeActionGet:
+		case ConfigTreeActionDelete, ConfigTreeActionGet, ConfigTreeActionUpdate:
 			// when the data is not found we just return x1 since nothing can get deleted or updated
 			tc.Found = false
 			tc.Data = x1
 			return x1
-		case ConfigTreeActionCreate, ConfigTreeActionUpdate:
+		case ConfigTreeActionCreate:
 			if idx == len(tc.Path.GetElem())-1 {
 				tc.Found = false
 				tc.Data = x1
