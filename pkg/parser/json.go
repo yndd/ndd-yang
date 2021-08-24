@@ -488,6 +488,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 											return x1
 										case ConfigTreeActionUpdate:
 											x1[n] = p.CopyAndCleanTxValues(tc.Value)
+											// we also need to add the key as part of the object
+											switch x := x1[n].(type) {
+											case map[string]interface{}:
+												x[pathElemKeyName] = pathElemKeyValues[i]
+											}
 											return x1
 										case ConfigTreeActionCreate:
 											// TODO if we ever come here
@@ -508,6 +513,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 											return x1
 										case ConfigTreeActionUpdate:
 											x1[n] = p.CopyAndCleanTxValues(tc.Value)
+											// we also need to add the key as part of the object
+											switch x := x1[n].(type) {
+											case map[string]interface{}:
+												x[pathElemKeyName] = pathElemKeyValues[i]
+											}
 											return x1
 										case ConfigTreeActionCreate:
 											// TODO if we ever come here
@@ -528,6 +538,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 											return x1
 										case ConfigTreeActionUpdate:
 											x1[n] = p.CopyAndCleanTxValues(tc.Value)
+											// we also need to add the key as part of the object
+											switch x := x1[n].(type) {
+											case map[string]interface{}:
+												x[pathElemKeyName] = pathElemKeyValues[i]
+											}
 											return x1
 										case ConfigTreeActionCreate:
 											// TODO if we ever come here
