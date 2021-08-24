@@ -340,7 +340,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					tc.Msg = append(tc.Msg, "end of path without key")
 					tc.Found = true
 					switch tc.Action {
-					case ConfigTreeActionGet:
+					case ConfigTreeActionGet:						
 						return x1[tc.Path.GetElem()[idx].GetName()]
 					case ConfigTreeActionDelete:
 						delete(x1, tc.Path.GetElem()[idx].GetName())
@@ -778,7 +778,6 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 			// loop over the path elements and if they all match we have a match
 			found := false
 			for i, pathElem := range dummyPath.GetElem() {
-				//log.Printf("FindKeyInPath: i: %d,pathElemName: %s, pathElemName: %s\n", i, refPath.GetElem()[i].GetName(), pathElem.GetName())
 				p.log.Debug("GetKeyNamesFromConfigPaths", "i", i, "pathElemName", pathElem.GetName(), "refPargElemName", refPath.GetElem()[i].GetName())
 				if refPath.GetElem()[i].GetName() == pathElem.GetName() {
 					found = true
@@ -813,6 +812,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	// int is the
 	objKeyValues := make(map[int][]map[string]string)
 	for _, update := range updates {
+		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
 		for i, pathElem := range update.Path.GetElem() {
 			if len(pathElem.GetKey()) != 0 {
 				// pathElem has a key
