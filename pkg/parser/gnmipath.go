@@ -25,6 +25,32 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 )
 
+// ConfigPath2GnmiPath converts the config path to gnmi path
+func (p *Parser) ConfigPath2GnmiPath(inPath *config.Path) *gnmi.Path {
+	outPath := &gnmi.Path{}
+	outPath.Elem = make([]*gnmi.PathElem, 0)
+	if inPath != nil {
+		for _, pElem := range inPath.GetElem() {
+			elem := &gnmi.PathElem{}
+			elem.Name = strings.Split(pElem.GetName(), ":")[len(strings.Split(pElem.GetName(), ":"))-1]
+			if len(pElem.GetKey()) != 0 {
+				elem.Key = make(map[string]string)
+				for key, value := range pElem.GetKey() {
+					if strings.Contains(value, "::") {
+						// avoids splitting ipv6 addresses
+						elem.Key[strings.Split(key, ":")[len(strings.Split(key, ":"))-1]] = value
+					} else {
+						elem.Key[strings.Split(key, ":")[len(strings.Split(key, ":"))-1]] = strings.Split(value, ":")[len(strings.Split(value, ":"))-1]
+					}
+
+				}
+			}
+			outPath.Elem = append(outPath.Elem, elem)
+		}
+	}
+	return outPath
+}
+
 // GnmiPath2ConfigPath converts the gnmi path to config path
 func (p *Parser) GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
 	outPath := &config.Path{}
