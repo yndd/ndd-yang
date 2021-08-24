@@ -826,9 +826,12 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 func (p *Parser) RemoveLeafsFromJSONData(x interface{}, leafStrings []string) interface{} {
 	switch x := x.(type) {
 	case map[string]interface{}:
-		for _, leafString := range leafStrings {
-			delete(x, leafString)
+		if len(leafStrings) != 0 {
+			for _, leafString := range leafStrings {
+				delete(x, leafString)
+			}
 		}
+		
 	}
 	return x
 }
@@ -847,6 +850,6 @@ func (p *Parser) AddJSONDataToList(x interface{}) (interface{}, error) {
 	}
 
 	// wrong data input
-	return x1, errors.New(fmt.Sprintf("data tarnsformation, wrong data input %v", x))
+	return x1, errors.New(fmt.Sprintf("data transformation, wrong data input %v", x))
 
 }
