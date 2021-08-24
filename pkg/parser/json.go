@@ -114,7 +114,13 @@ func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x4
 		case string:
 			// for string values there can be also a header in the values e.g. type, Value: srl_nokia-network-instance:ip-vrf
-			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = strings.Split(x3, ":")[len(strings.Split(x3, ":"))-1]
+			if strings.Contains(x3, "::") {
+				// avoids splitting ipv6 addresses
+				x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
+			} else {
+				x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = strings.Split(x3, ":")[len(strings.Split(x3, ":"))-1]
+			}
+
 		default:
 			// for other values like bool, float64, uint32 we dont do anything
 			fmt.Printf("type in main: %v\n", reflect.TypeOf(x3))
@@ -131,14 +137,25 @@ func (p *Parser) CopyAndCleanTxValues(value interface{}) interface{} {
 		for k, v := range vv {
 			switch vvv := v.(type) {
 			case string:
-				x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
+				if strings.Contains(vvv, "::") {
+					// avoids splitting ipv6 addresses
+					x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = vvv
+				} else {
+					x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
+				}
 			default:
 				x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
 			}
 		}
 		return x
 	case string:
-		return strings.Split(vv, ":")[len(strings.Split(vv, ":"))-1]
+		if strings.Contains(vv, "::") {
+			// avoids splitting ipv6 addresses
+			return vv
+		} else {
+			return strings.Split(vv, ":")[len(strings.Split(vv, ":"))-1]
+		}
+		
 	}
 	return value
 }
@@ -174,16 +191,26 @@ func (p *Parser) CleanDeviceValueForComparison(deviceValue interface{}) (interfa
 			// if a string contains a : we return the last string after the :
 			sk := strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
 			if k != sk {
-				switch v.(type) {
+				switch vv := v.(type) {
 				case string:
-					v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
+					if strings.Contains(vv, "::") {
+						// avoids splitting ipv6 addresses
+						// do nothing
+					} else {
+						v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
+					}	
 				}
 				delete(x, k)
 				x[sk] = v
 			} else {
-				switch v.(type) {
+				switch vv := v.(type) {
 				case string:
-					v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
+					if strings.Contains(vv, "::") {
+						// avoids splitting ipv6 addresses
+						// do nothing
+					} else {
+						v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
+					}
 				}
 				x[sk] = v
 			}
@@ -319,19 +346,19 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 						delete(x1, tc.Path.GetElem()[idx].GetName())
 						return x1
 						/*
-					case ConfigTreeActionUpdate:
-						switch vv := tc.Value.(type) {
-						case map[string]interface{}:
-							for k, v := range vv {
-								switch vvv := v.(type) {
-								case string:
-									x1[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
-								default:
-									x1[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							case ConfigTreeActionUpdate:
+								switch vv := tc.Value.(type) {
+								case map[string]interface{}:
+									for k, v := range vv {
+										switch vvv := v.(type) {
+										case string:
+											x1[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
+										default:
+											x1[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+										}
+									}
 								}
-							}
-						}
-						return x1
+								return x1
 						*/
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
 						x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
@@ -371,7 +398,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 		// this branch is mainly used for object creation
 		switch tc.Action {
 		case ConfigTreeActionDelete:
-			// when the data is not found we just return x1 since nothing can get deleted 
+			// when the data is not found we just return x1 since nothing can get deleted
 			tc.Found = false
 			tc.Data = x1
 			return x1
@@ -398,7 +425,13 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 						// add the key of the path to the list
 						for k, v := range tc.Path.GetElem()[idx].GetKey() {
 							// add clean element to the list
-							x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							if strings.Contains(v, "::") {
+								// avoids splitting ipv6 addresses
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							} else {
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							}
+							
 						}
 						x2 = append(x2, x4)
 					}
@@ -592,7 +625,12 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					// add the key of the path to the list
 					for k, v := range tc.Path.GetElem()[idx].GetKey() {
 						// add clean element to the list
-						x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+						if strings.Contains(v, "::") {
+							// avoids splitting ipv6 addresses
+							x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+						} else {
+							x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+						}
 					}
 					x1 = append(x1, x4)
 				}
@@ -659,7 +697,7 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 				// a list without a key, we create a dedicated path for this
 				newPath := p.DeepCopyPath(path)
 				newPath = p.AppendElemInPath(newPath, k, "")
-				
+
 				updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, x1, idx+1, updates, refPaths)
 				//return updates
 			case nil:
@@ -784,7 +822,6 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	return updates
 }
 
-
 // RemoveLeafsFromJSONData removes the leaf keys from the data
 func (p *Parser) RemoveLeafsFromJSONData(x interface{}, leafStrings []string) interface{} {
 	switch x := x.(type) {
@@ -808,8 +845,8 @@ func (p *Parser) AddJSONDataToList(x interface{}) (interface{}, error) {
 		}
 		return x1, nil
 	}
-	
+
 	// wrong data input
 	return x1, errors.New(fmt.Sprintf("data tarnsformation, wrong data input %v", x))
-	
+
 }
