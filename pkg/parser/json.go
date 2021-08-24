@@ -30,6 +30,11 @@ import (
 	"github.com/wI2L/jsondiff"
 )
 
+const (
+	keyNotFound = "key not found"
+	dummyValue = "dummy value"
+)
+
 // Make a deep copy from in into out object.
 func (p *Parser) DeepCopy(in interface{}) (interface{}, error) {
 	if in == nil {
@@ -705,7 +710,7 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 					} else {
 						// we can come here if a response from the device driver returns unmanaged resource
 						// data, we cont resolve the key information
-						newPath = p.AppendElemInPath(newPath, k, fmt.Sprintf("key-not-found-%d", i))
+						newPath = p.AppendElemInPath(newPath, k, keyNotFound)
 					}
 					updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, vv, idx+1, updates, refPaths)
 				}
@@ -817,7 +822,17 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 			if len(pathElem.GetKey()) != 0 {
 				// pathElem has a key
 				// get the keyValues
-				_, keyValues := p.GetKeyInfo(pathElem.GetKey())
+				keyNames, keyValues := p.GetKeyInfo(pathElem.GetKey())
+				// this is data from an umanaged resource, we fill dummies 
+				// since we dont know the key information
+				if keyNames[0] == keyNotFound {
+					if _, ok := objKeyValues[i]; !ok {
+						objKeyValues[i] = make([]map[string]string, 0)
+					}
+					dummy := map[string]string{keyNotFound: dummyValue}
+					objKeyValues[i] = append(objKeyValues[i], dummy)
+				}
+				// this is real data
 				if keyValues[0] != "" {
 					// the value is filled if one of the keys is filled
 					if _, ok := objKeyValues[i]; !ok {
@@ -835,6 +850,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	}
 	// add the elements of the rootPath to the updates
 	// we prepend all elements of the rooPath except the last one
+	// since this is already part of the resource
 	if len(rootPath.GetElem()) > 1 {
 		for _, update := range updates {
 			update.Path.Elem = append(rootPath.GetElem()[:len(rootPath.GetElem())-1], update.Path.Elem...)
