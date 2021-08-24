@@ -726,6 +726,7 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 			}
 		}
 		if updateValue {
+			
 			// if the path contains a key we need to remove the element from the value and add it in the path
 			if len(path.GetElem()[len(path.GetElem())-1].GetKey()) != 0 {
 				keyNames, _ := p.GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
@@ -776,6 +777,7 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 			found := false
 			for i, pathElem := range dummyPath.GetElem() {
 				//log.Printf("FindKeyInPath: i: %d,pathElemName: %s, pathElemName: %s\n", i, refPath.GetElem()[i].GetName(), pathElem.GetName())
+				p.log.Debug("GetKeyNamesFromConfigPaths", "i", i, "pathElemName", pathElem.GetName(), "refPargElemName", refPath.GetElem()[i].GetName())
 				if refPath.GetElem()[i].GetName() == pathElem.GetName() {
 					found = true
 				} else {
@@ -805,10 +807,13 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	})
 
 	// add all the values in the keys
+	// int is the 
 	objKeyValues := make(map[int][]map[string]string)
 	for _, update := range updates {
 		for i, pathElem := range update.Path.GetElem() {
 			if len(pathElem.GetKey()) != 0 {
+				// pathElem has a key
+				// get the keyValues
 				_, keyValues := p.GetKeyInfo(pathElem.GetKey())
 				if keyValues[0] != "" {
 					// the value is filled if one of the keys is filled
@@ -826,7 +831,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 		}
 	}
 	// add the elements of the rootPath to the updates
-	// we prepend all elements of the path except the last one
+	// we prepend all elements of the rooPath except the last one
 	if len(rootPath.GetElem()) > 1 {
 		for _, update := range updates {
 			update.Path.Elem = append(rootPath.GetElem()[:len(rootPath.GetElem())-1], update.Path.Elem...)
