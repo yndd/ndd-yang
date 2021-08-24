@@ -155,7 +155,7 @@ func (p *Parser) CopyAndCleanTxValues(value interface{}) interface{} {
 		} else {
 			return strings.Split(vv, ":")[len(strings.Split(vv, ":"))-1]
 		}
-		
+
 	}
 	return value
 }
@@ -198,7 +198,7 @@ func (p *Parser) CleanDeviceValueForComparison(deviceValue interface{}) (interfa
 						// do nothing
 					} else {
 						v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
-					}	
+					}
 				}
 				delete(x, k)
 				x[sk] = v
@@ -431,7 +431,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 							} else {
 								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
 							}
-							
+
 						}
 						x2 = append(x2, x4)
 					}
@@ -703,7 +703,8 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 					if len(keys) != 0 {
 						newPath = p.AppendElemInPath(newPath, k, keys[0])
 					} else {
-						// we should never come here, otherwise some preprocessing was wrong
+						// we can come here if a response from the device driver returns unmanaged resource
+						// data, we cont resolve the key information
 						newPath = p.AppendElemInPath(newPath, k, fmt.Sprintf("key-not-found-%d", i))
 					}
 					updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, vv, idx+1, updates, refPaths)
@@ -726,23 +727,24 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 			}
 		}
 		if updateValue {
-			
-			// if the path contains a key we need to remove the element from the value and add it in the path
-			if len(path.GetElem()[len(path.GetElem())-1].GetKey()) != 0 {
-				keyNames, _ := p.GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
-				for _, keyName := range keyNames {
-					if v, ok := value[keyName]; ok {
-						// add Value to path
-						switch v := v.(type) {
-						case string:
-							path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = string(v)
-						case uint32:
-							path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = strconv.Itoa(int(v))
-						case float64:
-							path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = fmt.Sprintf("%.0f", v)
+			if len(path.GetElem()) > 0 {
+				// if the path contains a key we need to remove the element from the value and add it in the path
+				if len(path.GetElem()[len(path.GetElem())-1].GetKey()) != 0 {
+					keyNames, _ := p.GetKeyInfo(path.GetElem()[len(path.GetElem())-1].GetKey())
+					for _, keyName := range keyNames {
+						if v, ok := value[keyName]; ok {
+							// add Value to path
+							switch v := v.(type) {
+							case string:
+								path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = string(v)
+							case uint32:
+								path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = strconv.Itoa(int(v))
+							case float64:
+								path.GetElem()[len(path.GetElem())-1].GetKey()[keyName] = fmt.Sprintf("%.0f", v)
+							}
+							// delete element from the value
+							delete(value, keyName)
 						}
-						// delete element from the value
-						delete(value, keyName)
 					}
 				}
 			}
@@ -795,7 +797,8 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 			}
 		}
 	}
-	p.log.Debug("GetKeyNamesFromConfigPaths return nil, this is very strange", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
+	// when the response data from the server contains unmanaged resource data we can end up here
+	p.log.Debug("GetKeyNamesFromConfigPaths return nil, unamanged resource data ", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
 	return nil
 }
 
@@ -807,7 +810,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	})
 
 	// add all the values in the keys
-	// int is the 
+	// int is the
 	objKeyValues := make(map[int][]map[string]string)
 	for _, update := range updates {
 		for i, pathElem := range update.Path.GetElem() {
@@ -851,7 +854,7 @@ func (p *Parser) RemoveLeafsFromJSONData(x interface{}, leafStrings []string) in
 				delete(x, leafString)
 			}
 		}
-		
+
 	}
 	return x
 }
