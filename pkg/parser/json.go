@@ -81,7 +81,7 @@ func (p *Parser) CleanConfig2String(cfg map[string]interface{}) (map[string]inte
 	for _, v := range cfg {
 		cfg = p.CleanConfig(v.(map[string]interface{}))
 	}
-	fmt.Printf("cleanConfig Config %v\n", cfg)
+	//fmt.Printf("cleanConfig Config %v\n", cfg)
 
 	jsonConfigStr, err := json.Marshal(cfg)
 	if err != nil {
@@ -93,7 +93,7 @@ func (p *Parser) CleanConfig2String(cfg map[string]interface{}) (map[string]inte
 func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 	x2 := make(map[string]interface{})
 	for k1, v1 := range x1 {
-		fmt.Printf("cleanConfig Key: %s, Value: %v\n", k1, v1)
+		//fmt.Printf("cleanConfig Key: %s, Value: %v\n", k1, v1)
 		switch x3 := v1.(type) {
 		case []interface{}:
 			x := make([]interface{}, 0)
@@ -108,7 +108,7 @@ func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 					case string:
 						x = append(x, strings.Split(v4, ":")[len(strings.Split(v4, ":"))-1])
 					default:
-						fmt.Printf("type in []interface{}: %v\n", reflect.TypeOf(v4))
+						//fmt.Printf("type in []interface{}: %v\n", reflect.TypeOf(v4))
 						x = append(x, v4)
 					}
 				}
@@ -783,7 +783,7 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 			// loop over the path elements and if they all match we have a match
 			found := false
 			for i, pathElem := range dummyPath.GetElem() {
-				p.log.Debug("GetKeyNamesFromConfigPaths", "i", i, "pathElemName", pathElem.GetName(), "refPargElemName", refPath.GetElem()[i].GetName())
+				//p.log.Debug("GetKeyNamesFromConfigPaths", "i", i, "pathElemName", pathElem.GetName(), "refPargElemName", refPath.GetElem()[i].GetName())
 				if refPath.GetElem()[i].GetName() == pathElem.GetName() {
 					found = true
 				} else {
@@ -817,7 +817,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	// int is the
 	objKeyValues := make(map[int][]map[string]string)
 	for _, update := range updates {
-		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
+		//p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
 		for i, pathElem := range update.Path.GetElem() {
 			if len(pathElem.GetKey()) != 0 {
 				// pathElem has a key
