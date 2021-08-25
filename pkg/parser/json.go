@@ -854,6 +854,8 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	// add all the values in the keys
 	// int is the
 	objKeyValues := make(map[int][]map[string]string)
+	objKeyValuesCntr := make(map[int]int)
+	objKeyValuesUsedIdx := make(map[int]int)
 	for _, update := range updates {
 		fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.ConfigGnmiPathToXPath(update.Path, true))
 		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
@@ -878,10 +880,16 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 						objKeyValues[i] = make([]map[string]string, 0)
 					}
 					objKeyValues[i] = append(objKeyValues[i], pathElem.GetKey())
+					objKeyValuesCntr[i]++ // the keys should be different, so we keep track of them
+					objKeyValuesUsedIdx[i]=0 // also we keep track of the used index
 				} else {
-					// the value is empty
+					// the value is empty, we need to fill in the proper info
 					for k := range pathElem.GetKey() {
-						pathElem.GetKey()[k] = objKeyValues[i][0][k]
+						if objKeyValuesCntr[i] > 1 {
+							pathElem.GetKey()[k] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
+							objKeyValuesUsedIdx[i]++
+						}
+						
 					}
 				}
 			}
