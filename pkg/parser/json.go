@@ -880,14 +880,16 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 						objKeyValues[i] = make([]map[string]string, 0)
 					}
 					objKeyValues[i] = append(objKeyValues[i], pathElem.GetKey())
-					objKeyValuesCntr[i]++      // the keys should be different, so we keep track of them
-					objKeyValuesUsedIdx[i] = 0 // also we keep track of the used index
+					objKeyValuesCntr[i]++ // the keys should be different, so we keep track of them
+					objKeyValuesUsedIdx[i]=0 // also we keep track of the used index
 				} else {
 					// the value is empty, we need to fill in the proper info
 					for k := range pathElem.GetKey() {
-						pathElem.GetKey()[k] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
-						if objKeyValuesUsedIdx[i]+1 <= objKeyValuesCntr[i] {
-							objKeyValuesUsedIdx[i]++
+						if objKeyValuesCntr[i] >= 1 {
+							pathElem.GetKey()[k] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
+							if objKeyValuesUsedIdx[i] + 1 <= objKeyValuesCntr[i] {
+								objKeyValuesUsedIdx[i]++
+							}
 						}
 					}
 				}
