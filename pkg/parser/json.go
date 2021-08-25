@@ -885,11 +885,13 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 				} else {
 					// the value is empty, we need to fill in the proper info
 					for k := range pathElem.GetKey() {
-						if objKeyValuesCntr[i] >= 1 {
+						if objKeyValuesCntr[i] > 1 {
 							pathElem.GetKey()[k] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
 							if objKeyValuesUsedIdx[i] + 1 <= objKeyValuesCntr[i] {
 								objKeyValuesUsedIdx[i]++
 							}
+						} else {
+							pathElem.GetKey()[k] = objKeyValues[i][0][k]
 						}
 					}
 				}
