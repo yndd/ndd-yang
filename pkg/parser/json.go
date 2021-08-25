@@ -844,81 +844,43 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 	return nil
 }
 
-// PostProcessUpdates sorts the update list and adds the key values in the config.Paths that could not be processed
+// the order of the processed paths should remain fixed since this allows to fill out the data ina  consistent way
+// First we process the data to capture the values of all resolved keys per pathElem level
+// Second we augment the values with the recorded data from the previous step
+// Lastly we augment the path with the rootPath information
 func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Update) []*config.Update {
-	// order them such that the smallest one starts first
-	sort.Slice(updates, func(i, j int) bool {
-		return len(updates[i].Path.GetElem()) < len(updates[j].Path.GetElem())
-	})
-
-	// add all the values with the keys
-	// contains the values of the elements per level in the path
-	// map[int]map[string][]string -> map[int -> level in path]map[string -> keyName][]string -> Value
-	objKeyValues := make(map[int]map[string][]string)
-	// keeps track of the index that is consumed when we fill in the data
-	objKeyValuesIdx := make(map[int]map[string]int)
-	for _, update := range updates {
-		fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.ConfigGnmiPathToXPath(update.Path, true))
-		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
-		for i, pathElem := range update.Path.GetElem() {
-			if len(pathElem.GetKey()) != 0 {
-				// pathElem has a key
-				// get the keyValues
-				//keyNames, keyValues := p.GetKeyInfo(pathElem.GetKey())
-				// this is data from an umanaged resource, we fill dummies
-				// since we dont know the key information
-				/*
-					WE DONT NEED BELOW SINCE WE AVOID PROCESSING UMR INFO
-					if keyNames[0] == keyNotFound {
-						if _, ok := objKeyValues[i]; !ok {
-							objKeyValues[i] = make(map[string][]string, 0)
-						}
-						dummy := map[string]string{keyNotFound: dummyValue}
-						objKeyValues[i] = append(objKeyValues[i], dummy)
-					}
-				*/
-				// this is real data, we capture the values
-				for keyName, value := range pathElem.GetKey() {
-					// if the data is filled in we need to capture the data
-					if value != "" {
-						// intialize the objKeyValues per level if this ws not yet initialized
-						// since this will be the first entry
-						if _, ok := objKeyValues[i]; !ok {
-							objKeyValues[i] = make(map[string][]string, 0)
-							objKeyValuesIdx[i] = make(map[string]int, 0)
-						}
-						// initialize the objKeyValues per level per key if this was not yet initialized
-						// since this will be the first entry
-						if _, ok := objKeyValues[i][keyName]; !ok {
-							objKeyValues[i][keyName] = make([]string, 0)
-							objKeyValuesIdx[i][keyName] = 0
-						}
-						objKeyValues[i][keyName] = append(objKeyValues[i][keyName], value)
-
-					} else {
-						// assign recorded value to the keyname in the proper level of the path
-						pathElem.GetKey()[keyName] = objKeyValues[i][keyName][objKeyValuesIdx[i][keyName]]
-						// only when there are multiple keys of an element increment the index,
-						// in other case the index remains 0
-						if len(objKeyValues[i][keyName]) > 1 {
-							objKeyValuesIdx[i][keyName]++
-						}
-						/*
-						if len(objKeyValues[i][keyName]) > 1 {
-							pathElem.GetKey()[keyName] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
-							if objKeyValuesUsedIdx[i]+1 <= objKeyValuesCntr[i] {
-								objKeyValuesUsedIdx[i]++
-							}
-						} else {
-							
-						}
-						*/
-
-					}
-				}
-			}
-		}
-	}
+	
+	// capture the values of all resolved keys per pathElem level
+	objKeyValues, objKeyValuesIdx := p.PostProcessUpdatesCaptureValues(updates)
+	fmt.Printf("objKeyValues: %v\n", objKeyValues)
+	// fill out blank key values based on the captured data
+	// below is a capture of the dat, you see that the key values are filled at the end, 
+	// this allows us to updates the index if we find a match
+	/*
+	Update Path: /bgp/ebgp-default-policy, Value: {"export-reject-all":false,"import-reject-all":false}
+	Update Path: /bgp/group[group-name=]/local-as[as-number=65000], Value: {}
+	Update Path: /bgp/group[group-name=]/ipv4-unicast, Value: {"admin-state":"enable"}
+	Update Path: /bgp/group[group-name=]/ipv6-unicast, Value: {"admin-state":"enable"}
+	Update Path: /bgp/group[group-name=underlay], Value: {"admin-state":"enable","export-policy":"policy-underlay","next-hop-self":"true"}
+	Update Path: /bgp/group[group-name=]/ipv4-unicast, Value: {"admin-state":"disable"}
+	Update Path: /bgp/group[group-name=]/ipv6-unicast, Value: {"admin-state":"disable"}
+	Update Path: /bgp/group[group-name=]/local-as[as-number=65400], Value: {}
+	Update Path: /bgp/group[group-name=]/evpn, Value: {"admin-state":"enable"}
+	Update Path: /bgp/group[group-name=overlay], Value: {"admin-state":"enable","next-hop-self":"true"}
+	Update Path: /bgp/ipv4-unicast/multipath, Value: {"allow-multiple-as":"true","max-paths-level-1":64,"max-paths-level-2":64}
+	Update Path: /bgp/ipv4-unicast, Value: {"admin-state":"enable"}
+	Update Path: /bgp/ipv6-unicast/multipath, Value: {"allow-multiple-as":"true","max-paths-level-1":64,"max-paths-level-2":64}
+	Update Path: /bgp/ipv6-unicast, Value: {"admin-state":"enable"}
+	Update Path: /bgp/neighbor[peer-address=]/local-as[as-number=65000], Value: {}
+	Update Path: /bgp/neighbor[peer-address=]/timers, Value: {"connect-retry":1}
+	Update Path: /bgp/neighbor[peer-address=100.64.0.1], Value: {"peer-as":65001,"peer-group":"underlay"}
+	Update Path: /bgp/neighbor[peer-address=]/transport, Value: {"local-address":"00.112.100.0"}
+	Update Path: /bgp/neighbor[peer-address=]/timers, Value: {"connect-retry":1}
+	Update Path: /bgp/neighbor[peer-address=]/local-as[as-number=65400], Value: {}
+	Update Path: /bgp/neighbor[peer-address=100.112.100.1], Value: {"peer-as":65400,"peer-group":"overlay"}
+	Update Path: /bgp, Value: {"admin-state":"enable","autonomous-system":"65000","router-id":"100.112.100.0"}
+	*/
+	updates = p.PostProcessAugmentValues(updates, objKeyValues, objKeyValuesIdx)
 	// add the elements of the rootPath to the updates
 	// we prepend all elements of the rooPath except the last one
 	// since this is already part of the resource
@@ -928,9 +890,81 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 		}
 
 	}
-	//p.log.Debug("PostProcessUpdates", "objKeyValues", objKeyValues)
+
+	// sort the updates per length before returning the data
+	sort.Slice(updates, func(i, j int) bool {
+		return len(updates[i].Path.GetElem()) < len(updates[j].Path.GetElem())
+		
+	})
 	return updates
 }
+
+// PostProcessUpdatesCaptureValues captures the values of all resolved keys per pathElem level
+// map[int]map[string][]string -> map[int -> level in path]map[string -> keyName][]string -> Value
+func (p *Parser) PostProcessUpdatesCaptureValues(updates []*config.Update) (map[int]map[string][]string, map[int]map[string]int) {
+	// contains the values of the elements per level in the path
+	// map[int]map[string][]string -> map[int -> level in path]map[string -> keyName][]string -> Value
+	objKeyValues := make(map[int]map[string][]string)
+	objKeyValuesIdx := make(map[int]map[string]int)
+	for _, update := range updates {
+		//fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.ConfigGnmiPathToXPath(update.Path, true))
+		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
+		for i, pathElem := range update.Path.GetElem() {
+			if len(pathElem.GetKey()) != 0 {
+				// this is real data, we capture the values
+				for keyName, value := range pathElem.GetKey() {
+					// if the data is filled in we need to capture the data
+					if value != "" {
+						// intialize the objKeyValues per level if this ws not yet initialized
+						// since this will be the first entry
+						if _, ok := objKeyValues[i]; !ok {
+							objKeyValues[i] = make(map[string][]string, 0)
+							objKeyValuesIdx[i] = make(map[string]int)
+						}
+						// initialize the objKeyValues per level per key if this was not yet initialized
+						// since this will be the first entry
+						if _, ok := objKeyValues[i][keyName]; !ok {
+							objKeyValues[i][keyName] = make([]string, 0)
+							objKeyValuesIdx[i][keyName] = 0
+						}
+						objKeyValues[i][keyName] = append(objKeyValues[i][keyName], value)
+
+					} 
+				}
+			}
+		}
+	}
+	return objKeyValues, objKeyValuesIdx
+}
+
+func (p *Parser) PostProcessAugmentValues(updates []*config.Update, objKeyValues map[int]map[string][]string, objKeyValuesIdx map[int]map[string]int) []*config.Update{
+
+	fmt.Printf("objKeyValues   : %v\n", objKeyValues)
+	fmt.Printf("objKeyValuesIdx: %v\n", objKeyValuesIdx)
+	// loop vover the updates and fill the blank values
+	for _, update := range updates {
+		for i, pathElem := range update.Path.GetElem() {
+			if len(pathElem.GetKey()) != 0 {
+				// path Element has Key
+				for keyName, value := range pathElem.GetKey() {
+					if value != "" {
+						// check if we have a match so we can increase the index if the key has multiple values
+						if value == objKeyValues[i][keyName][objKeyValuesIdx[i][keyName]] && len(objKeyValues[i][keyName]) > 1 {
+							objKeyValuesIdx[i][keyName]++
+						}
+					} else {
+						// value is empty so we should supply the value from the recorded data
+						// we use the current index
+						pathElem.GetKey()[keyName] = objKeyValues[i][keyName][objKeyValuesIdx[i][keyName]]
+					}
+				}
+			}
+		}
+	}
+	return updates
+}
+
+
 
 // RemoveLeafsFromJSONData removes the leaf keys from the data
 func (p *Parser) RemoveLeafsFromJSONData(x interface{}, leafStrings []string) interface{} {
