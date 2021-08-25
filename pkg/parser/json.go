@@ -701,8 +701,9 @@ func (p *Parser) GetUpdatesFromJSONData(rootPath, path *config.Path, x1 interfac
 	updates := make([]*config.Update, 0)
 	tc := &TraceCtxt{}
 	updates, tc = p.ParseJSONData2ConfigUpdates(tc, path, x1, 0, updates, refPaths)
+	p.log.Debug("GetUpdatesFromJSONData", "Updates", updates, "Trace Msg", tc.Msg)
 	updates = p.PostProcessUpdates(rootPath, updates)
-	p.log.Debug("GetUpdatesFromJSONData", "Trace Msg", tc.Msg)
+	p.log.Debug("GetUpdatesFromJSONData", "Updates", updates)
 	return updates
 }
 
