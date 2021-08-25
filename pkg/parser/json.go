@@ -887,9 +887,10 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 					for k := range pathElem.GetKey() {
 						if objKeyValuesCntr[i] > 1 {
 							pathElem.GetKey()[k] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
-							objKeyValuesUsedIdx[i]++
+							if objKeyValuesUsedIdx[i] + 1 <= objKeyValuesCntr[i] {
+								objKeyValuesUsedIdx[i]++
+							}
 						}
-						
 					}
 				}
 			}
