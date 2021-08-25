@@ -896,6 +896,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 						objKeyValues[i][keyName] = append(objKeyValues[i][keyName], value)
 
 					} else {
+						// assign recorded value to the keyname in the proper level of the path
 						pathElem.GetKey()[keyName] = objKeyValues[i][keyName][objKeyValuesIdx[i][keyName]]
 						// only when there are multiple keys of an element increment the index,
 						// in other case the index remains 0
