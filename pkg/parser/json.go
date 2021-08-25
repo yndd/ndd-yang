@@ -851,11 +851,12 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 		return len(updates[i].Path.GetElem()) < len(updates[j].Path.GetElem())
 	})
 
-	// add all the values in the keys
-	// int is the
-	objKeyValues := make(map[int][]map[string]string)
-	objKeyValuesCntr := make(map[int]int)
-	objKeyValuesUsedIdx := make(map[int]int)
+	// add all the values with the keys
+	// contains the values of the elements per level in the path
+	// map[int]map[string][]string -> map[int -> level in path]map[string -> keyName][]string -> Value
+	objKeyValues := make(map[int]map[string][]string)
+	// keeps track of the index that is consumed when we fill in the data
+	objKeyValuesIdx := make(map[int]map[string]int)
 	for _, update := range updates {
 		fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.ConfigGnmiPathToXPath(update.Path, true))
 		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
@@ -863,36 +864,50 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 			if len(pathElem.GetKey()) != 0 {
 				// pathElem has a key
 				// get the keyValues
-				keyNames, keyValues := p.GetKeyInfo(pathElem.GetKey())
+				//keyNames, keyValues := p.GetKeyInfo(pathElem.GetKey())
 				// this is data from an umanaged resource, we fill dummies
 				// since we dont know the key information
-				if keyNames[0] == keyNotFound {
-					if _, ok := objKeyValues[i]; !ok {
-						objKeyValues[i] = make([]map[string]string, 0)
+				/*
+					WE DONT NEED BELOW SINCE WE AVOID PROCESSING UMR INFO
+					if keyNames[0] == keyNotFound {
+						if _, ok := objKeyValues[i]; !ok {
+							objKeyValues[i] = make(map[string][]string, 0)
+						}
+						dummy := map[string]string{keyNotFound: dummyValue}
+						objKeyValues[i] = append(objKeyValues[i], dummy)
 					}
-					dummy := map[string]string{keyNotFound: dummyValue}
-					objKeyValues[i] = append(objKeyValues[i], dummy)
-				}
-				// this is real data, we capture
-				if keyValues[0] != "" {
-					// the value is filled if one of the keys is filled
-					if _, ok := objKeyValues[i]; !ok {
-						objKeyValues[i] = make([]map[string]string, 0)
-					}
-					objKeyValues[i] = append(objKeyValues[i], pathElem.GetKey())
-					objKeyValuesCntr[i]++ // the keys should be different, so we keep track of them
-					objKeyValuesUsedIdx[i]=0 // also we keep track of the used index
-				} else {
-					// the value is empty, we need to fill in the proper info
-					for k := range pathElem.GetKey() {
-						if objKeyValuesCntr[i] > 1 {
-							pathElem.GetKey()[k] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
-							if objKeyValuesUsedIdx[i] + 1 <= objKeyValuesCntr[i] {
+				*/
+				// this is real data, we capture the values
+				for keyName, value := range pathElem.GetKey() {
+					// if the data is filled in we need to capture the data
+					if value != "" {
+						// intialize the objKeyValues per level if this ws not yet initialized
+						// since this will be the first entry
+						if _, ok := objKeyValues[i]; !ok {
+							objKeyValues[i] = make(map[string][]string, 0)
+							objKeyValuesIdx[i] = make(map[string]int, 0)
+						}
+						// initialize the objKeyValues per level per key if this was not yet initialized
+						// since this will be the first entry
+						if _, ok := objKeyValues[i][keyName]; !ok {
+							objKeyValues[i][keyName] = make([]string, 0)
+							objKeyValuesIdx[i][keyName] = 0
+						}
+						objKeyValues[i][keyName] = append(objKeyValues[i][keyName], value)
+
+					} else {
+						pathElem.GetKey()[keyName] = objKeyValues[i][keyName][objKeyValuesIdx[i][keyName]]
+						/*
+						if len(objKeyValues[i][keyName]) > 1 {
+							pathElem.GetKey()[keyName] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
+							if objKeyValuesUsedIdx[i]+1 <= objKeyValuesCntr[i] {
 								objKeyValuesUsedIdx[i]++
 							}
 						} else {
-							pathElem.GetKey()[k] = objKeyValues[i][0][k]
+							
 						}
+						*/
+
 					}
 				}
 			}
