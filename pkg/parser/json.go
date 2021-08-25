@@ -32,7 +32,7 @@ import (
 
 const (
 	keyNotFound = "key not found"
-	dummyValue = "dummy value"
+	dummyValue  = "dummy value"
 )
 
 // Make a deep copy from in into out object.
@@ -128,7 +128,11 @@ func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 
 		default:
 			// for other values like bool, float64, uint32 we dont do anything
-			fmt.Printf("type in main: %v\n", reflect.TypeOf(x3))
+			if x3 != nil {
+				fmt.Printf("type in main: %v\n", reflect.TypeOf(x3))
+			} else {
+				fmt.Printf("type in main: nil\n")
+			}
 			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = v1
 		}
 	}
@@ -296,7 +300,12 @@ func (p *Parser) CleanCacheValueForComparison(path *config.Path, cacheValue inte
 			case nil:
 			default:
 				// TODO add better logging
-				fmt.Printf("cleanCacheValueForComparison Unknown type: %v\n", reflect.TypeOf(v))
+				if v != nil {
+					fmt.Printf("cleanCacheValueForComparison Unknown type: %v\n", reflect.TypeOf(v))
+				} else {
+					fmt.Printf("cleanCacheValueForComparison Unknown type: nil\n")
+				}
+
 			}
 		}
 		x1 = x
@@ -345,7 +354,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					tc.Msg = append(tc.Msg, "end of path without key")
 					tc.Found = true
 					switch tc.Action {
-					case ConfigTreeActionGet:						
+					case ConfigTreeActionGet:
 						return x1[tc.Path.GetElem()[idx].GetName()]
 					case ConfigTreeActionDelete:
 						delete(x1, tc.Path.GetElem()[idx].GetName())
@@ -556,7 +565,12 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 									}
 								default:
 									tc.Found = false
-									tc.Msg = append(tc.Msg, "[]interface{} pathElemKeyValue not found"+"."+fmt.Sprintf("%v", (reflect.TypeOf(x))))
+									if x != nil {
+										tc.Msg = append(tc.Msg, "[]interface{} pathElemKeyValue not found"+"."+fmt.Sprintf("%v", (reflect.TypeOf(x))))
+									} else {
+										tc.Msg = append(tc.Msg, "[]interface{} pathElemKeyValue not found"+"."+"nil")
+									}
+
 									tc.Data = x1
 									// we should not return here since there can be multiple entries in the list
 									// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
@@ -605,7 +619,12 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 									}
 								default:
 									tc.Found = false
-									tc.Msg = append(tc.Msg, "[]interface{} not found"+"."+fmt.Sprintf("%v %v", (reflect.TypeOf(x)), x))
+									if x != nil {
+										tc.Msg = append(tc.Msg, "[]interface{} not found"+"."+fmt.Sprintf("%v %v", (reflect.TypeOf(x)), x))
+									} else {
+										tc.Msg = append(tc.Msg, "[]interface{} not found"+"."+"nil")
+									}
+									
 									tc.Data = x1
 									// we should not return here since there can be multiple entries in the list
 									// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
@@ -694,15 +713,26 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 	tc.Msg = append(tc.Msg, fmt.Sprintf("entry, idx: %d", idx))
 	switch x := x1.(type) {
 	case map[string]interface{}:
+		tc.Msg = append(tc.Msg, "map[string]interface{}")
 		value := make(map[string]interface{})
 		for k, v := range x {
-			tc.Msg = append(tc.Msg, fmt.Sprintf("type: %v\n", reflect.TypeOf(v)))
+			if v != nil {
+				tc.Msg = append(tc.Msg, fmt.Sprintf("type: %v\n", reflect.TypeOf(v)))
+			} else {
+				tc.Msg = append(tc.Msg, "nil")
+			}
+
 			tc.Msg = append(tc.Msg, fmt.Sprintf("k: %s, v: %v\n", k, v))
 			switch x1 := v.(type) {
 			case []interface{}:
+				tc.Msg = append(tc.Msg, "[]interface{}")
 				// a list with a key, for each list entry we create a new path with its dedicated keys
 				for i, vv := range x1 {
-					tc.Msg = append(tc.Msg, fmt.Sprintf("type: %v, i: %d\n", reflect.TypeOf(v), i))
+					if v != nil {
+						tc.Msg = append(tc.Msg, fmt.Sprintf("type: %v, i: %d\n", reflect.TypeOf(v), i))
+					} else {
+						tc.Msg = append(tc.Msg, fmt.Sprintf("type: nil, i: %d\n", i))
+					}
 					newPath := p.DeepCopyPath(path)
 					keys := p.GetKeyNamesFromConfigPaths(newPath, k, refPaths)
 					if len(keys) != 0 {
@@ -716,10 +746,10 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 						// so for UMR the elemnt will be present while for MR the element will
 						// not be presented
 						value[k] = dummyValue
-						
+
 						//newPath = p.AppendElemInPath(newPath, k, keyNotFound)
 					}
-					
+
 				}
 			case map[string]interface{}:
 				// a list without a key, we create a dedicated path for this
@@ -830,7 +860,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 				// pathElem has a key
 				// get the keyValues
 				keyNames, keyValues := p.GetKeyInfo(pathElem.GetKey())
-				// this is data from an umanaged resource, we fill dummies 
+				// this is data from an umanaged resource, we fill dummies
 				// since we dont know the key information
 				if keyNames[0] == keyNotFound {
 					if _, ok := objKeyValues[i]; !ok {
