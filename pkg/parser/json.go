@@ -897,6 +897,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 
 					} else {
 						pathElem.GetKey()[keyName] = objKeyValues[i][keyName][objKeyValuesIdx[i][keyName]]
+						objKeyValuesIdx[i][keyName]++
 						/*
 						if len(objKeyValues[i][keyName]) > 1 {
 							pathElem.GetKey()[keyName] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
