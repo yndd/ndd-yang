@@ -897,7 +897,11 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 
 					} else {
 						pathElem.GetKey()[keyName] = objKeyValues[i][keyName][objKeyValuesIdx[i][keyName]]
-						objKeyValuesIdx[i][keyName]++
+						// only when there are multiple keys of an element increment the index,
+						// in other case the index remains 0
+						if len(objKeyValues[i][keyName]) > 1 {
+							objKeyValuesIdx[i][keyName]++
+						}
 						/*
 						if len(objKeyValues[i][keyName]) > 1 {
 							pathElem.GetKey()[keyName] = objKeyValues[i][objKeyValuesUsedIdx[i]][k]
