@@ -707,12 +707,19 @@ func (p *Parser) ParseJSONData2ConfigUpdates(tc *TraceCtxt, path *config.Path, x
 					keys := p.GetKeyNamesFromConfigPaths(newPath, k, refPaths)
 					if len(keys) != 0 {
 						newPath = p.AppendElemInPath(newPath, k, keys[0])
+						updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, vv, idx+1, updates, refPaths)
 					} else {
 						// we can come here if a response from the device driver returns unmanaged resource
 						// data, we cont resolve the key information
-						newPath = p.AppendElemInPath(newPath, k, keyNotFound)
+						// rather than appending the path we should add the value to the list
+						// when the resource goes to unmanaged the entry will not be present
+						// so for UMR the elemnt will be present while for MR the element will
+						// not be presented
+						value[k] = dummyValue
+						
+						//newPath = p.AppendElemInPath(newPath, k, keyNotFound)
 					}
-					updates, tc = p.ParseJSONData2ConfigUpdates(tc, newPath, vv, idx+1, updates, refPaths)
+					
 				}
 			case map[string]interface{}:
 				// a list without a key, we create a dedicated path for this
