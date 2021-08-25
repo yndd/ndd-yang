@@ -624,7 +624,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 									} else {
 										tc.Msg = append(tc.Msg, "[]interface{} not found"+"."+"nil")
 									}
-									
+
 									tc.Data = x1
 									// we should not return here since there can be multiple entries in the list
 									// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
@@ -855,7 +855,8 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	// int is the
 	objKeyValues := make(map[int][]map[string]string)
 	for _, update := range updates {
-		//p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
+		fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.ConfigGnmiPathToXPath(update.Path, true))
+		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
 		for i, pathElem := range update.Path.GetElem() {
 			if len(pathElem.GetKey()) != 0 {
 				// pathElem has a key
