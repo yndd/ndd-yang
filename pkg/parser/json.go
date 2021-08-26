@@ -484,9 +484,13 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 		//fmt.Printf("p.ParseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
 		tc.AddMsg("[]interface{}")
 
+		// NOTE: this is only used for leafref resolution
 		// we copy the current state of the resolved leafres when we resolve leafrefs in case we find multiple entries in the list
 		// durng this step of the processing
-		resolvedLeafRefsOrig := p.DeepCopyResolvedLeafRef(tc.ResolvedLeafRefs[lridx])
+		resolvedLeafRefsOrig := &ResolvedLeafRef{}
+		if tc.Action == ConfigResolveLeafRef {
+			resolvedLeafRefsOrig = p.DeepCopyResolvedLeafRef(tc.ResolvedLeafRefs[lridx])
+		}
 
 		for n, v := range x1 {
 			switch x2 := v.(type) {
@@ -502,11 +506,14 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 							// pathElemKeyName found
 							tc.AddMsg(fmt.Sprintf("pathElemKeyName found: %s", pathElemKeyName))
 							if tc.Action == ConfigResolveLeafRef {
+								// NOTE: this is only used for leafref resolution
 								// for leafref resolution, when n > 0 it means we have multiple
 								// elements that could potentially match
-								if n > 0 {
-									tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, resolvedLeafRefsOrig)
-									lridx++
+								if tc.Action == ConfigResolveLeafRef {
+									if n > 0 {
+										tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, resolvedLeafRefsOrig)
+										lridx++
+									}
 								}
 							}
 							if idx == len(tc.Path.GetElem())-1 {
