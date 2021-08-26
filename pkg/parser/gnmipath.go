@@ -271,10 +271,11 @@ func (p *Parser) GetRemotePathsFromResolvedLeafRef(resolvedLeafRef *ResolvedLeaf
 					p.AppendElemInPathWithFullKey(remotePath, pathElem.GetName(), nil)
 				}
 			}
-
+			p.log.Debug("GetRemotePathsFromResolvedLeafRef", "remotePath", remotePath)
+			remotePaths = append(remotePaths, remotePath)
+		} else {
+			remotePaths = append(remotePaths, resolvedLeafRef.RemotePath)
 		}
-		remotePaths = append(remotePaths, resolvedLeafRef.RemotePath)
-
 	}
 	return remotePaths
 
