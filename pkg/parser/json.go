@@ -324,6 +324,9 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
 	//fmt.Printf("p.ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
 	tc.AddMsg("entry")
+	if tc.Action == ConfigTreeActionFind {
+		p.log.Debug("ResolvedLeafRefs info", "tc", tc)
+	}
 	switch x1 := x1.(type) {
 	case map[string]interface{}:
 		tc.AddMsg("map[string]interface{}")
@@ -366,8 +369,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 					case ConfigTreeActionGet:
 						return x1[tc.Path.GetElem()[idx].GetName()]
 					case ConfigTreeActionFind:
-						p.log.Debug("ResolvedLeafRefs info", "tc.ResolvedIdx", tc.ResolvedIdx, "tc.ResolvedLeafRefs", tc.ResolvedLeafRefs)
-						if x2 == tc.ResolvedLeafRefs[tc.ResolvedIdx].Value {
+						if x2 == tc.Value {
 							tc.Found = true
 							return x2
 						} else {
