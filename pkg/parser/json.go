@@ -314,8 +314,12 @@ func (p *Parser) CleanCacheValueForComparison(path *config.Path, cacheValue inte
 }
 
 // p.ParseTreeWithAction parses various actions on a json object in a recursive way
-// actions can be Get, Update, Delete and Create
-func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
+// actions can be Get, Update, Delete and Create, LeafRef, Find and LeafRefResolution
+// NOTE1: idx and lridx are indexes that needs to be relevant in the ctxt of the recursive resolution and cannot be put
+// in tc since tc is a global conext
+// NOTE2: ConfigResolveLeafRef is a run to completion and hsould not find a return in the path until the end
+// NOTE3: all other actions are returning something based on the path they traverse
+func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx int) interface{} {
 	// idx is a local counter that will stay local, after the recurssive function calls it remains the same
 	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
 	//fmt.Printf("p.ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
@@ -333,11 +337,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]
 					switch tc.Action {
 					case ConfigResolveLeafRef:
-						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 					case ConfigTreeActionGet, ConfigTreeActionFind:
-						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 					case ConfigTreeActionDelete:
-						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 						// if this is the last element in the slice we can delete the key from the list
 						// e.g. delete subinterface[index=0] from interface[name=x] and it was the last subinterface in the interface
 						switch x2 := x1[tc.Path.GetElem()[idx].GetName()].(type) {
@@ -349,7 +353,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 						}
 						return x1
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 						return x1
 					}
 				} else {
@@ -358,11 +362,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					tc.Found = true
 					switch tc.Action {
 					case ConfigResolveLeafRef:
-						p.PopulateLocalLeafRefValue(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						p.PopulateLocalLeafRefValue(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 					case ConfigTreeActionGet:
 						return x1[tc.Path.GetElem()[idx].GetName()]
 					case ConfigTreeActionFind:
-						if x2 == tc.ResolvedLeafRefs[tc.ResolvedIdx] {
+						if x2 == tc.ResolvedLeafRefs[tc.ResolvedIdx].Value {
 							tc.Found = true
 							return x2
 						} else {
@@ -384,14 +388,14 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]/subinterface[index=100]
 					switch tc.Action {
 					case ConfigResolveLeafRef:
-						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 					case ConfigTreeActionGet, ConfigTreeActionFind:
-						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 					case ConfigTreeActionDelete:
-						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 						return x1
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx, lridx)
 						return x1
 					}
 				} else {
@@ -400,11 +404,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 					tc.AddMsg("end of path without key")
 					switch tc.Action {
 					case ConfigResolveLeafRef:
-						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
 					case ConfigTreeActionGet, ConfigTreeActionFind:
-						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
 					case ConfigTreeActionDelete, ConfigTreeActionCreate, ConfigTreeActionUpdate:
-						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
 						return x1
 					}
 				}
@@ -469,7 +473,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 				tc.Idx++
 				// create a new map string interface which will be recursively filled
 				x1[tc.Path.GetElem()[idx].GetName()] = make(map[string]interface{})
-				x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+				x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
 				return x1
 			}
 		}
@@ -477,12 +481,9 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 		//fmt.Printf("p.ParseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
 		tc.AddMsg("[]interface{}")
 
-		if tc.Action == ConfigResolveLeafRef {
-			// we copy the current state of the resolved leafres when we resolve leafrefs in case we find multiple entries in the list
-			// durng this step of the processing
-			tc.ResolvedLeafRefCopy = p.DeepCopyResolvedLeafRef(tc.ResolvedLeafRefs[tc.ResolvedIdx])
-
-		}
+		// we copy the current state of the resolved leafres when we resolve leafrefs in case we find multiple entries in the list
+		// durng this step of the processing
+		resolvedLeafRefsOrig := p.DeepCopyResolvedLeafRef(tc.ResolvedLeafRefs[lridx])
 
 		for n, v := range x1 {
 			switch x2 := v.(type) {
@@ -501,8 +502,8 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 								// for leafref resolution, when n > 0 it means we have multiple
 								// elements that could potentially match
 								if n > 0 {
-									tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, tc.ResolvedLeafRefCopy)
-									tc.ResolvedIdx++
+									tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, resolvedLeafRefsOrig)
+									lridx++
 								}
 							}
 							if idx == len(tc.Path.GetElem())-1 {
@@ -538,8 +539,8 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 										}
 									}
 								} else {
-									// for leafRef resolution
-									p.PopulateLocalLeafRefValue(x3, tc, idx)
+									// for leafRef resolution, we resolved the leafref
+									p.PopulateLocalLeafRefValue(x3, tc, idx, lridx)
 								}
 								// we should not return here since there can be multiple entries in the list
 								// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
@@ -554,9 +555,9 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 									if found {
 										switch tc.Action {
 										case ConfigTreeActionGet, ConfigTreeActionFind:
-											return p.ParseTreeWithAction(x1[n], tc, idx+1)
+											return p.ParseTreeWithAction(x1[n], tc, idx+1, lridx)
 										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = p.ParseTreeWithAction(x1[n], tc, idx+1)
+											x1[n] = p.ParseTreeWithAction(x1[n], tc, idx+1, lridx)
 											return x1
 										}
 										// we should not return here since there can be multiple entries in the list
@@ -571,11 +572,11 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 									// since we are not at the end of the path we dont have leafRefValues and hence we dont need to Populate them
 									// this is PopulateLocalLeafRefKey iso PopulateLocalLeafRefValue since we are not yet at the end
 									// Data is x3 which we use to populate the pathELem key
-									p.PopulateLocalLeafRefKey(x3, tc, idx)
+									p.PopulateLocalLeafRefKey(x3, tc, idx, lridx)
 									// given that we can have multiple entries in the list we initialize a new index to increment independently
 									i := idx
 									i++
-									p.ParseTreeWithAction(x1[n], tc, i)
+									p.ParseTreeWithAction(x1[n], tc, i, lridx)
 
 								}
 								// we should not return here since there can be multiple entries in the list
@@ -721,8 +722,8 @@ func (p *Parser) HandleNotEndOfListWithKeyInParseKeyWithAction(x interface{}, va
 }
 
 // PopulateLocalLeafRefValue, populates the values and the keyvalues in the resolved leafref objects
-func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx int) {
-	rlref := tc.ResolvedLeafRefs[tc.ResolvedIdx]
+func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx, lridx int) {
+	rlref := tc.ResolvedLeafRefs[lridx]
 	switch x1 := x.(type) {
 	case string:
 		rlref.Value = x1
@@ -763,8 +764,8 @@ func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx int
 	}
 }
 
-func (p *Parser) PopulateLocalLeafRefKey(x interface{}, tc *TraceCtxt, idx int) {
-	rlref := tc.ResolvedLeafRefs[tc.ResolvedIdx]
+func (p *Parser) PopulateLocalLeafRefKey(x interface{}, tc *TraceCtxt, idx, lridx int) {
+	rlref := tc.ResolvedLeafRefs[lridx]
 	switch x1 := x.(type) {
 	case string:
 		// a leaf ref can only have 1 value, this is why this works
@@ -811,6 +812,7 @@ func (p *Parser) PopulateRemoteLeafRefKey(rlref *ResolvedLeafRef) {
 
 // p.ParseTreeWithAction parses various actions on a json object in a recursive way
 // actions can be Get, Update, Delete and Create
+/*
 func (p *Parser) ParseTreeWithActionOld(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
 	// idx is a local counter that will stay local, after the recurssive function calls it remains the same
 	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
@@ -855,21 +857,6 @@ func (p *Parser) ParseTreeWithActionOld(x1 interface{}, tc *TraceCtxt, idx int) 
 					case ConfigTreeActionDelete:
 						delete(x1, tc.Path.GetElem()[idx].GetName())
 						return x1
-						/*
-							case ConfigTreeActionUpdate:
-								switch vv := tc.Value.(type) {
-								case map[string]interface{}:
-									for k, v := range vv {
-										switch vvv := v.(type) {
-										case string:
-											x1[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
-										default:
-											x1[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
-										}
-									}
-								}
-								return x1
-						*/
 					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
 						x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
 						return x1
@@ -1190,6 +1177,7 @@ func (p *Parser) ParseTreeWithActionOld(x1 interface{}, tc *TraceCtxt, idx int) 
 		return x1
 	}
 }
+*/
 
 // GetUpdatesFromJSONData returns config.Updates based on the JSON input data and config.Path/reference Paths
 // These updates are used prepared so they can be send to a GNMI capable device
