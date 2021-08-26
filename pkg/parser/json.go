@@ -366,6 +366,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 					case ConfigTreeActionGet:
 						return x1[tc.Path.GetElem()[idx].GetName()]
 					case ConfigTreeActionFind:
+						p.log.Debug("ResolvedLeafRefs info", "tc.ResolvedIdx", tc.ResolvedIdx, "tc.ResolvedLeafRefs", tc.ResolvedLeafRefs)
 						if x2 == tc.ResolvedLeafRefs[tc.ResolvedIdx].Value {
 							tc.Found = true
 							return x2
