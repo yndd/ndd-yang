@@ -737,7 +737,7 @@ func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx, lr
 	switch x1 := x.(type) {
 	case string:
 		rlref.Value = x1
-		tc.AddMsg("string" + rlref.Value)
+		tc.AddMsg("string: " + rlref.Value)
 		// the value is typically resolved using rlref.Value
 		if len(rlref.LocalPath.GetElem()[idx].GetKey()) != 0 {
 			for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
@@ -747,7 +747,7 @@ func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx, lr
 		rlref.Resolved = true
 	case int:
 		rlref.Value = strconv.Itoa(int(x1))
-		tc.AddMsg("int" + rlref.Value)
+		tc.AddMsg("int: " + rlref.Value)
 		// the value is typically resolved using rlref.Value
 		if len(rlref.LocalPath.GetElem()[idx].GetKey()) != 0 {
 			for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
@@ -757,7 +757,7 @@ func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx, lr
 		rlref.Resolved = true
 	case float64:
 		rlref.Value = fmt.Sprintf("%.0f", x1)
-		tc.AddMsg("float64" + rlref.Value)
+		tc.AddMsg("float64: " + rlref.Value)
 		// the value is typically resolved using rlref.Value
 		if len(rlref.LocalPath.GetElem()[idx].GetKey()) != 0 {
 			for k := range rlref.LocalPath.GetElem()[idx].GetKey() {

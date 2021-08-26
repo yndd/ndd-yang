@@ -229,6 +229,57 @@ func (p *Parser) AppendElemInPath(path *config.Path, name, key string) *config.P
 	return path
 }
 
+// AppendElemInPath adds a pathElem to the config gnmi path
+func (p *Parser) AppendElemInPathWithFullKey(path *config.Path, name string, key map[string]string) *config.Path {
+	pathElem := &config.PathElem{
+		Name: name,
+	}
+	if key != nil {
+		pathElem.Key = key
+	}
+
+	path.Elem = append(path.Elem, pathElem)
+	return path
+}
+
+func (p *Parser) CopyPathElemKey(key map[string]string) map[string]string {
+	newKey := make(map[string]string)
+	for k, v := range key {
+		newKey[k] = v
+	}
+	return newKey
+}
+
+func (p *Parser) GetRemotePathsFromResolvedLeafRef(resolvedLeafRef *ResolvedLeafRef) []*config.Path {
+	remotePaths := make([]*config.Path, 0)
+	for i := 0; i < len(strings.Split(resolvedLeafRef.Value, ".")); i++ {
+		if i > 0 {
+			// this is a special case where the value is split in "." e.g. network-instance -> interface + subinterface
+			// or tunnel-interface + vxlan-interface
+			// we create a shorter path to resolve the hierarchical path
+			remotePath := &config.Path{
+				Elem: make([]*config.PathElem, 0),
+			}
+			// we return on the first reference path
+			for _, pathElem := range resolvedLeafRef.RemotePath.GetElem() {
+				if len(pathElem.GetKey()) != 0 {
+					newKey := p.CopyPathElemKey(pathElem.GetKey())
+					p.AppendElemInPathWithFullKey(remotePath, pathElem.GetName(), newKey)
+					// we stop at copying the first key
+					break
+				} else {
+					p.AppendElemInPathWithFullKey(remotePath, pathElem.GetName(), nil)
+				}
+			}
+
+		}
+		remotePaths = append(remotePaths, resolvedLeafRef.RemotePath)
+
+	}
+	return remotePaths
+
+}
+
 // RemoveFirstEntry removes the first entry of the xpath, so it trims the first element of the /
 func (p *Parser) RemoveFirstEntry(s string) string {
 	split := strings.Split(s, "/")
