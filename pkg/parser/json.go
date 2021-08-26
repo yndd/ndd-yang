@@ -786,6 +786,23 @@ func (p *Parser) PopulateLocalLeafRefKey(x interface{}, tc *TraceCtxt, idx int) 
 	}
 }
 
+// Populates the Key of the remote leafref
+func (p *Parser) PopulateRemoteLeafRefKey(rlref *ResolvedLeafRef) {
+	// for interface.subinterface we have a special handling where the value is seperated by a ethernet-1/1.4
+	// the part before the dot represents the interface value in the key and the 2nd part represents the subinterface index
+	// not sure how generic this is
+	split := strings.Split(rlref.Value, ".")
+	n := 0
+	for _, PathElem := range rlref.RemotePath.GetElem() {
+		if len(PathElem.GetKey()) != 0 {
+			for k := range PathElem.GetKey() {
+				PathElem.GetKey()[k] = split[n]
+				n++
+			}
+		}
+	}
+}
+
 // p.ParseTreeWithAction parses various actions on a json object in a recursive way
 // actions can be Get, Update, Delete and Create
 func (p *Parser) ParseTreeWithActionOld(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
