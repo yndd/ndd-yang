@@ -476,9 +476,13 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 	case []interface{}:
 		//fmt.Printf("p.ParseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
 		tc.AddMsg("[]interface{}")
-		// we copy the current state of the resolved leafres when we resolve leafrefs in case we find multiple entries in the list
-		// durng this step of the processing
-		resolvedLeafRefsOrig := p.DeepCopyResolvedLeafRef(tc.ResolvedLeafRefs[tc.ResolvedIdx])
+
+		if tc.Action == ConfigResolveLeafRef {
+			// we copy the current state of the resolved leafres when we resolve leafrefs in case we find multiple entries in the list
+			// durng this step of the processing
+			tc.ResolvedLeafRefCopy = p.DeepCopyResolvedLeafRef(tc.ResolvedLeafRefs[tc.ResolvedIdx])
+
+		}
 
 		for n, v := range x1 {
 			switch x2 := v.(type) {
@@ -493,11 +497,13 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 						if x3, ok := x2[pathElemKeyName]; ok {
 							// pathElemKeyName found
 							tc.AddMsg(fmt.Sprintf("pathElemKeyName found: %s", pathElemKeyName))
-							// for leafref resolution, when n > 0 it means we have multiple
-							// elements that could potentially match
-							if n > 0 {
-								tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, resolvedLeafRefsOrig)
-								tc.ResolvedIdx++
+							if tc.Action == ConfigResolveLeafRef {
+								// for leafref resolution, when n > 0 it means we have multiple
+								// elements that could potentially match
+								if n > 0 {
+									tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, tc.ResolvedLeafRefCopy)
+									tc.ResolvedIdx++
+								}
 							}
 							if idx == len(tc.Path.GetElem())-1 {
 								tc.AddMsg("end of path with key")
@@ -1339,36 +1345,36 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 // Second we augment the values with the recorded data from the previous step
 // Lastly we augment the path with the rootPath information
 func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Update) []*config.Update {
-	
+
 	// capture the values of all resolved keys per pathElem level
 	objKeyValues, objKeyValuesIdx := p.PostProcessUpdatesCaptureValues(updates)
 	fmt.Printf("objKeyValues: %v\n", objKeyValues)
 	// fill out blank key values based on the captured data
-	// below is a capture of the dat, you see that the key values are filled at the end, 
+	// below is a capture of the dat, you see that the key values are filled at the end,
 	// this allows us to updates the index if we find a match
 	/*
-	Update Path: /bgp/ebgp-default-policy, Value: {"export-reject-all":false,"import-reject-all":false}
-	Update Path: /bgp/group[group-name=]/local-as[as-number=65000], Value: {}
-	Update Path: /bgp/group[group-name=]/ipv4-unicast, Value: {"admin-state":"enable"}
-	Update Path: /bgp/group[group-name=]/ipv6-unicast, Value: {"admin-state":"enable"}
-	Update Path: /bgp/group[group-name=underlay], Value: {"admin-state":"enable","export-policy":"policy-underlay","next-hop-self":"true"}
-	Update Path: /bgp/group[group-name=]/ipv4-unicast, Value: {"admin-state":"disable"}
-	Update Path: /bgp/group[group-name=]/ipv6-unicast, Value: {"admin-state":"disable"}
-	Update Path: /bgp/group[group-name=]/local-as[as-number=65400], Value: {}
-	Update Path: /bgp/group[group-name=]/evpn, Value: {"admin-state":"enable"}
-	Update Path: /bgp/group[group-name=overlay], Value: {"admin-state":"enable","next-hop-self":"true"}
-	Update Path: /bgp/ipv4-unicast/multipath, Value: {"allow-multiple-as":"true","max-paths-level-1":64,"max-paths-level-2":64}
-	Update Path: /bgp/ipv4-unicast, Value: {"admin-state":"enable"}
-	Update Path: /bgp/ipv6-unicast/multipath, Value: {"allow-multiple-as":"true","max-paths-level-1":64,"max-paths-level-2":64}
-	Update Path: /bgp/ipv6-unicast, Value: {"admin-state":"enable"}
-	Update Path: /bgp/neighbor[peer-address=]/local-as[as-number=65000], Value: {}
-	Update Path: /bgp/neighbor[peer-address=]/timers, Value: {"connect-retry":1}
-	Update Path: /bgp/neighbor[peer-address=100.64.0.1], Value: {"peer-as":65001,"peer-group":"underlay"}
-	Update Path: /bgp/neighbor[peer-address=]/transport, Value: {"local-address":"00.112.100.0"}
-	Update Path: /bgp/neighbor[peer-address=]/timers, Value: {"connect-retry":1}
-	Update Path: /bgp/neighbor[peer-address=]/local-as[as-number=65400], Value: {}
-	Update Path: /bgp/neighbor[peer-address=100.112.100.1], Value: {"peer-as":65400,"peer-group":"overlay"}
-	Update Path: /bgp, Value: {"admin-state":"enable","autonomous-system":"65000","router-id":"100.112.100.0"}
+		Update Path: /bgp/ebgp-default-policy, Value: {"export-reject-all":false,"import-reject-all":false}
+		Update Path: /bgp/group[group-name=]/local-as[as-number=65000], Value: {}
+		Update Path: /bgp/group[group-name=]/ipv4-unicast, Value: {"admin-state":"enable"}
+		Update Path: /bgp/group[group-name=]/ipv6-unicast, Value: {"admin-state":"enable"}
+		Update Path: /bgp/group[group-name=underlay], Value: {"admin-state":"enable","export-policy":"policy-underlay","next-hop-self":"true"}
+		Update Path: /bgp/group[group-name=]/ipv4-unicast, Value: {"admin-state":"disable"}
+		Update Path: /bgp/group[group-name=]/ipv6-unicast, Value: {"admin-state":"disable"}
+		Update Path: /bgp/group[group-name=]/local-as[as-number=65400], Value: {}
+		Update Path: /bgp/group[group-name=]/evpn, Value: {"admin-state":"enable"}
+		Update Path: /bgp/group[group-name=overlay], Value: {"admin-state":"enable","next-hop-self":"true"}
+		Update Path: /bgp/ipv4-unicast/multipath, Value: {"allow-multiple-as":"true","max-paths-level-1":64,"max-paths-level-2":64}
+		Update Path: /bgp/ipv4-unicast, Value: {"admin-state":"enable"}
+		Update Path: /bgp/ipv6-unicast/multipath, Value: {"allow-multiple-as":"true","max-paths-level-1":64,"max-paths-level-2":64}
+		Update Path: /bgp/ipv6-unicast, Value: {"admin-state":"enable"}
+		Update Path: /bgp/neighbor[peer-address=]/local-as[as-number=65000], Value: {}
+		Update Path: /bgp/neighbor[peer-address=]/timers, Value: {"connect-retry":1}
+		Update Path: /bgp/neighbor[peer-address=100.64.0.1], Value: {"peer-as":65001,"peer-group":"underlay"}
+		Update Path: /bgp/neighbor[peer-address=]/transport, Value: {"local-address":"00.112.100.0"}
+		Update Path: /bgp/neighbor[peer-address=]/timers, Value: {"connect-retry":1}
+		Update Path: /bgp/neighbor[peer-address=]/local-as[as-number=65400], Value: {}
+		Update Path: /bgp/neighbor[peer-address=100.112.100.1], Value: {"peer-as":65400,"peer-group":"overlay"}
+		Update Path: /bgp, Value: {"admin-state":"enable","autonomous-system":"65000","router-id":"100.112.100.0"}
 	*/
 	updates = p.PostProcessAugmentValues(updates, objKeyValues, objKeyValuesIdx)
 	// add the elements of the rootPath to the updates
@@ -1384,7 +1390,7 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	// sort the updates per length before returning the data
 	sort.Slice(updates, func(i, j int) bool {
 		return len(updates[i].Path.GetElem()) < len(updates[j].Path.GetElem())
-		
+
 	})
 	return updates
 }
@@ -1419,7 +1425,7 @@ func (p *Parser) PostProcessUpdatesCaptureValues(updates []*config.Update) (map[
 						}
 						objKeyValues[i][keyName] = append(objKeyValues[i][keyName], value)
 
-					} 
+					}
 				}
 			}
 		}
@@ -1427,7 +1433,7 @@ func (p *Parser) PostProcessUpdatesCaptureValues(updates []*config.Update) (map[
 	return objKeyValues, objKeyValuesIdx
 }
 
-func (p *Parser) PostProcessAugmentValues(updates []*config.Update, objKeyValues map[int]map[string][]string, objKeyValuesIdx map[int]map[string]int) []*config.Update{
+func (p *Parser) PostProcessAugmentValues(updates []*config.Update, objKeyValues map[int]map[string][]string, objKeyValuesIdx map[int]map[string]int) []*config.Update {
 
 	fmt.Printf("objKeyValues   : %v\n", objKeyValues)
 	fmt.Printf("objKeyValuesIdx: %v\n", objKeyValuesIdx)
@@ -1453,8 +1459,6 @@ func (p *Parser) PostProcessAugmentValues(updates []*config.Update, objKeyValues
 	}
 	return updates
 }
-
-
 
 // RemoveLeafsFromJSONData removes the leaf keys from the data
 func (p *Parser) RemoveLeafsFromJSONData(x interface{}, leafStrings []string) interface{} {
