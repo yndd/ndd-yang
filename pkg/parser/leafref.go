@@ -23,6 +23,55 @@ import (
 	"github.com/openconfig/goyang/pkg/yang"
 )
 
+type LeafRef struct {
+	LocalPath  *config.Path `json:"localPath,omitempty"`
+	RemotePath *config.Path `json:"remotePath,omitempty"`
+}
+
+type ResolvedLeafRef struct {
+	LocalPath  *config.Path `json:"localPath,omitempty"`
+	RemotePath *config.Path `json:"remotePath,omitempty"`
+	Value      string       `json:"value,omitempty"`
+	Resolved   bool         `json:"resolved,omitempty"`
+}
+
+func (p *Parser) DeepCopyResolvedLeafRef(in *ResolvedLeafRef) (out *ResolvedLeafRef) {
+	out = new(ResolvedLeafRef)
+	if in.LocalPath != nil {
+		out.LocalPath = new(config.Path)
+		out.LocalPath.Elem = make([]*config.PathElem, 0)
+		for _, v := range in.LocalPath.GetElem() {
+			elem := &config.PathElem{}
+			elem.Name = v.Name
+			if len(v.GetKey()) != 0 {
+				elem.Key = make(map[string]string)
+				for key, value := range v.Key {
+					elem.Key[key] = value
+				}
+			}
+			out.LocalPath.Elem = append(out.LocalPath.Elem, elem)
+		}
+	}
+	if in.RemotePath != nil {
+		out.RemotePath = new(config.Path)
+		out.RemotePath.Elem = make([]*config.PathElem, 0)
+		for _, v := range in.RemotePath.GetElem() {
+			elem := &config.PathElem{}
+			elem.Name = v.Name
+			if len(v.GetKey()) != 0 {
+				elem.Key = make(map[string]string)
+				for key, value := range v.Key {
+					elem.Key[key] = value
+				}
+			}
+			out.RemotePath.Elem = append(out.RemotePath.Elem, elem)
+		}
+	}
+	out.Resolved = in.Resolved
+	out.Value = in.Value
+	return out
+}
+
 // ProcessLeafRef processes the leafref and returns if a leafref localPath, remotePath and if the leafRef is local or external to the resource
 // used for yang parser
 func (p *Parser) ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *config.Path) (*config.Path, *config.Path, bool) {

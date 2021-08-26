@@ -319,6 +319,479 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx int) int
 	// idx is a local counter that will stay local, after the recurssive function calls it remains the same
 	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
 	//fmt.Printf("p.ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
+	tc.AddMsg("entry")
+	switch x1 := x1.(type) {
+	case map[string]interface{}:
+		tc.AddMsg("map[string]interface{}")
+		if x2, ok := x1[tc.Path.GetElem()[idx].GetName()]; ok {
+			// object should exists
+			tc.AddMsg("pathElem found")
+			if idx == len(tc.Path.GetElem())-1 {
+				// end of the path
+				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
+					tc.AddMsg("end of path with key")
+					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]
+					switch tc.Action {
+					case ConfigResolveLeafRef:
+						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+					case ConfigTreeActionGet, ConfigTreeActionFind:
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+					case ConfigTreeActionDelete:
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						// if this is the last element in the slice we can delete the key from the list
+						// e.g. delete subinterface[index=0] from interface[name=x] and it was the last subinterface in the interface
+						switch x2 := x1[tc.Path.GetElem()[idx].GetName()].(type) {
+						case []interface{}:
+							if len(x2) == 0 {
+								tc.AddMsg("removed last entry in the list with keys")
+								delete(x1, tc.Path.GetElem()[idx].GetName())
+							}
+						}
+						return x1
+					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return x1
+					}
+				} else {
+					// system/ntp
+					tc.AddMsg("end of path without key")
+					tc.Found = true
+					switch tc.Action {
+					case ConfigResolveLeafRef:
+						p.PopulateLocalLeafRefValue(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+					case ConfigTreeActionGet:
+						return x1[tc.Path.GetElem()[idx].GetName()]
+					case ConfigTreeActionFind:
+						if x2 == tc.ResolvedLeafRefs[tc.ResolvedIdx] {
+							tc.Found = true
+							return x2
+						} else {
+							tc.Found = true
+							return x2
+						}
+					case ConfigTreeActionDelete:
+						delete(x1, tc.Path.GetElem()[idx].GetName())
+						return x1
+					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
+						x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
+						return x1
+					}
+
+				}
+			} else {
+				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
+					tc.AddMsg("not end of path with key")
+					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]/subinterface[index=100]
+					switch tc.Action {
+					case ConfigResolveLeafRef:
+						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+					case ConfigTreeActionGet, ConfigTreeActionFind:
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+					case ConfigTreeActionDelete:
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return x1
+					case ConfigTreeActionCreate, ConfigTreeActionUpdate:
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx)
+						return x1
+					}
+				} else {
+					// not last element of network-instance[name=ethernet-1/1]/protocol/bgp-vpn; we are at protocol level
+					tc.Idx++
+					tc.AddMsg("end of path without key")
+					switch tc.Action {
+					case ConfigResolveLeafRef:
+						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+					case ConfigTreeActionGet, ConfigTreeActionFind:
+						return p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+					case ConfigTreeActionDelete, ConfigTreeActionCreate, ConfigTreeActionUpdate:
+						x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+						return x1
+					}
+				}
+			}
+		}
+		tc.AddMsg("map[string]interface{} not found")
+		// this branch is mainly used for object creation
+		switch tc.Action {
+		case ConfigResolveLeafRef:
+			// we dont do anything as we want to run to completion of the path
+			// for leafref resolution
+		case ConfigTreeActionDelete:
+			// when the data is not found we just return x1 since nothing can get deleted
+			tc.Found = false
+			tc.Data = x1
+			return x1
+		case ConfigTreeActionGet:
+			tc.Found = false
+			tc.Data = x1
+			return x1
+		case ConfigTreeActionCreate, ConfigTreeActionUpdate:
+			// this branch is used to insert leafs, leaflists in the tree when object get created
+			tc.Found = false
+			if idx == len(tc.Path.GetElem())-1 {
+				tc.AddMsg("map[string]interface{} last element in path, added item in the list")
+				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
+					tc.AddMsg("with key")
+					// this is a new leaflist so we need to create the []interface
+					// and add the key to map[string]interface{}
+					// e.g. add subinterface[index=0] with value: admin-state: enable
+					x2 := make([]interface{}, 0)
+					// copy the values
+					x3 := p.CopyAndCleanTxValues(tc.Value)
+					// add the keys to the list
+					switch x4 := x3.(type) {
+					case map[string]interface{}:
+						// add the key of the path to the list
+						for k, v := range tc.Path.GetElem()[idx].GetKey() {
+							// add clean element to the list
+							if strings.Contains(v, "::") {
+								// avoids splitting ipv6 addresses
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							} else {
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							}
+
+						}
+						x2 = append(x2, x4)
+					}
+					x1[tc.Path.GetElem()[idx].GetName()] = x2
+				} else {
+					// create an mtu in
+					tc.AddMsg("without key")
+					x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
+				}
+				return x1
+			} else {
+				// it can be that we get a new creation with a path that is not fully created
+				// e.g. /interface[name=ethernet-1/49]/subinterface[index=0]/vlan/encap/untagged
+				//  and we only had /interface[name=ethernet-1/49]/subinterface[index=0] in the config
+				tc.AddMsg("map[string]interface{} not last last element in path, adding element to the tree")
+				tc.Idx++
+				// create a new map string interface which will be recursively filled
+				x1[tc.Path.GetElem()[idx].GetName()] = make(map[string]interface{})
+				x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1)
+				return x1
+			}
+		}
+	case []interface{}:
+		//fmt.Printf("p.ParseTreeWithAction []interface{}, idx: %d, path length %d, path: %v\n data: %v\n", idx, len(path.GetElem()), path.GetElem(), x1)
+		tc.AddMsg("[]interface{}")
+		// we copy the current state of the resolved leafres when we resolve leafrefs in case we find multiple entries in the list
+		// durng this step of the processing
+		resolvedLeafRefsOrig := p.DeepCopyResolvedLeafRef(tc.ResolvedLeafRefs[tc.ResolvedIdx])
+
+		for n, v := range x1 {
+			switch x2 := v.(type) {
+			case map[string]interface{}:
+				// this should always resolve since we are in a list and keys will be mandatory
+				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
+					pathElemKeyNames, pathElemKeyValues := p.GetKeyInfo(tc.Path.GetElem()[idx].GetKey())
+					tc.AddMsg(fmt.Sprintf("pathElemKeyNames %v, pathElemKeyValues%v", pathElemKeyNames, pathElemKeyValues))
+					// loop over all pathElemKeyNames
+					// TODO multiple keys and values need to be tested !
+					for i, pathElemKeyName := range pathElemKeyNames {
+						if x3, ok := x2[pathElemKeyName]; ok {
+							// pathElemKeyName found
+							tc.AddMsg(fmt.Sprintf("pathElemKeyName found: %s", pathElemKeyName))
+							// for leafref resolution, when n > 0 it means we have multiple
+							// elements that could potentially match
+							if n > 0 {
+								tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, resolvedLeafRefsOrig)
+								tc.ResolvedIdx++
+							}
+							if idx == len(tc.Path.GetElem())-1 {
+								tc.AddMsg("end of path with key")
+								if tc.Action != ConfigResolveLeafRef {
+									// action for non leafref resolution
+									// validates if the value of the json object matches the value of the key in the pathElem
+									p.HandleEndOfListWithKeyInParseKeyWithAction(x3, pathElemKeyValues[i], tc)
+									if tc.Found {
+										// we return since we are at the end of the path and the key/value were found
+										switch tc.Action {
+										case ConfigTreeActionGet, ConfigTreeActionFind:
+											return x1[n]
+										case ConfigTreeActionDelete:
+											x1 = append(x1[:n], x1[n+1:]...)
+											return x1
+										case ConfigTreeActionUpdate:
+											x1[n] = p.CopyAndCleanTxValues(tc.Value)
+											// we also need to add the key as part of the object
+											switch x := x1[n].(type) {
+											case map[string]interface{}:
+												x[pathElemKeyName] = pathElemKeyValues[i]
+											}
+											return x1
+										case ConfigTreeActionCreate:
+											// TODO if we ever come here
+											return x1
+										default:
+											// we should not return here since there can be multiple entries in the list
+											// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+											// we need to loop over all of them and the global for loop will return if not found
+											//return x1
+										}
+									}
+								} else {
+									// for leafRef resolution
+									p.PopulateLocalLeafRefValue(x3, tc, idx)
+								}
+								// we should not return here since there can be multiple entries in the list
+								// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+								// we need to loop over all of them and the global for loop will return if not found
+								//return x1
+							} else {
+								// we hit this e.g. at interface level of interface[system0]/subinterface[index=0]
+								tc.AddMsg("not end of path with key")
+
+								if tc.Action != ConfigResolveLeafRef {
+									found := p.HandleNotEndOfListWithKeyInParseKeyWithAction(x3, pathElemKeyValues[i], tc)
+									if found {
+										switch tc.Action {
+										case ConfigTreeActionGet, ConfigTreeActionFind:
+											return p.ParseTreeWithAction(x1[n], tc, idx+1)
+										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
+											x1[n] = p.ParseTreeWithAction(x1[n], tc, idx+1)
+											return x1
+										}
+										// we should not return here since there can be multiple entries in the list
+										// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+										// we need to loop over all of them and the global for loop will return if not found
+										//return x1
+									}
+								} else {
+									// for leafRef resolution
+
+									// the value is always a string since it is part of map[string]interface{}
+									// since we are not at the end of the path we dont have leafRefValues and hence we dont need to Populate them
+									// this is PopulateLocalLeafRefKey iso PopulateLocalLeafRefValue since we are not yet at the end
+									// Data is x3 which we use to populate the pathELem key
+									p.PopulateLocalLeafRefKey(x3, tc, idx)
+									// given that we can have multiple entries in the list we initialize a new index to increment independently
+									i := idx
+									i++
+									p.ParseTreeWithAction(x1[n], tc, i)
+
+								}
+								// we should not return here since there can be multiple entries in the list
+								// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+								// we need to loop over all of them and the global for loop will return if not found
+								//return x1
+
+							}
+						} else {
+							tc.Found = false
+							tc.Data = x1
+							tc.AddMsg(fmt.Sprintf("pathElemKeyName not found: %s", pathElemKeyName))
+							// we should not return here since there can be multiple entries in the list
+							// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+							// we need to loop over all of them and the global for loop will return if not found
+							//return x1
+						}
+					}
+				}
+			}
+		}
+		tc.AddMsg("[]interface{} not found")
+		// this is used to add an element to a list that already exists
+		// e.g. interface[name=ethernet-1/49]/subinterface[index=0] exists and we add interface[name=ethernet-1/49]/subinterface[index=1]
+		switch tc.Action {
+		case ConfigResolveLeafRef:
+			// dont do anything since we want to run to completion
+		case ConfigTreeActionDelete, ConfigTreeActionGet:
+			// when the data is not found we just return x1 since nothing can get deleted or retrieved
+			tc.Found = false
+			tc.Data = x1
+			return x1
+		case ConfigTreeActionCreate, ConfigTreeActionUpdate:
+			if idx == len(tc.Path.GetElem())-1 {
+				tc.Found = false
+				tc.Data = x1
+				tc.AddMsg("add element in an existing list")
+				// copy the data of the information
+				// add the key of the path to the data
+				x3 := p.CopyAndCleanTxValues(tc.Value)
+				// add the keys to the list
+				switch x4 := x3.(type) {
+				case map[string]interface{}:
+					// add the key of the path to the list
+					for k, v := range tc.Path.GetElem()[idx].GetKey() {
+						// add clean element to the list
+						if strings.Contains(v, "::") {
+							// avoids splitting ipv6 addresses
+							x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+						} else {
+							x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+						}
+					}
+					x1 = append(x1, x4)
+				}
+				return x1
+			}
+		}
+	case nil:
+	default:
+	}
+	switch tc.Action {
+	case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionGet, ConfigTreeActionCreate:
+		// when the data is not found we just return x1 since nothing can get deleted or updated
+		tc.Found = false
+		tc.Data = x1
+		tc.AddMsg("default")
+		return x1
+	default:
+		// when the data is not found we just return x1 since nothing can get deleted or updated
+		tc.Found = false
+		tc.Data = x1
+		tc.AddMsg("default")
+		return x1
+	}
+}
+
+// HandleEndOfListWithKeyInParseKeyWithAction is called to assist Get, Create, Delete, Update Action
+// it validates if the value of the JSON object matches the key value of the path
+func (p *Parser) HandleEndOfListWithKeyInParseKeyWithAction(x interface{}, value string, tc *TraceCtxt) {
+	switch x := x.(type) {
+	case string:
+		if string(x) == value {
+			tc.Found = true
+			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s string", value))
+		}
+	case uint32:
+		// this part is used for get, create, delete, update
+		if strconv.Itoa(int(x)) == value {
+			tc.Found = true
+			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s uint32", value))
+		}
+	case float64:
+		if fmt.Sprintf("%.0f", x) == value {
+			tc.Found = true
+			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s float64", value))
+		}
+	default:
+		tc.Found = false
+		if x != nil {
+			tc.Msg = append(tc.Msg, "[]interface{} pathElemKeyValue not found"+"."+fmt.Sprintf("%v", (reflect.TypeOf(x))))
+		} else {
+			tc.Msg = append(tc.Msg, "[]interface{} pathElemKeyValue not found"+"."+"nil")
+		}
+		tc.Data = x
+	}
+}
+
+// HandleNotEndOfListWithKeyInParseKeyWithAction is called to assist Get, Create, Delete, Update Action
+// it validates if the value of the JSON object matches the key value of the path
+func (p *Parser) HandleNotEndOfListWithKeyInParseKeyWithAction(x interface{}, value string, tc *TraceCtxt) bool {
+	switch x := x.(type) {
+	case string:
+		if string(x) == value {
+			tc.Idx++
+			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s string", value))
+			return true
+		}
+	case uint32:
+		if strconv.Itoa(int(x)) == value {
+			tc.Idx++
+			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s uint32", value))
+			return true
+		}
+	case float64:
+		if fmt.Sprintf("%.0f", x) == value {
+			tc.Idx++
+			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s float64", value))
+		}
+		return true
+	default:
+		tc.Found = false
+		if x != nil {
+			tc.Msg = append(tc.Msg, "[]interface{} not found"+"."+fmt.Sprintf("%v %v", (reflect.TypeOf(x)), x))
+		} else {
+			tc.Msg = append(tc.Msg, "[]interface{} not found"+"."+"nil")
+		}
+
+		tc.Data = x
+		return false
+	}
+	return false
+}
+
+// PopulateLocalLeafRefValue, populates the values and the keyvalues in the resolved leafref objects
+func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx int) {
+	rlref := tc.ResolvedLeafRefs[tc.ResolvedIdx]
+	switch x1 := x.(type) {
+	case string:
+		rlref.Value = x1
+		tc.AddMsg("string" + rlref.Value)
+		// the value is typically resolved using rlref.Value
+		if len(rlref.LocalPath.GetElem()[idx].GetKey()) != 0 {
+			for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
+				rlref.LocalPath.GetElem()[idx].GetKey()[k] = x1
+			}
+		}
+		rlref.Resolved = true
+	case int:
+		rlref.Value = strconv.Itoa(int(x1))
+		tc.AddMsg("int" + rlref.Value)
+		// the value is typically resolved using rlref.Value
+		if len(rlref.LocalPath.GetElem()[idx].GetKey()) != 0 {
+			for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
+				rlref.LocalPath.GetElem()[idx].GetKey()[k] = strconv.Itoa(int(x1))
+			}
+		}
+		rlref.Resolved = true
+	case float64:
+		rlref.Value = fmt.Sprintf("%.0f", x1)
+		tc.AddMsg("float64" + rlref.Value)
+		// the value is typically resolved using rlref.Value
+		if len(rlref.LocalPath.GetElem()[idx].GetKey()) != 0 {
+			for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
+				rlref.LocalPath.GetElem()[idx].GetKey()[k] = fmt.Sprintf("%.0f", x1)
+			}
+		}
+		rlref.Resolved = true
+	default:
+		if x1 != nil {
+			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", reflect.TypeOf(x1))
+		} else {
+			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", nil)
+		}
+	}
+}
+
+func (p *Parser) PopulateLocalLeafRefKey(x interface{}, tc *TraceCtxt, idx int) {
+	rlref := tc.ResolvedLeafRefs[tc.ResolvedIdx]
+	switch x1 := x.(type) {
+	case string:
+		// a leaf ref can only have 1 value, this is why this works
+		for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
+			rlref.LocalPath.GetElem()[idx].GetKey()[k] = x1
+		}
+	case int:
+		rlref.Value = strconv.Itoa(int(x1))
+		// a leaf ref can only have 1 value, this is why this works
+		for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
+			rlref.LocalPath.GetElem()[idx].GetKey()[k] = strconv.Itoa(int(x1))
+		}
+	case float64:
+		rlref.Value = fmt.Sprintf("%.0f", x1)
+		// a leaf ref can only have 1 value, this is why this works
+		for k := range rlref.LocalPath.GetElem()[idx].GetKey() {
+			rlref.LocalPath.GetElem()[idx].GetKey()[k] = fmt.Sprintf("%.0f", x1)
+		}
+	default:
+		if x1 != nil {
+			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", reflect.TypeOf(x1))
+		} else {
+			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", nil)
+		}
+	}
+}
+
+// p.ParseTreeWithAction parses various actions on a json object in a recursive way
+// actions can be Get, Update, Delete and Create
+func (p *Parser) ParseTreeWithActionOld(x1 interface{}, tc *TraceCtxt, idx int) interface{} {
+	// idx is a local counter that will stay local, after the recurssive function calls it remains the same
+	// tc.Idx is a global index used for tracing to trace, after a recursive function it will change if the recursive function changed it
+	//fmt.Printf("p.ParseTreeWithAction: %v, path: %v\n", tc, tc.Path)
 	tc.Msg = append(tc.Msg, "entry")
 	switch x1 := x1.(type) {
 	case map[string]interface{}:

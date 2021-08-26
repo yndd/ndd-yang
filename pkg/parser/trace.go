@@ -36,6 +36,8 @@ const (
 	ConfigTreeActionDelete ConfigTreeAction = "delete"
 	ConfigTreeActionCreate ConfigTreeAction = "create"
 	ConfigTreeActionUpdate ConfigTreeAction = "update"
+	ConfigTreeActionFind   ConfigTreeAction = "find"
+	ConfigResolveLeafRef   ConfigTreeAction = "resolve leafref"
 )
 
 func (c *ConfigTreeAction) String() string {
@@ -48,16 +50,26 @@ func (c *ConfigTreeAction) String() string {
 		return "create"
 	case ConfigTreeActionUpdate:
 		return "update"
+	case ConfigTreeActionFind:
+		return "find"
+	case ConfigResolveLeafRef:
+		return "resolve leafref"
 	}
 	return ""
 }
 
 type TraceCtxt struct {
-	Action ConfigTreeAction
-	Found  bool
-	Idx    int
-	Path   *config.Path
-	Data   interface{}
-	Value  interface{}
-	Msg    []string
+	Action           ConfigTreeAction
+	Found            bool
+	Idx              int
+	Path             *config.Path // the input path data
+	ResolvedIdx      int          // keeps track of the amount of amount of resolved Indexes
+	ResolvedLeafRefs []*ResolvedLeafRef
+	Data             interface{}
+	Value            interface{}
+	Msg              []string
+}
+
+func (tc *TraceCtxt) AddMsg(s string) {
+	tc.Msg = append(tc.Msg, s)
 }
