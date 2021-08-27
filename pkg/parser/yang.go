@@ -18,9 +18,12 @@ package parser
 
 import (
 	"fmt"
+	"strings"
 
 	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
 	"github.com/openconfig/goyang/pkg/yang"
+	"github.com/stoewer/go-strcase"
+	"github.com/yndd/ndd-yang/pkg/container"
 )
 
 // GetypeName return a string of the type of the  yang entry
@@ -68,4 +71,138 @@ func (p *Parser) CreatePathElem(e *yang.Entry) *config.PathElem {
 		fmt.Printf("Key: %s, KeyType: %s\n", e.Key, keyType)
 	}
 	return pathElem
+}
+
+func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Container) *container.Entry {
+	// Allocate a new Entry
+	entry := container.NewEntry(e.Name)
+
+	// initialize the Next pointer if relevant -> only relevant for list
+	entry.Next = next
+	entry.Prev = prev
+
+	// process mandatory attribute
+	switch e.Mandatory {
+	case 1: // TSTrue
+		entry.Mandatory = true
+	default: // TSTrue
+		entry.Mandatory = false
+	}
+	if e.Key != "" {
+		entry.Mandatory = true
+	}
+
+	// process type attaribute
+	switch p.GetTypeName(e) {
+	case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
+		entry.Type = p.GetTypeName(e)
+	case "boolean":
+		entry.Type = "bool"
+	case "enumeration":
+		entry.Enum = e.Type.Enum.Names()
+		entry.Type = "string"
+	default:
+		switch p.GetTypeKind(e) {
+		case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
+			entry.Type = p.GetTypeKind(e)
+		case "boolean":
+			entry.Type = "bool"
+		case "union":
+			entry.Type = "string"
+			entry.Union = true
+			for _, t := range e.Type.Type {
+				entry.Type = t.Root.Kind.String()
+				if entry.Type == "enumeration" ||
+					entry.Type == "leafref" ||
+					entry.Type == "union" {
+					entry.Type = "string"
+				}
+				entry.Pattern = append(entry.Pattern, t.Pattern...)
+
+			}
+		case "leafref":
+			// The processing of leaf refs is handled in another function
+			entry.Type = "string"
+		default:
+			entry.Type = "string"
+		}
+	}
+	// process elementType for a Key
+	if e.Key != "" {
+		switch p.GetTypeName(e.Dir[e.Key]) {
+		case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
+			entry.Type = p.GetTypeName(e.Dir[e.Key])
+		case "boolean":
+			entry.Type = "bool"
+		default:
+			entry.Type = "string"
+		}
+	}
+	// update the Type to reflect the reference to the proper struct
+	if entry.Prev != nil {
+		entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName() + "-" + e.Name)
+	}
+
+	if e.Type != nil {
+		for _, ra := range e.Type.Range {
+			entry.Range = append(entry.Range, int(ra.Min.Value))
+			entry.Range = append(entry.Range, int(ra.Max.Value))
+			//fmt.Printf("RANGE MIN: %d MAX: %d, TOTAL: %d\n", ra.Min.Value, ra.Max.Value, entry.Range)
+		}
+
+		for _, le := range e.Type.Length {
+			entry.Length = append(entry.Length, int(le.Min.Value))
+			entry.Length = append(entry.Length, int(le.Max.Value))
+			//fmt.Printf("LENGTH MIN: %d MAX: %d, TOTAL: %d\n", le.Min.Value, le.Max.Value, entry.Length)
+		}
+
+		if e.Type.Pattern != nil {
+			entry.Pattern = append(entry.Pattern, e.Type.Pattern...)
+			//fmt.Printf("LEAF NAME: %s, PATTERN: %s\n", e.Name, entry.Pattern)
+
+		}
+		if e.Type.Kind.String() == "enumeration" {
+			entry.Enum = e.Type.Enum.Names()
+		}
+		if e.Default != "" {
+			entry.Default = e.Default
+		}
+	}
+
+	// pattern post processing
+	var pattern string
+	for i, p := range entry.Pattern {
+		fmt.Printf("Pattern: %s last\n", p)
+		if i == (len(entry.Pattern) - 1) {
+			pattern += p
+		} else {
+			pattern += p + "|"
+		}
+	}
+	if len(pattern) > 0 {
+		fmt.Printf("Pattern orig: %sorig\n", pattern)
+		//pattern = strings.ReplaceAll(pattern, "@", "")
+		//pattern = strings.ReplaceAll(pattern, "#", "")
+		//pattern = strings.ReplaceAll(pattern, "$", "")
+		entry.PatternString = strings.ReplaceAll(pattern, "%", "")
+
+		if strings.Contains(pattern, "`") {
+			entry.PatternString = fmt.Sprintf("\"%s\"", entry.PatternString)
+		} else {
+			entry.PatternString = fmt.Sprintf("`%s`", entry.PatternString)
+		}
+		fmt.Printf("Pattern processed: %sprocessed\n", pattern)
+	}
+
+	// enum post processing
+	for _, enum := range entry.Enum {
+		entry.EnumString += "`" + enum + "`;"
+	}
+	if entry.EnumString != "" {
+		entry.EnumString = strings.TrimRight(entry.EnumString, ";")
+	}
+
+	// key handling
+	entry.Key = e.Key
+	return entry
 }
