@@ -29,6 +29,7 @@ import (
 )
 
 type Resource struct {
+	parser             *parser.Parser                 // calls a library for parsing JSON/YANG elements
 	Path               *config.Path                   // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
 	ActualPath         *config.Path                   // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
 	DependsOn          *Resource                      // resource dependency
@@ -50,7 +51,7 @@ type Option func(g *Resource)
 
 func WithXPath(p string) Option {
 	return func(r *Resource) {
-		r.Path = parser.XpathToConfigGnmiPath(p, 0)
+		r.Path = r.parser.XpathToConfigGnmiPath(p, 0)
 	}
 }
 
@@ -62,13 +63,14 @@ func WithDependsOn(d *Resource) Option {
 
 func WithExclude(p string) Option {
 	return func(r *Resource) {
-		r.Excludes = append(r.Excludes, parser.XpathToConfigGnmiPath(p, 0))
+		r.Excludes = append(r.Excludes, r.parser.XpathToConfigGnmiPath(p, 0))
 	}
 }
 
 func NewResource(opts ...Option) *Resource {
 	r := &Resource{
-		Path: new(config.Path),
+		parser: parser.NewParser(),
+		Path:   new(config.Path),
 		//DependsOn:          new(Resource),
 		Excludes:           make([]*config.Path, 0),
 		RootContainerEntry: nil,
@@ -203,7 +205,7 @@ func (r *Resource) GetPath() *config.Path {
 }
 
 func (r *Resource) GetRelativeXPath() *string {
-	return parser.ConfigGnmiPathToXPath(r.Path, true)
+	return r.parser.ConfigGnmiPathToXPath(r.Path, true)
 }
 
 func (r *Resource) GetAbsoluteName() string {
@@ -224,7 +226,7 @@ func (r *Resource) GetAbsoluteName() string {
 		newElem = append(newElem, pathElem)
 	}
 	//fmt.Printf("PathELem: %v\n", newElem)
-	return parser.ConfigGnmiPathToName(&config.Path{
+	return r.parser.ConfigGnmiPathToName(&config.Path{
 		Elem: newElem,
 	})
 }
@@ -248,13 +250,13 @@ func (r *Resource) GetAbsoluteGnmiPath() *config.Path {
 }
 
 func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
-	return parser.ConfigGnmiPathToXPath(&config.Path{
+	return r.parser.ConfigGnmiPathToXPath(&config.Path{
 		Elem: findPathElemHierarchy(r),
 	}, false)
 }
 
 func (r *Resource) GetAbsoluteXPath() *string {
-	return parser.ConfigGnmiPathToXPath(&config.Path{
+	return r.parser.ConfigGnmiPathToXPath(&config.Path{
 		Elem: findPathElemHierarchy(r),
 	}, true)
 }
@@ -262,7 +264,7 @@ func (r *Resource) GetAbsoluteXPath() *string {
 func (r *Resource) GetExcludeRelativeXPath() []string {
 	e := make([]string, 0)
 	for _, p := range r.Excludes {
-		e = append(e, *parser.ConfigGnmiPathToXPath(p, true))
+		e = append(e, *r.parser.ConfigGnmiPathToXPath(p, true))
 	}
 	return e
 }
@@ -318,10 +320,11 @@ func DeepCopyConfigPath(in *config.Path) *config.Path {
 func AddPathElem(p *config.Path, e *container.Entry) *config.Path {
 	elem := &config.PathElem{}
 	if e.Key == "" {
-		elem.Name = e.Name
+
+		elem.Name = e.GetName()
 	} else {
-		elem.Name = e.Name
-		elem.Key = map[string]string{e.Key: ""}
+		elem.Name = e.GetName()
+		elem.Key = map[string]string{strings.Split(e.GetKey(), " ")[0]: ""}
 	}
 	p.Elem = append(p.Elem, elem)
 	return p
@@ -341,7 +344,7 @@ func (r *Resource) GetInternalHierarchicalPaths() []*config.Path {
 
 	for _, e := range r.ContainerList[0].Entries {
 		if e.Next != nil {
-			fmt.Printf("GetInternalHierarchicalPaths Next Entry : %v, Container: %v", e, e.Next)
+			//fmt.Printf("GetInternalHierarchicalPaths Next Entry : %v, Container: %v", e, e.Next)
 			paths = addInternalHierarchicalPath(paths, path, e)
 		}
 	}
@@ -357,7 +360,7 @@ func addInternalHierarchicalPath(paths []*config.Path, origPath *config.Path, e 
 	paths = append(paths, path)
 	for _, e := range e.Next.Entries {
 		if e.Next != nil {
-			fmt.Printf("addInternalHierarchicalPath Next Entry : %v, Container: %v", e, e.Next)
+			//fmt.Printf("addInternalHierarchicalPath Next Entry : %v, Container: %v", e, e.Next)
 			paths = addInternalHierarchicalPath(paths, path, e)
 		}
 	}

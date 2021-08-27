@@ -35,14 +35,6 @@ type ResolvedLeafRef struct {
 	Resolved   bool         `json:"resolved,omitempty"`
 }
 
-// ResultleafRefValidation is a more human readable output
-type ResultleafRefValidation struct {
-	LocalPathString  string
-	RemotePathString string
-	Value            string
-	Resolved         bool
-}
-
 func (p *Parser) DeepCopyResolvedLeafRef(in *ResolvedLeafRef) (out *ResolvedLeafRef) {
 	out = new(ResolvedLeafRef)
 	if in.LocalPath != nil {

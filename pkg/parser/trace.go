@@ -59,15 +59,14 @@ func (c *ConfigTreeAction) String() string {
 }
 
 type TraceCtxt struct {
-	Action              ConfigTreeAction
-	Found               bool
-	Idx                 int
-	Path                *config.Path // the input path data
-	//ResolvedIdx         int          // used to know the Index when searching for the remote leafref
-	ResolvedLeafRefs    []*ResolvedLeafRef // holds all the resolved leafRefs if they get resolved
-	Data                interface{}
-	Value               interface{}
-	Msg                 []string
+	Action           ConfigTreeAction
+	Found            bool
+	Idx              int
+	Path             *config.Path       // the input path data
+	ResolvedLeafRefs []*ResolvedLeafRef // holds all the resolved leafRefs if they get resolved
+	Data             interface{}
+	Value            interface{} // used for leafref resolution
+	Msg              []string
 }
 
 func (tc *TraceCtxt) AddMsg(s string) {

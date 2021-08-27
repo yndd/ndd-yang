@@ -404,7 +404,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 				} else {
 					// not last element of network-instance[name=ethernet-1/1]/protocol/bgp-vpn; we are at protocol level
 					tc.Idx++
-					tc.AddMsg("end of path without key")
+					tc.AddMsg("not end of path without key")
 					switch tc.Action {
 					case ConfigResolveLeafRef:
 						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
@@ -766,10 +766,12 @@ func (p *Parser) PopulateLocalLeafRefValue(x interface{}, tc *TraceCtxt, idx, lr
 		}
 		rlref.Resolved = true
 	default:
-		if x1 != nil {
-			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", reflect.TypeOf(x1))
-		} else {
-			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", nil)
+		if p.log != nil {
+			if x1 != nil {
+				p.log.Debug("PopulateLocalLeafRefValue", "undefined type", reflect.TypeOf(x1))
+			} else {
+				p.log.Debug("PopulateLocalLeafRefValue", "undefined type", nil)
+			}
 		}
 	}
 }
@@ -795,10 +797,12 @@ func (p *Parser) PopulateLocalLeafRefKey(x interface{}, tc *TraceCtxt, idx, lrid
 			rlref.LocalPath.GetElem()[idx].GetKey()[k] = fmt.Sprintf("%.0f", x1)
 		}
 	default:
-		if x1 != nil {
-			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", reflect.TypeOf(x1))
-		} else {
-			p.log.Debug("PopulateLocalLeafRefValue", "undefined type", nil)
+		if p.log != nil {
+			if x1 != nil {
+				p.log.Debug("PopulateLocalLeafRefValue", "undefined type", reflect.TypeOf(x1))
+			} else {
+				p.log.Debug("PopulateLocalLeafRefValue", "undefined type", nil)
+			}
 		}
 	}
 }
@@ -1195,9 +1199,13 @@ func (p *Parser) GetUpdatesFromJSONData(rootPath, path *config.Path, x1 interfac
 	updates := make([]*config.Update, 0)
 	tc := &TraceCtxt{}
 	updates, tc = p.ParseJSONData2ConfigUpdates(tc, path, x1, 0, updates, refPaths)
-	p.log.Debug("GetUpdatesFromJSONData", "Updates", updates, "Trace Msg", tc.Msg)
+	if p.log != nil {
+		p.log.Debug("GetUpdatesFromJSONData", "Updates", updates, "Trace Msg", tc.Msg)
+	}
 	updates = p.PostProcessUpdates(rootPath, updates)
-	p.log.Debug("GetUpdatesFromJSONData", "Updates", updates)
+	if p.log != nil {
+		p.log.Debug("GetUpdatesFromJSONData", "Updates", updates)
+	}
 	return updates
 }
 
@@ -1334,7 +1342,9 @@ func (p *Parser) GetKeyNamesFromConfigPaths(path *config.Path, lastElem string, 
 		}
 	}
 	// when the response data from the server contains unmanaged resource data we can end up here
-	p.log.Debug("GetKeyNamesFromConfigPaths return nil, unamanged resource data ", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
+	if p.log != nil {
+		p.log.Debug("GetKeyNamesFromConfigPaths return nil, unamanged resource data ", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
+	}
 	return nil
 }
 
@@ -1402,7 +1412,9 @@ func (p *Parser) PostProcessUpdatesCaptureValues(updates []*config.Update) (map[
 	objKeyValuesIdx := make(map[int]map[string]int)
 	for _, update := range updates {
 		//fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.ConfigGnmiPathToXPath(update.Path, true))
-		p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
+		if p.log != nil {
+			p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.ConfigGnmiPathToXPath(update.Path, true))
+		}
 		for i, pathElem := range update.Path.GetElem() {
 			if len(pathElem.GetKey()) != 0 {
 				// this is real data, we capture the values
