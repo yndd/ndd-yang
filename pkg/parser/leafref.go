@@ -20,7 +20,15 @@ import (
 	"strings"
 
 	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
+	"github.com/netw-device-driver/ndd-runtime/pkg/logging"
 	"github.com/openconfig/goyang/pkg/yang"
+)
+
+type LeafRefValidationKind string
+
+const (
+	LeafRefValidationLocal    LeafRefValidationKind = "local"
+	LeafRefValidationExternal LeafRefValidationKind = "external"
 )
 
 type LeafRef struct {
@@ -174,4 +182,140 @@ func (p *Parser) ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath
 		}
 	}
 	return nil, nil, false
+}
+
+// ValidateLocalLeafRef validates the local leafred information on the local resource data
+// first the local leafrefs are resolved and if they are resolved
+// the remote leaf refs within the objects are located
+/// based on the result this funciton return the result + information on the validation
+func (p *Parser) ValidateLeafRef(kind LeafRefValidationKind, x1, x2 interface{}, definedLeafRefs []*LeafRef, log logging.Logger) (bool, []*ResolvedLeafRef, error) {
+
+	// a global indication if the leafRef resolution was successfull or not
+	// we are positive so we initialize to true
+	success := true
+	// we initialize a global list for finer information on the resolution
+	resultResolvedLeafRefs := make([]*ResolvedLeafRef, 0)
+
+	// for all defined leafrefs check if the local leafref exists
+	// if the local leafref is resolved, validate if the remote leafref is present
+	// if not the resource cannot be configured
+	for _, leafRef := range definedLeafRefs {
+		// Initialize 1 entry in resolvedLeafRefs, whether it will be resolved or not
+		// will be indicated by the Resolved flag in the resolvedLeafRef
+		resolvedLeafRefs := make([]*ResolvedLeafRef, 0)
+		resolvedLeafRef := &ResolvedLeafRef{
+			LocalPath:  p.DeepCopyPath(leafRef.LocalPath), // used for path
+			RemotePath: p.DeepCopyPath(leafRef.RemotePath),
+			Value:      "",
+			Resolved:   false,
+		}
+		resolvedLeafRefs = append(resolvedLeafRefs, resolvedLeafRef)
+		// resolve the leafreference
+		tc := &TraceCtxt{
+			Path:             p.DeepCopyPath(leafRef.LocalPath), // used to walk through the object -> this data will not be filled in
+			Idx:              0,
+			Msg:              make([]string, 0),
+			ResolvedLeafRefs: resolvedLeafRefs,
+			Action:           ConfigResolveLeafRef,
+		}
+		p.ParseTreeWithAction(x1, tc, 0, 0)
+
+		/*
+			if len(tc.ResolvedLeafRefs) > 1 {
+				fmt.Printf("ValidateLeafRef, localpath:%s, tc: %v\n", *p.ConfigGnmiPathToXPath(tc.Path, true), tc)
+				for _, resolvedLeafRef := range tc.ResolvedLeafRefs {
+					fmt.Printf("ValidateLeafRef resolvedLeafRef value     :%v\n", resolvedLeafRef.Value)
+					fmt.Printf("ValidateLeafRef resolvedLeafRef resolved  :%v\n", resolvedLeafRef.Resolved)
+					fmt.Printf("ValidateLeafRef resolvedLeafRef local path:%v\n", *p.ConfigGnmiPathToXPath(resolvedLeafRef.LocalPath, true))
+					fmt.Printf("ValidateLeafRef resolvedLeafRef remotepath:%v\n", *p.ConfigGnmiPathToXPath(resolvedLeafRef.RemotePath, true))
+				}
+			}
+		*/
+
+		// for all the resolved leafrefs validate if the remote leafref exists
+		for _, resolvedLeafRef := range tc.ResolvedLeafRefs {
+			// Validate if the leaf ref is resolved
+			if resolvedLeafRef.Resolved {
+				// populate the remote leaf ref key
+				p.PopulateRemoteLeafRefKey(resolvedLeafRef)
+				// find the Remote leafRef in the JSON data
+
+				tc := &TraceCtxt{
+					Path:   p.DeepCopyPath(resolvedLeafRef.RemotePath), // used to walk through the object -> this data will not be filled in
+					Idx:    0,
+					Msg:    make([]string, 0),
+					Action: ConfigTreeActionFind,
+				}
+				if kind == LeafRefValidationLocal {
+					// use the local data supplied in x1 for the remote leafref resolution
+					p.ParseTreeWithAction(x1, tc, 0, 0)
+				} else {
+					// use the external data supplied in x2 for the remote leafref resolution
+					p.ParseTreeWithAction(x2, tc, 0, 0)
+				}
+
+				// check if the remote leafref got resolved
+				if !tc.Found {
+					success = false
+				}
+				// fill out information which will be returned
+				resultResolvedLeafRef := &ResolvedLeafRef{
+					LocalPath:  resolvedLeafRef.LocalPath,
+					RemotePath: resolvedLeafRef.RemotePath,
+					Value:      resolvedLeafRef.Value,
+					Resolved:   tc.Found,
+				}
+				resultResolvedLeafRefs = append(resultResolvedLeafRefs, resultResolvedLeafRef)
+			}
+		}
+	}
+	return success, resultResolvedLeafRefs, nil
+}
+
+// NOT SURE IF A SINGLE VALUE IS SOMETHING THAT WILL BE OK ACCROSS THE BOARD
+// ValidateParentDependency validates the parent resource dependency
+// the remote leaf refs within the objects are located
+/// based on the result this funciton return the result + information on the validation
+func (p *Parser) ValidateParentDependency(x1 interface{}, value string, definedParentDependencies []*LeafRef, log logging.Logger) (bool, []*ResolvedLeafRef, error) {
+	// a global indication if the leafRef resolution was successfull or not
+	// we are positive so we initialize to true
+	success := true
+	// we initialize a global list for finer information on the resolution
+	resultleafRefValidation := make([]*ResolvedLeafRef, 0)
+
+	// for all defined parent dependencies check if the remote leafref exists
+	for _, leafRef := range definedParentDependencies {
+		// A parent dependency can only have 1 resolved leafref
+		// for structs/code reuse reasons we leverage the same structs
+		resolvedLeafRef := &ResolvedLeafRef{
+			RemotePath: p.DeepCopyPath(leafRef.RemotePath),
+			Value:      value,
+		}
+
+		p.PopulateRemoteLeafRefKey(resolvedLeafRef)
+		// find the Remote leafRef in the JSON data
+		tc := &TraceCtxt{
+			Path:   p.DeepCopyPath(resolvedLeafRef.RemotePath), // used to walk through the object -> this data will not be filled in
+			Idx:    0,
+			Msg:    make([]string, 0),
+			Value:  resolvedLeafRef.Value,
+			Action: ConfigTreeActionFind,
+		}
+
+		p.ParseTreeWithAction(x1, tc, 0, 0)
+
+		// check if the remote leafref got resolved
+		if !tc.Found {
+			success = false
+		}
+		// fill out information which will be returned
+		resolvedLeafRefValidationResult := &ResolvedLeafRef{
+			RemotePath: resolvedLeafRef.RemotePath,
+			Value:      resolvedLeafRef.Value,
+			Resolved:   tc.Found,
+		}
+		resultleafRefValidation = append(resultleafRefValidation, resolvedLeafRefValidationResult)
+
+	}
+	return success, resultleafRefValidation, nil
 }
