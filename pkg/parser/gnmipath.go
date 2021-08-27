@@ -384,8 +384,9 @@ func (p *Parser) DeepCopyPath(in *config.Path) *config.Path {
 	return out
 }
 
-func (p *Parser) CompareConfigPathsWithResourceKeys(path *config.Path, resourceKeys map[string]string) (bool, *config.Path, map[string]string) {
+func (p *Parser) CompareConfigPathsWithResourceKeys(path *config.Path, resourceKeys map[string]string) (bool, []*config.Path, map[string]string) {
 	changed := false
+	deletePaths := make([]*config.Path, 0)
 	deletePath := &config.Path{
 		Elem: make([]*config.PathElem, 0),
 	}
@@ -410,5 +411,6 @@ func (p *Parser) CompareConfigPathsWithResourceKeys(path *config.Path, resourceK
 		}
 		deletePath.Elem = append(deletePath.Elem, elem)
 	}
-	return changed, deletePath, newKeys
+	deletePaths = append(deletePaths, deletePath)
+	return changed, deletePaths, newKeys
 }
