@@ -368,17 +368,47 @@ func (p *Parser) DeepCopyPath(in *config.Path) *config.Path {
 	out := new(config.Path)
 	if in != nil {
 		out.Elem = make([]*config.PathElem, 0)
-		for _, v := range in.GetElem() {
-			elem := &config.PathElem{}
-			elem.Name = v.Name
-			if len(v.GetKey()) != 0 {
+		for _, pathElem := range in.GetElem() {
+			elem := &config.PathElem{
+				Name: pathElem.GetName(),
+			}
+			if len(pathElem.GetKey()) != 0 {
 				elem.Key = make(map[string]string)
-				for key, value := range v.Key {
-					elem.Key[key] = value
+				for keyName, keyValue := range pathElem.GetKey() {
+					elem.Key[keyName] = keyValue
 				}
 			}
 			out.Elem = append(out.Elem, elem)
 		}
 	}
 	return out
+}
+
+func (p *Parser) CompareConfigPathsWithResourceKeys(path *config.Path, resourceKeys map[string]string) (bool, *config.Path, map[string]string) {
+	changed := false
+	deletePath := &config.Path{
+		Elem: make([]*config.PathElem, 0),
+	}
+	newKeys := make(map[string]string)
+	for _, pathElem := range path.GetElem() {
+		elem := &config.PathElem{
+			Name: pathElem.GetName(),
+		}
+		if len(pathElem.GetKey()) != 0 {
+			elem.Key = make(map[string]string)
+			for keyName, keyValue := range pathElem.GetKey() {
+				if value, ok := resourceKeys[pathElem.GetName()+":"+keyName]; ok {
+					if value != keyValue {
+						changed = true
+					}
+					// use the value of the resourceKeys if the path should be deleted
+					elem.Key[keyName] = value
+					// these are the new keys which were supplied by the resource
+					newKeys[pathElem.GetName()+":"+keyName] = keyValue
+				}
+			}
+		}
+		deletePath.Elem = append(deletePath.Elem, elem)
+	}
+	return changed, deletePath, newKeys
 }
