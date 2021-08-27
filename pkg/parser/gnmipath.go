@@ -384,6 +384,9 @@ func (p *Parser) DeepCopyPath(in *config.Path) *config.Path {
 	return out
 }
 
+// CompareConfigPathsWithResourceKeys returns changed true when resourceKeys were provided 
+// and if they are different. In this case the deletePath is also valid, otherwise when changd is false
+// the delete path is not reliable
 func (p *Parser) CompareConfigPathsWithResourceKeys(path *config.Path, resourceKeys map[string]string) (bool, []*config.Path, map[string]string) {
 	changed := false
 	deletePaths := make([]*config.Path, 0)
@@ -398,15 +401,19 @@ func (p *Parser) CompareConfigPathsWithResourceKeys(path *config.Path, resourceK
 		if len(pathElem.GetKey()) != 0 {
 			elem.Key = make(map[string]string)
 			for keyName, keyValue := range pathElem.GetKey() {
-				if value, ok := resourceKeys[pathElem.GetName()+":"+keyName]; ok {
-					if value != keyValue {
-						changed = true
+				if len(resourceKeys) != 0 {
+					// the resource keys exists; if they dont exist there is no point comparing
+					// the data
+					if value, ok := resourceKeys[pathElem.GetName()+":"+keyName]; ok {
+						if value != keyValue {
+							changed = true
+						}
+						// use the value of the resourceKeys if the path should be deleted
+						elem.Key[keyName] = value
 					}
-					// use the value of the resourceKeys if the path should be deleted
-					elem.Key[keyName] = value
-					// these are the new keys which were supplied by the resource
-					newKeys[pathElem.GetName()+":"+keyName] = keyValue
 				}
+				// these are the new keys which were supplied by the resource
+				newKeys[pathElem.GetName()+":"+keyName] = keyValue
 			}
 		}
 		deletePath.Elem = append(deletePath.Elem, elem)
