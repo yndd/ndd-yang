@@ -1424,7 +1424,7 @@ func (p *Parser) PostProcessUpdatesCaptureValues(updates []*config.Update) (map[
 						// intialize the objKeyValues per level if this ws not yet initialized
 						// since this will be the first entry
 						if _, ok := objKeyValues[i]; !ok {
-							objKeyValues[i] = make(map[string][]string, 0)
+							objKeyValues[i] = make(map[string][]string)
 							objKeyValuesIdx[i] = make(map[string]int)
 						}
 						// initialize the objKeyValues per level per key if this was not yet initialized
