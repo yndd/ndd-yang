@@ -708,19 +708,22 @@ func (p *Parser) HandleNotEndOfListWithKeyInParseKeyWithAction(x interface{}, va
 			tc.Idx++
 			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s string", value))
 			return true
-		}
+		} 
+		tc.AddMsg("string")
 	case uint32:
 		if strconv.Itoa(int(x)) == value {
 			tc.Idx++
 			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s uint32", value))
 			return true
 		}
+		tc.AddMsg("uint32")
 	case float64:
 		if fmt.Sprintf("%.0f", x) == value {
 			tc.Idx++
 			tc.AddMsg(fmt.Sprintf("pathElemKeyValue found: %s float64", value))
+			return true
 		}
-		return true
+		tc.AddMsg("float64")
 	default:
 		tc.Found = false
 		if x != nil {
@@ -732,6 +735,7 @@ func (p *Parser) HandleNotEndOfListWithKeyInParseKeyWithAction(x interface{}, va
 		tc.Data = x
 		return false
 	}
+	tc.AddMsg(fmt.Sprintf("pathElemKeyValue not found: %s", value))
 	return false
 }
 
