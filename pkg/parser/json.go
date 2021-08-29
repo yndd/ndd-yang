@@ -125,6 +125,10 @@ func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 			} else {
 				x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = strings.Split(x3, ":")[len(strings.Split(x3, ":"))-1]
 			}
+		case float64:
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
+		case bool:
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
 
 		default:
 			// for other values like bool, float64, uint32 we dont do anything
@@ -133,7 +137,7 @@ func (p *Parser) CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 			} else {
 				fmt.Printf("type in main: nil\n")
 			}
-			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = v1
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
 		}
 	}
 	return x2
