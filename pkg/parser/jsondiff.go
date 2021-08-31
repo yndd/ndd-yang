@@ -23,6 +23,7 @@ import (
 
 	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
 	"github.com/netw-device-driver/ndd-runtime/pkg/logging"
+	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
 )
 
@@ -50,6 +51,143 @@ type Operation struct {
 	Type  OperationType
 	Path  string
 	Value interface{}
+}
+
+func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log logging.Logger) ([]*gnmi.Path, []*gnmi.Update, error) {
+
+	deletes := make([]*gnmi.Path, 0)
+	updates := make([]*gnmi.Update, 0)
+	// First we check if there are paths, which are created but should not be there!
+	// We run over the data from the response and check if there are paths which are not found
+	// in the intended data, if so we should delete the path
+	for _, updatex2 := range updatesx2 {
+		found := false
+		for _, updatex1 := range updatesx1 {
+			if *p.GnmiPathToXPath(updatex1.Path, true) == *p.GnmiPathToXPath(updatex2.Path, true) {
+				found = true
+			}
+		}
+		// path not found we should create it
+		if !found {
+			//fmt.Printf("path not found in the intended data data x1: %s\n", *p.ConfigGnmiPathToXPath(updatex2.Path, true))
+			deletes = append(deletes, updatex2.Path)
+		}
+	}
+	// After we check of the intended data is modified or deleted
+	// We compare the intended data with the response data
+	for _, updatex1 := range updatesx1 {
+		found := false
+		for _, updatex2 := range updatesx2 {
+			if *p.GnmiPathToXPath(updatex1.Path, true) == *p.GnmiPathToXPath(updatex2.Path, true) {
+				found = true
+				//fmt.Printf("path x1: %s\n", *p.ConfigGnmiPathToXPath(updatex1.Path, true))
+				//fmt.Printf("path x2: %s\n", *p.ConfigGnmiPathToXPath(updatex2.Path, true))
+				//fmt.Printf("Spec Data: %v\n", string(updatex1.Value))
+				//fmt.Printf("Resp Data: %v\n", string(updatex2.Value))
+				x1, err := p.GetValue(updatex1.Val)
+				if err != nil {
+					return nil, nil, err
+				}
+				b1, err := json.Marshal(x1)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				x2, err := p.GetValue(updatex2.Val)
+				if err != nil {
+					return nil, nil, err
+				}
+				b2, err := json.Marshal(x2)
+				if err != nil {
+					return nil, nil, err
+				}
+				patch, err := p.CompareJSONData(b1, b2)
+				if err != nil {
+					return nil, nil, errors.Wrap(err, errJSONMarshalIndent)
+				}
+				if len(patch) != 0 {
+					// resource is not up to date
+					fmt.Printf("Patch: %v\n", patch)
+					for _, operation := range patch {
+
+						v, err := json.Marshal(operation.Value)
+						if err != nil {
+							return nil, nil, err
+						}
+						fmt.Printf("Patch Operation: type %v, path: %v, value: %v\n", operation.Type, operation.Path, string(v))
+						switch operation.Type {
+						case OperationTypeDelete:
+							path := p.DeepCopyGnmiPath(updatex1.Path)
+
+							//split := strings.Split(operation.Path, "/")
+							//for i := 1; i <= len(split)-1; i++ {
+							p.AppendElemInGnmiPath(path, operation.Path, "")
+							//}
+							deletes = append(deletes, path)
+						case OperationTypeUpdate:
+							// reapply the same data to the cache since we have individual paths
+							// which means we can reapply the data
+							path := p.DeepCopyGnmiPath(updatex1.Path)
+							//split := strings.Split(operation.Path, "/")
+							//for i := 1; i <= len(split)-1; i++ {
+							p.AppendElemInGnmiPath(path, operation.Path, "")
+							//}
+
+							//fmt.Printf("Patch Replace Data: %v\n", operation.Value)
+							value, err := json.Marshal(operation.Value)
+							if err != nil {
+								return nil, nil, err
+							}
+							updates = append(updates, &gnmi.Update{
+								Path: path,
+								Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+							})
+						case OperationTypeCreate:
+							// reapply the same data to the cache since we have individual paths
+							// which means we can reapply the data
+							path := p.DeepCopyGnmiPath(updatex1.Path)
+
+							updates = append(updates, &gnmi.Update{
+								Path: path,
+								Val:  updatex1.Val,
+							})
+
+						default:
+							fmt.Printf("Json Patch difference, Patch Operation: type %v, path: %v, value: %v\n", operation.Type, operation.Path, operation.Value)
+						}
+					}
+					return deletes, updates, nil
+				}
+				continue
+			}
+		}
+		// path not found we should create it
+		if !found {
+			fmt.Printf("path not found  in data x1: %s\n", *p.GnmiPathToXPath(updatex1.Path, true))
+			updates = append(updates, updatex1)
+		}
+	}
+	if len(updates) == 0 {
+		fmt.Printf("FindResourceDelta2 Update up to date\n")
+	} else {
+		for _, u := range updates {
+			fmt.Printf("FindResourceDelta2 Update, Path: %v, Value: %s\n", u.Path, u.Val)
+		}
+	}
+	if len(deletes) == 0 {
+		fmt.Printf("FindResourceDelta2 Delete up to date\n")
+	} else {
+		if len(deletes) == 2 {
+			first := deletes[0]
+			last := deletes[1]
+			deletes[0] = last
+			deletes[1] = first
+		}
+		for _, dp := range deletes {
+			fmt.Printf("FindResourceDelta2 Delete, Path: %v\n", dp)
+		}
+	}
+	return deletes, updates, nil
 }
 
 func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log logging.Logger) ([]*config.Path, []*config.Update, error) {
@@ -99,20 +237,20 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 						fmt.Printf("Patch Operation: type %v, path: %v, value: %v\n", operation.Type, operation.Path, string(v))
 						switch operation.Type {
 						case OperationTypeDelete:
-							path := p.DeepCopyPath(updatex1.Path)
+							path := p.DeepCopyConfigPath(updatex1.Path)
 
 							//split := strings.Split(operation.Path, "/")
 							//for i := 1; i <= len(split)-1; i++ {
-							p.AppendElemInPath(path, operation.Path, "")
+							p.AppendElemInConfigPath(path, operation.Path, "")
 							//}
 							deletes = append(deletes, path)
 						case OperationTypeUpdate:
 							// reapply the same data to the cache since we have individual paths
 							// which means we can reapply the data
-							path := p.DeepCopyPath(updatex1.Path)
+							path := p.DeepCopyConfigPath(updatex1.Path)
 							//split := strings.Split(operation.Path, "/")
 							//for i := 1; i <= len(split)-1; i++ {
-							p.AppendElemInPath(path, operation.Path, "")
+							p.AppendElemInConfigPath(path, operation.Path, "")
 							//}
 
 							//fmt.Printf("Patch Replace Data: %v\n", operation.Value)
@@ -127,7 +265,7 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 						case OperationTypeCreate:
 							// reapply the same data to the cache since we have individual paths
 							// which means we can reapply the data
-							path := p.DeepCopyPath(updatex1.Path)
+							path := p.DeepCopyConfigPath(updatex1.Path)
 
 							updates = append(updates, &config.Update{
 								Path:  path,
@@ -171,6 +309,7 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 	}
 	return deletes, updates, nil
 }
+
 
 // CompareJSONData compares the target with the source and provides operation guides
 func (p *Parser) CompareJSONData(t, s []byte) ([]Operation, error) {
@@ -228,5 +367,3 @@ func (p *Parser) CompareJSONData(t, s []byte) ([]Operation, error) {
 	}
 	return operations, nil
 }
-
-

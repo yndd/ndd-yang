@@ -16,7 +16,10 @@ limitations under the License.
 
 package parser
 
-import config "github.com/netw-device-driver/ndd-grpc/config/configpb"
+import (
+	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
+	"github.com/openconfig/gnmi/proto/gnmi"
+)
 
 const (
 	// values
@@ -70,5 +73,20 @@ type TraceCtxt struct {
 }
 
 func (tc *TraceCtxt) AddMsg(s string) {
+	tc.Msg = append(tc.Msg, s)
+}
+
+type TraceCtxtGnmi struct {
+	Action           ConfigTreeAction
+	Found            bool
+	Idx              int
+	Path             *gnmi.Path             // the input path data
+	ResolvedLeafRefs []*ResolvedLeafRefGnmi // holds all the resolved leafRefs if they get resolved
+	Data             interface{}
+	Value            interface{} // used for leafref resolution
+	Msg              []string
+}
+
+func (tc *TraceCtxtGnmi) AddMsg(s string) {
 	tc.Msg = append(tc.Msg, s)
 }
