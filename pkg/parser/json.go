@@ -2038,8 +2038,8 @@ func (p *Parser) ParseJSONData2ConfigUpdatesGnmi(tc *TraceCtxtGnmi, path *gnmi.P
 			}
 			v, _ := json.Marshal(value)
 			update := &gnmi.Update{
-				Path:  path,
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
+				Path: path,
+				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: v}},
 			}
 			updates = append(updates, update)
 		}
