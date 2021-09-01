@@ -17,6 +17,7 @@ limitations under the License.
 package parser
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -2039,7 +2040,12 @@ func (p *Parser) ParseJSONData2ConfigUpdatesGnmi(tc *TraceCtxtGnmi, path *gnmi.P
 			v, _ := json.Marshal(value)
 			update := &gnmi.Update{
 				Path: path,
-				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: v}},
+				//Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: v}},
+				Val: &gnmi.TypedValue{
+					Value: &gnmi.TypedValue_JsonIetfVal{
+						JsonIetfVal: bytes.Trim(v, " \r\n\t"),
+					},
+				},
 			}
 			updates = append(updates, update)
 		}

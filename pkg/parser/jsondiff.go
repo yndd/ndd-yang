@@ -17,6 +17,7 @@ limitations under the License.
 package parser
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -140,7 +141,12 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 							}
 							updates = append(updates, &gnmi.Update{
 								Path: path,
-								Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: value}},
+								//Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: value}},
+								Val: &gnmi.TypedValue{
+									Value: &gnmi.TypedValue_JsonIetfVal{
+										JsonIetfVal: bytes.Trim(value, " \r\n\t"),
+									},
+								},
 							})
 						case OperationTypeCreate:
 							// reapply the same data to the cache since we have individual paths
@@ -309,7 +315,6 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 	}
 	return deletes, updates, nil
 }
-
 
 // CompareJSONData compares the target with the source and provides operation guides
 func (p *Parser) CompareJSONData(t, s []byte) ([]Operation, error) {
