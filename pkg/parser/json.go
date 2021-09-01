@@ -997,8 +997,10 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 											// we also need to add the key as part of the object
 											switch x := x1[n].(type) {
 											case map[string]interface{}:
+												tc.Msg = append(tc.Msg, "adding key map[string]interface{}")
 												x[pathElemKeyName] = pathElemKeyValues[i]
-											case nil:
+											default:
+												tc.Msg = append(tc.Msg, "adding key"+"."+fmt.Sprintf("%v", (reflect.TypeOf(x))))
 												// create the key since the object was initialized as nil
 												xx := make(map[string]interface{})
 												xx[pathElemKeyName] = pathElemKeyValues[i]
