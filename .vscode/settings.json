@@ -1,0 +1,9 @@
+{
+    "go.toolsManagement.autoUpdate": true,
+    "git.autofetch": true,
+    "python.venvPath": ".venv",
+    "go.gotoSymbol.includeImports": true,
+    "go.toolsEnvVars": {
+        "GOPROXY": ""
+    },
+}

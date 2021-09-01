@@ -4,8 +4,8 @@ go 1.16
 
 require (
 	github.com/netw-device-driver/ndd-grpc v0.1.32
-	github.com/netw-device-driver/ndd-runtime v0.4.78
-	github.com/openconfig/gnmi v0.0.0-20200414194230-1597cc0f2600
+	github.com/netw-device-driver/ndd-runtime v0.4.111
+	github.com/openconfig/gnmi v0.0.0-20210707145734-c69a5df04b53
 	github.com/openconfig/goyang v0.2.7
 	github.com/pkg/errors v0.9.1
 	github.com/stoewer/go-strcase v1.2.0

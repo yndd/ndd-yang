@@ -140,7 +140,7 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 							}
 							updates = append(updates, &gnmi.Update{
 								Path: path,
-								Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+								Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: value}},
 							})
 						case OperationTypeCreate:
 							// reapply the same data to the cache since we have individual paths
