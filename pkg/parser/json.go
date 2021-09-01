@@ -922,6 +922,18 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 
 						}
 						x2 = append(x2, x4)
+					case nil:
+						xx := make(map[string]interface{})
+						// add the key of the path to the list
+						for k, v := range tc.Path.GetElem()[idx].GetKey() {
+							if strings.Contains(v, "::") {
+								// avoids splitting ipv6 addresses
+								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							} else {
+								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							}
+						}
+						x2 = append(x2, xx)
 					}
 					x1[tc.Path.GetElem()[idx].GetName()] = x2
 				} else {
@@ -1000,7 +1012,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 												tc.AddMsg("adding key map[string]interface{}")
 												x[pathElemKeyName] = pathElemKeyValues[i]
 											default:
-												tc.AddMsg("adding key"+"."+fmt.Sprintf("%v", (reflect.TypeOf(x))))
+												tc.AddMsg("adding key" + "." + fmt.Sprintf("%v", (reflect.TypeOf(x))))
 												// create the key since the object was initialized as nil
 												xx := make(map[string]interface{})
 												xx[pathElemKeyName] = pathElemKeyValues[i]
