@@ -998,6 +998,11 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 											switch x := x1[n].(type) {
 											case map[string]interface{}:
 												x[pathElemKeyName] = pathElemKeyValues[i]
+											case nil:
+												// create the key since the object was initialized as nil
+												xx := make(map[string]interface{})
+												xx[pathElemKeyName] = pathElemKeyValues[i]
+												x1[n] = xx
 											}
 											return x1
 										case ConfigTreeActionCreate:
