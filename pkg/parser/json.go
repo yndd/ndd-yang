@@ -2267,6 +2267,19 @@ func (p *Parser) PostProcessUpdatesGnmi(rootPath *gnmi.Path, updates []*gnmi.Upd
 		return len(updates[i].Path.GetElem()) < len(updates[j].Path.GetElem())
 
 	})
+
+	if len(updates[0].GetPath().GetElem()) > len(rootPath.GetElem()) {
+		// insert the first element in the path
+		path := p.DeepCopyGnmiPath(updates[0].GetPath())
+		path.Elem = path.GetElem()[0:len(rootPath.GetElem())-1]
+
+		updates = append([]*gnmi.Update{
+			{
+				Path: path,
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: nil}},
+			},
+		}, updates...)
+	}
 	return updates
 }
 
