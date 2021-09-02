@@ -937,6 +937,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 						x2 = append(x2, xx)
 					}
 					x1[tc.Path.GetElem()[idx].GetName()] = x2
+					tc.AddMsg(fmt.Sprintf("data inserted: %v", x1[tc.Path.GetElem()[idx].GetName()]))
 				} else {
 					// create an mtu in
 					tc.AddMsg("without key")
