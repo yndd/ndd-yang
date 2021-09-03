@@ -1882,15 +1882,13 @@ func (p *Parser) GetKeyNamesFromGnmiPaths(path *gnmi.Path, lastElem string, refP
 	//p.log.Debug("FindKeyInPath", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
 	// loop over all reference paths
 	for _, refPath := range refPaths {
-		refPath.Elem = refPath.GetElem()[1:len(refPath.GetElem())-1]
-		fmt.Printf("refPath %s\n", *p.GnmiPathToXPath(refPath, true))
 		// take only the paths on which the lengths are equal
-		if len(refPath.GetElem()) == len(dummyPath.GetElem()) {
+		if len(refPath.GetElem())-1 == len(dummyPath.GetElem()) {
 			// loop over the path elements and if they all match we have a match
 			found := false
 			for i, pathElem := range dummyPath.GetElem() {
 				//p.log.Debug("GetKeyNamesFromConfigPaths", "i", i, "pathElemName", pathElem.GetName(), "refPargElemName", refPath.GetElem()[i].GetName())
-				if refPath.GetElem()[i].GetName() == pathElem.GetName() {
+				if refPath.GetElem()[i+1].GetName() == pathElem.GetName() {
 					found = true
 				} else {
 					found = false
