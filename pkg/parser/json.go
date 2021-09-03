@@ -2009,7 +2009,8 @@ func (p *Parser) PostProcessUpdatesGnmi(rootPath *gnmi.Path, updates []*gnmi.Upd
 	// since this is already part of the resource
 	if len(rootPath.GetElem()) > 1 {
 		for _, update := range updates {
-			update.Path.Elem = append(rootPath.GetElem()[:len(rootPath.GetElem())-1], update.Path.Elem...)
+			update.Path.Elem = append(rootPath.GetElem(), update.Path.Elem...)
+			//update.Path.Elem = append(rootPath.GetElem()[:len(rootPath.GetElem())-1], update.Path.Elem...)
 		}
 
 	}
