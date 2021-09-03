@@ -1132,7 +1132,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 	case nil:
 		tc.AddMsg("-^ nil case ^-")
 		switch tc.Action {
-		case ConfigTreeActionDelete, ConfigTreeActionUpdate:
+		case ConfigTreeActionCreate, ConfigTreeActionUpdate:
 			// this branch is used to insert leafs, leaflists in the tree when object get created
 			tc.Found = false
 			x1 := make(map[string]interface{})
