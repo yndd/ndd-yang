@@ -1882,6 +1882,7 @@ func (p *Parser) GetKeyNamesFromGnmiPaths(path *gnmi.Path, lastElem string, refP
 	//p.log.Debug("FindKeyInPath", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
 	// loop over all reference paths
 	for _, refPath := range refPaths {
+		refPath.Elem = refPath.GetElem()[1:len(refPath.GetElem())]
 		fmt.Printf("refPath %s\n", *p.GnmiPathToXPath(refPath, true))
 		// take only the paths on which the lengths are equal
 		if len(refPath.GetElem()) == len(dummyPath.GetElem()) {
