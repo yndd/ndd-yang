@@ -173,6 +173,7 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 			updates = append(updates, updatex1)
 		}
 	}
+	/*
 	if len(updates) == 0 {
 		fmt.Printf("FindResourceDelta2 Update up to date\n")
 	} else {
@@ -180,8 +181,10 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 			fmt.Printf("FindResourceDelta2 Update, Path: %v, Value: %s\n", u.Path, u.Val)
 		}
 	}
+	*/
+
 	if len(deletes) == 0 {
-		fmt.Printf("FindResourceDelta2 Delete up to date\n")
+		//fmt.Printf("FindResourceDelta2 Delete up to date\n")
 	} else {
 		if len(deletes) == 2 {
 			first := deletes[0]
@@ -189,9 +192,11 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 			deletes[0] = last
 			deletes[1] = first
 		}
+		/*
 		for _, dp := range deletes {
 			fmt.Printf("FindResourceDelta2 Delete, Path: %v\n", dp)
 		}
+		*/
 	}
 	return deletes, updates, nil
 }
@@ -233,14 +238,14 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 				}
 				if len(patch) != 0 {
 					// resource is not up to date
-					fmt.Printf("Patch: %v\n", patch)
+					//fmt.Printf("Patch: %v\n", patch)
 					for _, operation := range patch {
 
-						v, err := json.Marshal(operation.Value)
+						_, err := json.Marshal(operation.Value)
 						if err != nil {
 							return nil, nil, err
 						}
-						fmt.Printf("Patch Operation: type %v, path: %v, value: %v\n", operation.Type, operation.Path, string(v))
+						//fmt.Printf("Patch Operation: type %v, path: %v, value: %v\n", operation.Type, operation.Path, string(v))
 						switch operation.Type {
 						case OperationTypeDelete:
 							path := p.DeepCopyConfigPath(updatex1.Path)
@@ -279,7 +284,7 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 							})
 
 						default:
-							fmt.Printf("Json Patch difference, Patch Operation: type %v, path: %v, value: %v\n", operation.Type, operation.Path, operation.Value)
+							//fmt.Printf("Json Patch difference, Patch Operation: type %v, path: %v, value: %v\n", operation.Type, operation.Path, operation.Value)
 						}
 					}
 					return deletes, updates, nil
@@ -289,10 +294,11 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 		}
 		// path not found we should create it
 		if !found {
-			fmt.Printf("path not found  in data x1: %s\n", *p.ConfigGnmiPathToXPath(updatex1.Path, true))
+			//fmt.Printf("path not found  in data x1: %s\n", *p.ConfigGnmiPathToXPath(updatex1.Path, true))
 			updates = append(updates, updatex1)
 		}
 	}
+	/*
 	if len(updates) == 0 {
 		fmt.Printf("FindResourceDelta2 Update up to date\n")
 	} else {
@@ -300,6 +306,7 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 			fmt.Printf("FindResourceDelta2 Update, Path: %v, Value: %s\n", u.Path, string(u.Value))
 		}
 	}
+	*/
 	if len(deletes) == 0 {
 		fmt.Printf("FindResourceDelta2 Delete up to date\n")
 	} else {
@@ -309,9 +316,11 @@ func (p *Parser) FindResourceDelta(updatesx1, updatesx2 []*config.Update, log lo
 			deletes[0] = last
 			deletes[1] = first
 		}
+		/*
 		for _, dp := range deletes {
 			fmt.Printf("FindResourceDelta2 Delete, Path: %v\n", dp)
 		}
+		*/
 	}
 	return deletes, updates, nil
 }
@@ -363,7 +372,7 @@ func (p *Parser) CompareJSONData(t, s []byte) ([]Operation, error) {
 		}
 	default:
 		// this is not an object but a string or float or integer instead
-		fmt.Printf("CompareJSONData Default, type x1: %v, type x2: %v", reflect.TypeOf(x1), reflect.TypeOf(x2))
+		//fmt.Printf("CompareJSONData Default, type x1: %v, type x2: %v", reflect.TypeOf(x1), reflect.TypeOf(x2))
 		// check if the value differs
 		if x1 != x2 {
 			// the data differs
