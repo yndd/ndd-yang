@@ -498,7 +498,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 				}
 			} else {
 				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
-					tc.AddMsg("not end of path with key")
+					tc.AddMsg(fmt.Sprintf("-^not end of path with key: PathElemName: %s PathElemKey: %v ^-", tc.Path.GetElem()[idx].GetName(), tc.Path.GetElem()[idx].GetKey()))
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]/subinterface[index=100]
 					switch tc.Action {
 					case ConfigResolveLeafRef:
@@ -515,7 +515,7 @@ func (p *Parser) ParseTreeWithAction(x1 interface{}, tc *TraceCtxt, idx, lridx i
 				} else {
 					// not last element of network-instance[name=ethernet-1/1]/protocol/bgp-vpn; we are at protocol level
 					tc.Idx++
-					tc.AddMsg("not end of path without key")
+					tc.AddMsg(fmt.Sprintf("-^not end of path without key: PathElemName: %s PathElemKey: %v ^-", tc.Path.GetElem()[idx].GetName(), tc.Path.GetElem()[idx].GetKey()))
 					switch tc.Action {
 					case ConfigResolveLeafRef:
 						p.ParseTreeWithAction(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
@@ -850,7 +850,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 				}
 			} else {
 				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
-					tc.AddMsg("not end of path with key")
+					tc.AddMsg(fmt.Sprintf("-^not end of path with key: PathElemName: %s PathElemKey: %v ^-", tc.Path.GetElem()[idx].GetName(), tc.Path.GetElem()[idx].GetKey()))
 					// not last element of the list e.g. we are at interface of interface[name=ethernet-1/1]/subinterface[index=100]
 					switch tc.Action {
 					case ConfigResolveLeafRef:
@@ -867,7 +867,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 				} else {
 					// not last element of network-instance[name=ethernet-1/1]/protocol/bgp-vpn; we are at protocol level
 					tc.Idx++
-					tc.AddMsg("not end of path without key")
+					tc.AddMsg(fmt.Sprintf("-^not end of path without key: PathElemName: %s PathElemKey: %v ^-", tc.Path.GetElem()[idx].GetName(), tc.Path.GetElem()[idx].GetKey()))
 					switch tc.Action {
 					case ConfigResolveLeafRef:
 						p.ParseTreeWithActionGnmi(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
@@ -889,11 +889,11 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 		case ConfigTreeActionDelete:
 			// when the data is not found we just return x1 since nothing can get deleted
 			tc.Found = false
-			tc.Data = x1
+			//tc.Data = x1
 			return x1
 		case ConfigTreeActionGet:
 			tc.Found = false
-			tc.Data = x1
+			//tc.Data = x1
 			return x1
 		case ConfigTreeActionCreate, ConfigTreeActionUpdate:
 			// this branch is used to insert leafs, leaflists in the tree when object get created
@@ -1130,6 +1130,128 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 			}
 		}
 	case nil:
+		tc.AddMsg("-^ nil case ^-")
+		switch tc.Action {
+		case ConfigTreeActionDelete, ConfigTreeActionUpdate:
+			// this branch is used to insert leafs, leaflists in the tree when object get created
+			tc.Found = false
+			x1 := make(map[string]interface{})
+			if idx == len(tc.Path.GetElem())-1 {
+				tc.AddMsg(fmt.Sprintf("-^last element in path: PathElemName: %s PathElemKey: %v ^-", tc.Path.GetElem()[idx].GetName(), tc.Path.GetElem()[idx].GetKey()))
+				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
+					tc.AddMsg("-^ with key ^-")
+					// this is a new leaflist so we need to create the []interface
+					// and add the key to map[string]interface{}
+					// e.g. add subinterface[index=0] with value: admin-state: enable
+					x2 := make([]interface{}, 0)
+					// copy the values
+					x3 := p.CopyAndCleanTxValues(tc.Value)
+					// add the keys to the list
+					switch x4 := x3.(type) {
+					case map[string]interface{}:
+						// add the key of the path to the list
+						for k, v := range tc.Path.GetElem()[idx].GetKey() {
+							// add clean element to the list
+							if strings.Contains(v, "::") {
+								// avoids splitting ipv6 addresses
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							} else {
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							}
+
+						}
+						x2 = append(x2, x4)
+					case nil:
+						xx := make(map[string]interface{})
+						// add the key of the path to the list
+						for k, v := range tc.Path.GetElem()[idx].GetKey() {
+							if strings.Contains(v, "::") {
+								// avoids splitting ipv6 addresses
+								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							} else {
+								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							}
+						}
+						x2 = append(x2, xx)
+					}
+					
+					tc.AddMsg(fmt.Sprintf("-^ data inserted: %v ^-", x2))
+					x1[tc.Path.GetElem()[idx].GetName()] = x2
+					return x1
+				} else {
+					// create an mtu in
+					tc.AddMsg("-^ without key ^-")
+					x2 := p.CopyAndCleanTxValues(tc.Value)
+					tc.AddMsg(fmt.Sprintf("-^ data inserted: %v ^-", x2))
+					x1[tc.Path.GetElem()[idx].GetName()] = x2
+					return x1
+				}
+			} else {
+				// it can be that we get a new creation with a path that is not fully created
+				// e.g. /interface[name=ethernet-1/49]/subinterface[index=0]/vlan/encap/untagged
+				//  and we only had /interface[name=ethernet-1/49]/subinterface[index=0] in the config
+				tc.AddMsg(fmt.Sprintf("-^not last last element in path: PathElemName: %s PathElemKey: %v ^-", tc.Path.GetElem()[idx].GetName(), tc.Path.GetElem()[idx].GetKey()))
+				tc.Idx++
+				// create a new map string interface which will be recursively filled
+				x1 := make(map[string]interface{})				
+
+				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
+					tc.AddMsg("-^ with key ^-")
+					// this is a new leaflist so we need to create the []interface
+					// and add the key to map[string]interface{}
+					// e.g. add subinterface[index=0] with value: admin-state: enable
+					x2 := make([]interface{}, 0)
+					// copy the values
+					x3 := p.CopyAndCleanTxValues(tc.Value)
+					// add the keys to the list
+					switch x4 := x3.(type) {
+					case map[string]interface{}:
+						// add the key of the path to the list
+						for k, v := range tc.Path.GetElem()[idx].GetKey() {
+							// add clean element to the list
+							if strings.Contains(v, "::") {
+								// avoids splitting ipv6 addresses
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							} else {
+								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							}
+
+						}
+						x2 = append(x2, x4)
+					case nil:
+						xx := make(map[string]interface{})
+						// add the key of the path to the list
+						for k, v := range tc.Path.GetElem()[idx].GetKey() {
+							if strings.Contains(v, "::") {
+								// avoids splitting ipv6 addresses
+								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
+							} else {
+								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
+							}
+						}
+						x2 = append(x2, xx)
+					}
+					x1[tc.Path.GetElem()[idx].GetName()] = x2
+					tc.AddMsg(fmt.Sprintf("-^ inserting data ^-"))
+					x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithActionGnmi(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
+					tc.AddMsg(fmt.Sprintf("-^ data inserted: %v ^-", x2))
+					return x2
+				} else {
+					// create an mtu in
+					tc.AddMsg("-^ without key ^-") 
+					x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
+					tc.AddMsg(fmt.Sprintf("-^ inserting data ^-"))
+					x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithActionGnmi(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
+					tc.AddMsg(fmt.Sprintf("-^ data inserted: %v ^-", x1))
+				}
+				return x1
+			}
+		default:
+			tc.Found = false
+			//tc.Data = x1
+			tc.AddMsg("default")
+			return x1
+		}
 	default:
 	}
 	switch tc.Action {
