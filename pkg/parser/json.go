@@ -191,9 +191,9 @@ func (p *Parser) CompareValues(path *config.Path, cacheValue, deviceValue interf
 		return nil, errors.Wrap(err, ErrJSONCompare)
 	}
 	/*
-	if len(patch) != 0 {
-		//fmt.Printf("Data Comparison failed:\nx1: %v\nx2: %v\n", x1, x2)
-	}
+		if len(patch) != 0 {
+			//fmt.Printf("Data Comparison failed:\nx1: %v\nx2: %v\n", x1, x2)
+		}
 	*/
 	return patch, nil
 }
@@ -214,9 +214,9 @@ func (p *Parser) CompareValuesGnmi(path *gnmi.Path, cacheValue, deviceValue inte
 		return nil, errors.Wrap(err, ErrJSONCompare)
 	}
 	/*
-	if len(patch) != 0 {
-		fmt.Printf("Data Comparison failed:\nx1: %v\nx2: %v\n", x1, x2)
-	}
+		if len(patch) != 0 {
+			fmt.Printf("Data Comparison failed:\nx1: %v\nx2: %v\n", x1, x2)
+		}
 	*/
 	return patch, nil
 }
@@ -1172,7 +1172,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 						}
 						x2 = append(x2, xx)
 					}
-					
+
 					tc.AddMsg(fmt.Sprintf("-^ data inserted: %v ^-", x2))
 					x1[tc.Path.GetElem()[idx].GetName()] = x2
 					return x1
@@ -1191,7 +1191,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 				tc.AddMsg(fmt.Sprintf("-^not last last element in path: PathElemName: %s PathElemKey: %v ^-", tc.Path.GetElem()[idx].GetName(), tc.Path.GetElem()[idx].GetKey()))
 				tc.Idx++
 				// create a new map string interface which will be recursively filled
-				x1 := make(map[string]interface{})				
+				x1 := make(map[string]interface{})
 
 				if len(tc.Path.GetElem()[idx].GetKey()) != 0 {
 					tc.AddMsg("-^ with key ^-")
@@ -1236,7 +1236,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 					return x2
 				} else {
 					// create an mtu in
-					tc.AddMsg("-^ without key ^-") 
+					tc.AddMsg("-^ without key ^-")
 					x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
 					tc.AddMsg(fmt.Sprintf("-^ inserting data ^-"))
 					x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithActionGnmi(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
@@ -1878,9 +1878,11 @@ func (p *Parser) GetKeyNamesFromGnmiPaths(path *gnmi.Path, lastElem string, refP
 	// the result will be used for comparison
 	dummyPath := p.DeepCopyGnmiPath(path)
 	dummyPath = p.AppendElemInGnmiPath(dummyPath, lastElem, "")
+	fmt.Printf("dummyPath %s\n", *p.GnmiPathToXPath(dummyPath, true))
 	//p.log.Debug("FindKeyInPath", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
 	// loop over all reference paths
 	for _, refPath := range refPaths {
+		fmt.Printf("refPath %s\n", *p.GnmiPathToXPath(refPath, true))
 		// take only the paths on which the lengths are equal
 		if len(refPath.GetElem()) == len(dummyPath.GetElem()) {
 			// loop over the path elements and if they all match we have a match
@@ -1906,7 +1908,7 @@ func (p *Parser) GetKeyNamesFromGnmiPaths(path *gnmi.Path, lastElem string, refP
 	}
 	// when the response data from the server contains unmanaged resource data we can end up here
 	if p.log != nil {
-		p.log.Debug("GetKeyNamesFromConfigPaths return nil, unamanged resource data ", "path", *p.GnmiPathToXPath(dummyPath, true))
+		p.log.Debug("GetKeyNamesFromConfigPaths return nil, unmanaged resource data ", "path", *p.GnmiPathToXPath(dummyPath, true))
 	}
 	return nil
 }
@@ -2024,18 +2026,18 @@ func (p *Parser) PostProcessUpdatesGnmi(rootPath *gnmi.Path, updates []*gnmi.Upd
 			// insert the first element in the path
 			path := p.DeepCopyGnmiPath(updates[0].GetPath())
 			path.Elem = path.GetElem()[:len(rootPath.GetElem())]
-	
+
 			var x1 map[string]interface{}
 			b, _ := json.Marshal(x1)
 			updates = append([]*gnmi.Update{
 				{
 					Path: path,
-					Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: b}},
+					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: b}},
 				},
 			}, updates...)
 		}
 	}
-	
+
 	return updates
 }
 
