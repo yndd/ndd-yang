@@ -1878,7 +1878,6 @@ func (p *Parser) GetKeyNamesFromGnmiPaths(path *gnmi.Path, lastElem string, refP
 	// the result will be used for comparison
 	dummyPath := p.DeepCopyGnmiPath(path)
 	dummyPath = p.AppendElemInGnmiPath(dummyPath, lastElem, "")
-	fmt.Printf("dummyPath %s\n", *p.GnmiPathToXPath(dummyPath, true))
 	//p.log.Debug("FindKeyInPath", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
 	// loop over all reference paths
 	for _, refPath := range refPaths {
@@ -1954,7 +1953,8 @@ func (p *Parser) PostProcessUpdates(rootPath *config.Path, updates []*config.Upd
 	// since this is already part of the resource
 	if len(rootPath.GetElem()) > 1 {
 		for _, update := range updates {
-			update.Path.Elem = append(rootPath.GetElem()[:len(rootPath.GetElem())-1], update.Path.Elem...)
+			update.Path.Elem = append(rootPath.GetElem(), update.Path.Elem...)
+			//update.Path.Elem = append(rootPath.GetElem()[:len(rootPath.GetElem())-1], update.Path.Elem...)
 		}
 
 	}
