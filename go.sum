@@ -687,11 +687,8 @@ github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OS
 github.com/nats-io/stan.go v0.7.0/go.mod h1:Ci6mUIpGQTjl++MqK2XzkWI/0vF+Bl72uScx7ejSYmU=
 github.com/ncw/swift v1.0.47/go.mod h1:23YIA4yWVnGwv2dQlN4bB7egfYX6YLn0Yo/S6zZO/ZM=
 github.com/netw-device-driver/ndd-grpc v0.1.28/go.mod h1:HfnC81owTl7n476RrrbK2YzFjg7dtnvMjfVZ+ZGx09w=
-github.com/netw-device-driver/ndd-grpc v0.1.32 h1:Xn3PoCnqhZiGYnund88g+qdKzCtjL5YKrlS81yNIw0o=
 github.com/netw-device-driver/ndd-grpc v0.1.32/go.mod h1:JANvl+sv2h/e0IMq3tLX72HVLrpxYtBgFbd35wbyTOc=
 github.com/netw-device-driver/ndd-runtime v0.4.78/go.mod h1:pe+ucJSwzefLFHRTCeHkIMrNf6F3OxSddBpfA1TT6Rs=
-github.com/netw-device-driver/ndd-runtime v0.4.111 h1:OvACY/8SMlgr4IwuKv/S9ps9vyRo12cCSU7RREUDAY8=
-github.com/netw-device-driver/ndd-runtime v0.4.111/go.mod h1:jhWrTR/rIVYEQJ1pcAFReZn6BvlkJrNah/MXoD/Llrw=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/nishanths/predeclared v0.0.0-20200524104333-86fad755b4d3/go.mod h1:nt3d53pc1VYcphSCIaYAJtnPYnr3Zyn8fMq2wvPGPso=
 github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1/go.mod h1:IuKpRQcYE1Tfu+oAQqaLisqDeXgjyyltCfsaoYN18NQ=
@@ -934,6 +931,8 @@ github.com/xeipuuv/gojsonschema v0.0.0-20180618132009-1d523034197f/go.mod h1:5yf
 github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMxjDjgmT5uz5wzYJKVo23qUhYTos=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
+github.com/yndd/ndd-runtime v0.1.1 h1:sH/cA7EURGGiQXDtB7vKQeqUS3YGQQhiVZqUXGwaoaA=
+github.com/yndd/ndd-runtime v0.1.1/go.mod h1:H9878DK7V5xxs4bi1pMrWPZJ6/+X3MqpKaErDPkcLs4=
 github.com/yndd/ndd-yang v0.1.62/go.mod h1:GT/8efIchBH1sQ6J64AM1FZDXXIaWeirkYUpbmDPlHI=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

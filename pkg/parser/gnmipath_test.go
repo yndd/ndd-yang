@@ -20,23 +20,23 @@ import (
 	"reflect"
 	"testing"
 
-	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
+	"github.com/openconfig/gnmi/proto/gnmi"
 )
 
-func TestConfigGnmiPathToXPath(t *testing.T) {
+func TestGnmiPathToXPath(t *testing.T) {
 	tests := []struct {
-		inp *config.Path
+		inp *gnmi.Path
 		exp string
 	}{
 		{
-			inp: &config.Path{
-				Elem: []*config.PathElem{},
+			inp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{},
 			},
 			exp: "/",
 		},
 		{
-			inp: &config.Path{
-				Elem: []*config.PathElem{
+			inp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{
 					{Name: "a"},
 					{Name: "b"},
 				},
@@ -44,8 +44,8 @@ func TestConfigGnmiPathToXPath(t *testing.T) {
 			exp: "/a/b",
 		},
 		{
-			inp: &config.Path{
-				Elem: []*config.PathElem{{
+			inp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{{
 					Name: "a", Key: map[string]string{"z1": "z2"},
 				}, {
 					Name: "b",
@@ -54,8 +54,8 @@ func TestConfigGnmiPathToXPath(t *testing.T) {
 			exp: "/a[z1=z2]/b",
 		},
 		{
-			inp: &config.Path{
-				Elem: []*config.PathElem{{
+			inp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{{
 					Name: "a", Key: map[string]string{"z1": "z2", "z3": "z4"},
 				}, {
 					Name: "b",
@@ -67,7 +67,7 @@ func TestConfigGnmiPathToXPath(t *testing.T) {
 
 	for _, tt := range tests {
 		parser := NewParser()
-		ret := parser.ConfigGnmiPathToXPath(tt.inp, true)
+		ret := parser.GnmiPathToXPath(tt.inp, true)
 		if !reflect.DeepEqual(*ret, tt.exp) {
 			t.Errorf("sortedVals(%v) = got %v, want %v", tt.inp, *ret, tt.exp)
 		}
@@ -77,24 +77,24 @@ func TestConfigGnmiPathToXPath(t *testing.T) {
 func TestXpathToGnmiPath(t *testing.T) {
 	tests := []struct {
 		inp string
-		exp *config.Path
+		exp *gnmi.Path
 	}{
 		{
 			inp: "",
-			exp: &config.Path{
-				Elem: []*config.PathElem{},
+			exp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{},
 			},
 		},
 		{
 			inp: "/",
-			exp: &config.Path{
-				Elem: []*config.PathElem{},
+			exp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{},
 			},
 		},
 		{
 			inp: "/a/b",
-			exp: &config.Path{
-				Elem: []*config.PathElem{
+			exp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{
 					{Name: "a"},
 					{Name: "b"},
 				},
@@ -102,8 +102,8 @@ func TestXpathToGnmiPath(t *testing.T) {
 		},
 		{
 			inp: "/a[z1=z2]/b",
-			exp: &config.Path{
-				Elem: []*config.PathElem{{
+			exp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{{
 					Name: "a", Key: map[string]string{"z1": "z2"},
 				}, {
 					Name: "b",
@@ -112,8 +112,8 @@ func TestXpathToGnmiPath(t *testing.T) {
 		},
 		{
 			inp: "/a[z1=z2, z3=z4]/b",
-			exp: &config.Path{
-				Elem: []*config.PathElem{{
+			exp: &gnmi.Path{
+				Elem: []*gnmi.PathElem{{
 					Name: "a", Key: map[string]string{"z1": "z2", "z3": "z4"},
 				}, {
 					Name: "b",
@@ -124,7 +124,7 @@ func TestXpathToGnmiPath(t *testing.T) {
 
 	for _, tt := range tests {
 		parser := NewParser()
-		ret := parser.XpathToConfigGnmiPath(tt.inp, 0)
+		ret := parser.XpathToGnmiPath(tt.inp, 0)
 		if !reflect.DeepEqual(ret, tt.exp) {
 			t.Errorf("sortedVals(%v) = got %v, want %v", tt.inp, ret, tt.exp)
 		}

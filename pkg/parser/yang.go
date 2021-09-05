@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
+	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/goyang/pkg/yang"
 	"github.com/stoewer/go-strcase"
 	"github.com/yndd/ndd-yang/pkg/container"
@@ -49,8 +49,8 @@ func (p *Parser) GetTypeKind(e *yang.Entry) string {
 }
 
 // CreatePathElem returns a config path element from a yang Entry
-func (p *Parser) CreatePathElem(e *yang.Entry) *config.PathElem {
-	pathElem := &config.PathElem{
+func (p *Parser) CreatePathElem(e *yang.Entry) *gnmi.PathElem {
+	pathElem := &gnmi.PathElem{
 		Name: e.Name,
 		Key:  make(map[string]string),
 	}

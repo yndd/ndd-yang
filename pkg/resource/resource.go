@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
+	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/stoewer/go-strcase"
 	"github.com/yndd/ndd-yang/pkg/container"
 	"github.com/yndd/ndd-yang/pkg/parser"
@@ -30,10 +30,10 @@ import (
 
 type Resource struct {
 	parser             *parser.Parser                 // calls a library for parsing JSON/YANG elements
-	Path               *config.Path                   // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
-	ActualPath         *config.Path                   // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
+	Path               *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
+	ActualPath         *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
 	DependsOn          *Resource                      // resource dependency
-	Excludes           []*config.Path                 // relative from the the resource
+	Excludes           []*gnmi.Path                   // relative from the the resource
 	FileName           string                         // the filename the resource is using to render out the config
 	ResFile            *os.File                       // the file reference for writing the resource file
 	RootContainerEntry *container.Entry               // this is the root element which is used to reference the hierarchical resource information
@@ -42,8 +42,8 @@ type Resource struct {
 	ContainerList      []*container.Container         // List of all containers within the resource
 	ContainerLevel     int                            // the current container Level when processing the yang entries
 	ContainerLevelKeys map[int][]*container.Container // the current container Level key list
-	LocalLeafRefs      []*parser.LeafRef
-	ExternalLeafRefs   []*parser.LeafRef
+	LocalLeafRefs      []*parser.LeafRefGnmi
+	ExternalLeafRefs   []*parser.LeafRefGnmi
 }
 
 // Option can be used to manipulate Options.
@@ -51,7 +51,7 @@ type Option func(g *Resource)
 
 func WithXPath(p string) Option {
 	return func(r *Resource) {
-		r.Path = r.parser.XpathToConfigGnmiPath(p, 0)
+		r.Path = r.parser.XpathToGnmiPath(p, 0)
 	}
 }
 
@@ -63,24 +63,24 @@ func WithDependsOn(d *Resource) Option {
 
 func WithExclude(p string) Option {
 	return func(r *Resource) {
-		r.Excludes = append(r.Excludes, r.parser.XpathToConfigGnmiPath(p, 0))
+		r.Excludes = append(r.Excludes, r.parser.XpathToGnmiPath(p, 0))
 	}
 }
 
 func NewResource(opts ...Option) *Resource {
 	r := &Resource{
 		parser: parser.NewParser(),
-		Path:   new(config.Path),
+		Path:   new(gnmi.Path),
 		//DependsOn:          new(Resource),
-		Excludes:           make([]*config.Path, 0),
+		Excludes:           make([]*gnmi.Path, 0),
 		RootContainerEntry: nil,
 		Container:          nil,
 		LastContainerPtr:   nil,
 		ContainerList:      make([]*container.Container, 0),
 		ContainerLevel:     0,
 		ContainerLevelKeys: make(map[int][]*container.Container),
-		LocalLeafRefs:      make([]*parser.LeafRef, 0),
-		ExternalLeafRefs:   make([]*parser.LeafRef, 0),
+		LocalLeafRefs:      make([]*parser.LeafRefGnmi, 0),
+		ExternalLeafRefs:   make([]*parser.LeafRefGnmi, 0),
 	}
 
 	for _, o := range opts {
@@ -92,7 +92,7 @@ func NewResource(opts ...Option) *Resource {
 	return r
 }
 
-func (r *Resource) AddLocalLeafRef(ll, rl *config.Path) {
+func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
 		for _, c := range r.ContainerList {
@@ -110,13 +110,13 @@ func (r *Resource) AddLocalLeafRef(ll, rl *config.Path) {
 			}
 		}
 	}
-	r.LocalLeafRefs = append(r.LocalLeafRefs, &parser.LeafRef{
+	r.LocalLeafRefs = append(r.LocalLeafRefs, &parser.LeafRefGnmi{
 		LocalPath:  ll,
 		RemotePath: rl,
 	})
 }
 
-func (r *Resource) AddExternalLeafRef(ll, rl *config.Path) {
+func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	entries := make([]*container.Entry, 0)
 	for i, llpElem := range ll.GetElem() {
@@ -141,17 +141,17 @@ func (r *Resource) AddExternalLeafRef(ll, rl *config.Path) {
 			}
 		}
 	}
-	r.ExternalLeafRefs = append(r.ExternalLeafRefs, &parser.LeafRef{
+	r.ExternalLeafRefs = append(r.ExternalLeafRefs, &parser.LeafRefGnmi{
 		LocalPath:  ll,
 		RemotePath: rl,
 	})
 }
 
-func (r *Resource) GetLocalLeafRef() []*parser.LeafRef {
+func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
 	return r.LocalLeafRefs
 }
 
-func (r *Resource) GetExternalLeafRef() []*parser.LeafRef {
+func (r *Resource) GetExternalLeafRef() []*parser.LeafRefGnmi {
 	return r.ExternalLeafRefs
 }
 
@@ -176,14 +176,14 @@ func (r *Resource) ResourceLastElement() string {
 	return r.Path.GetElem()[len(r.Path.GetElem())-1].GetName()
 }
 
-func (r *Resource) GetRelativeGnmiPath() *config.Path {
+func (r *Resource) GetRelativeGnmiPath() *gnmi.Path {
 	return r.Path
 }
 
 // root resource have a additional entry in the path which is inconsistent with hierarchical resources
 // to provide consistencyw e introduced this method to provide a consistent result for paths
 // used mainly for leafrefs for now
-func (r *Resource) GetRelativeGnmiActualResourcePath() *config.Path {
+func (r *Resource) GetRelativeGnmiActualResourcePath() *gnmi.Path {
 	if r.DependsOn != nil {
 		return r.Path
 	}
@@ -194,7 +194,7 @@ func (r *Resource) GetRelativeGnmiActualResourcePath() *config.Path {
 
 // GetPath returns the relative Path of the resource
 // For the root resources we need to strip the first entry of the path since srl uses some prefix entry
-func (r *Resource) GetPath() *config.Path {
+func (r *Resource) GetPath() *gnmi.Path {
 	if r.DependsOn != nil {
 		return r.Path
 	}
@@ -205,7 +205,7 @@ func (r *Resource) GetPath() *config.Path {
 }
 
 func (r *Resource) GetRelativeXPath() *string {
-	return r.parser.ConfigGnmiPathToXPath(r.Path, true)
+	return r.parser.GnmiPathToXPath(r.Path, true)
 }
 
 func (r *Resource) GetAbsoluteName() string {
@@ -215,18 +215,18 @@ func (r *Resource) GetAbsoluteName() string {
 		e = e[1:]
 	}
 	// we remove the "-" from the element names otherwise we get a name clash when we parse all the Yang information
-	newElem := make([]*config.PathElem, 0)
+	newElem := make([]*gnmi.PathElem, 0)
 	for _, entry := range e {
 		name := strings.ReplaceAll(entry.Name, "-", "")
 		name = strings.ReplaceAll(name, "ethernetsegment", "esi")
-		pathElem := &config.PathElem{
+		pathElem := &gnmi.PathElem{
 			Name: name,
 			Key:  entry.GetKey(),
 		}
 		newElem = append(newElem, pathElem)
 	}
 	//fmt.Printf("PathELem: %v\n", newElem)
-	return r.parser.ConfigGnmiPathToName(&config.Path{
+	return r.parser.GnmiPathToName(&gnmi.Path{
 		Elem: newElem,
 	})
 }
@@ -234,8 +234,8 @@ func (r *Resource) GetAbsoluteName() string {
 // root resource have a additional entry in the path which is inconsistent with hierarchical resources
 // to provide consistency we introduced this method to provide a consistent result for paths
 // used mainly for leafrefs for now
-func (r *Resource) GetAbsoluteGnmiActualResourcePath() *config.Path {
-	actPath := &config.Path{
+func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
+	actPath := &gnmi.Path{
 		Elem: findPathElemHierarchy(r),
 	}
 
@@ -243,20 +243,20 @@ func (r *Resource) GetAbsoluteGnmiActualResourcePath() *config.Path {
 	return actPath
 }
 
-func (r *Resource) GetAbsoluteGnmiPath() *config.Path {
-	return &config.Path{
+func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
+	return &gnmi.Path{
 		Elem: findPathElemHierarchy(r),
 	}
 }
 
 func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
-	return r.parser.ConfigGnmiPathToXPath(&config.Path{
+	return r.parser.GnmiPathToXPath(&gnmi.Path{
 		Elem: findPathElemHierarchy(r),
 	}, false)
 }
 
 func (r *Resource) GetAbsoluteXPath() *string {
-	return r.parser.ConfigGnmiPathToXPath(&config.Path{
+	return r.parser.GnmiPathToXPath(&gnmi.Path{
 		Elem: findPathElemHierarchy(r),
 	}, true)
 }
@@ -264,12 +264,12 @@ func (r *Resource) GetAbsoluteXPath() *string {
 func (r *Resource) GetExcludeRelativeXPath() []string {
 	e := make([]string, 0)
 	for _, p := range r.Excludes {
-		e = append(e, *r.parser.ConfigGnmiPathToXPath(p, true))
+		e = append(e, *r.parser.GnmiPathToXPath(p, true))
 	}
 	return e
 }
 
-func findPathElemHierarchy(r *Resource) []*config.PathElem {
+func findPathElemHierarchy(r *Resource) []*gnmi.PathElem {
 	if r.DependsOn != nil {
 		fp := findPathElemHierarchy(r.DependsOn)
 		fp = append(fp, r.Path.Elem...)
@@ -298,12 +298,12 @@ func (r *Resource) GetHierarchicalElements() []*HeInfo {
 	return he
 }
 
-func DeepCopyConfigPath(in *config.Path) *config.Path {
-	out := &config.Path{
-		Elem: make([]*config.PathElem, 0),
+func DeepCopyConfigPath(in *gnmi.Path) *gnmi.Path {
+	out := &gnmi.Path{
+		Elem: make([]*gnmi.PathElem, 0),
 	}
 	for _, elem := range in.Elem {
-		pathElem := &config.PathElem{
+		pathElem := &gnmi.PathElem{
 			Name: elem.Name,
 		}
 		if len(elem.Key) != 0 {
@@ -317,8 +317,8 @@ func DeepCopyConfigPath(in *config.Path) *config.Path {
 	return out
 }
 
-func AddPathElem(p *config.Path, e *container.Entry) *config.Path {
-	elem := &config.PathElem{}
+func AddPathElem(p *gnmi.Path, e *container.Entry) *gnmi.Path {
+	elem := &gnmi.PathElem{}
 	if e.Key == "" {
 
 		elem.Name = e.GetName()
@@ -330,12 +330,12 @@ func AddPathElem(p *config.Path, e *container.Entry) *config.Path {
 	return p
 }
 
-func (r *Resource) GetInternalHierarchicalPaths() []*config.Path {
+func (r *Resource) GetInternalHierarchicalPaths() []*gnmi.Path {
 	// paths collects all paths
-	paths := make([]*config.Path, 0)
+	paths := make([]*gnmi.Path, 0)
 	// allocate a new path
-	path := &config.Path{
-		Elem: make([]*config.PathElem, 0),
+	path := &gnmi.Path{
+		Elem: make([]*gnmi.PathElem, 0),
 	}
 	// add root container entry to path elem
 	AddPathElem(path, r.RootContainerEntry)
@@ -351,7 +351,7 @@ func (r *Resource) GetInternalHierarchicalPaths() []*config.Path {
 	return paths
 }
 
-func addInternalHierarchicalPath(paths []*config.Path, origPath *config.Path, e *container.Entry) []*config.Path {
+func addInternalHierarchicalPath(paths []*gnmi.Path, origPath *gnmi.Path, e *container.Entry) []*gnmi.Path {
 	// copy the old path to a new path
 	path := DeepCopyConfigPath(origPath)
 	// add container entry to path elem
@@ -387,15 +387,15 @@ type HeInfo struct {
 	Type string `json:"type,omitempty"`
 }
 
-func (r *Resource) GetActualGnmiFullPath() *config.Path {
-	actPath := &config.Path{
+func (r *Resource) GetActualGnmiFullPath() *gnmi.Path {
+	actPath := &gnmi.Path{
 		Elem: findActualPathElemHierarchy(r),
 	}
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
 	return actPath
 }
 
-func findActualPathElemHierarchy(r *Resource) []*config.PathElem {
+func findActualPathElemHierarchy(r *Resource) []*gnmi.PathElem {
 	if r.DependsOn != nil {
 		fp := findActualPathElemHierarchy(r.DependsOn)
 		pathElem := r.Path.GetElem()

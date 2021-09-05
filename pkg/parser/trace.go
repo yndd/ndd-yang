@@ -17,7 +17,6 @@ limitations under the License.
 package parser
 
 import (
-	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
 	"github.com/openconfig/gnmi/proto/gnmi"
 )
 
@@ -59,21 +58,6 @@ func (c *ConfigTreeAction) String() string {
 		return "resolve leafref"
 	}
 	return ""
-}
-
-type TraceCtxt struct {
-	Action           ConfigTreeAction
-	Found            bool
-	Idx              int
-	Path             *config.Path       // the input path data
-	ResolvedLeafRefs []*ResolvedLeafRef // holds all the resolved leafRefs if they get resolved
-	Data             interface{}
-	Value            interface{} // used for leafref resolution
-	Msg              []string
-}
-
-func (tc *TraceCtxt) AddMsg(s string) {
-	tc.Msg = append(tc.Msg, s)
 }
 
 type TraceCtxtGnmi struct {

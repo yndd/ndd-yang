@@ -17,7 +17,7 @@ limitations under the License.
 package parser
 
 import (
-	"github.com/netw-device-driver/ndd-runtime/pkg/logging"
+	"github.com/yndd/ndd-runtime/pkg/logging"
 )
 
 type Parser struct {

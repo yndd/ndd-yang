@@ -20,87 +20,13 @@ import (
 	"encoding/json"
 	"strings"
 
-	config "github.com/netw-device-driver/ndd-grpc/config/configpb"
-	"github.com/netw-device-driver/ndd-runtime/pkg/utils"
+	"github.com/yndd/ndd-runtime/pkg/utils"
 	"github.com/openconfig/gnmi/proto/gnmi"
 )
-
-// ConfigPath2GnmiPath converts the config path to gnmi path
-func (p *Parser) ConfigPath2GnmiPath(inPath *config.Path) *gnmi.Path {
-	outPath := &gnmi.Path{}
-	outPath.Elem = make([]*gnmi.PathElem, 0)
-	if inPath != nil {
-		for _, pElem := range inPath.GetElem() {
-			elem := &gnmi.PathElem{}
-			elem.Name = strings.Split(pElem.GetName(), ":")[len(strings.Split(pElem.GetName(), ":"))-1]
-			if len(pElem.GetKey()) != 0 {
-				elem.Key = make(map[string]string)
-				for key, value := range pElem.GetKey() {
-					if strings.Contains(value, "::") {
-						// avoids splitting ipv6 addresses
-						elem.Key[strings.Split(key, ":")[len(strings.Split(key, ":"))-1]] = value
-					} else {
-						elem.Key[strings.Split(key, ":")[len(strings.Split(key, ":"))-1]] = strings.Split(value, ":")[len(strings.Split(value, ":"))-1]
-					}
-
-				}
-			}
-			outPath.Elem = append(outPath.Elem, elem)
-		}
-	}
-	return outPath
-}
-
-// GnmiPath2ConfigPath converts the gnmi path to config path
-func (p *Parser) GnmiPath2ConfigPath(inPath *gnmi.Path) *config.Path {
-	outPath := &config.Path{}
-	outPath.Elem = make([]*config.PathElem, 0)
-	if inPath != nil {
-		for _, pElem := range inPath.GetElem() {
-			elem := &config.PathElem{}
-			elem.Name = strings.Split(pElem.GetName(), ":")[len(strings.Split(pElem.GetName(), ":"))-1]
-			if len(pElem.GetKey()) != 0 {
-				elem.Key = make(map[string]string)
-				for key, value := range pElem.GetKey() {
-					if strings.Contains(value, "::") {
-						// avoids splitting ipv6 addresses
-						elem.Key[strings.Split(key, ":")[len(strings.Split(key, ":"))-1]] = value
-					} else {
-						elem.Key[strings.Split(key, ":")[len(strings.Split(key, ":"))-1]] = strings.Split(value, ":")[len(strings.Split(value, ":"))-1]
-					}
-
-				}
-			}
-			outPath.Elem = append(outPath.Elem, elem)
-		}
-	}
-	return outPath
-}
 
 // GnmiPathToName converts a config gnmi path to a name where each element of the
 // path is seperated by a "-"
 func (p *Parser) GnmiPathToName(path *gnmi.Path) string {
-	sb := strings.Builder{}
-	for i, pElem := range path.GetElem() {
-		pes := strings.Split(pElem.GetName(), ":")
-		var pe string
-		if len(pes) > 1 {
-			pe = pes[1]
-		} else {
-			pe = pes[0]
-		}
-		sb.WriteString(pe)
-
-		if i+1 != len(path.GetElem()) {
-			sb.WriteString("-")
-		}
-	}
-	return sb.String()
-}
-
-// ConfigGnmiPathToName converts a config gnmi path to a name where each element of the
-// path is seperated by a "-"
-func (p *Parser) ConfigGnmiPathToName(path *config.Path) string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")
@@ -145,79 +71,6 @@ func (p *Parser) GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
 		}
 	}
 	return utils.StringPtr("/" + sb.String())
-}
-
-// ConfigGnmiPathToXPath converts a config gnmi path with or withour keys to a string pointer
-func (p *Parser) ConfigGnmiPathToXPath(path *config.Path, keys bool) *string {
-	sb := strings.Builder{}
-	for i, pElem := range path.GetElem() {
-		pes := strings.Split(pElem.GetName(), ":")
-		var pe string
-		if len(pes) > 1 {
-			pe = pes[1]
-		} else {
-			pe = pes[0]
-		}
-		sb.WriteString(pe)
-		if keys {
-			for k, v := range pElem.GetKey() {
-				sb.WriteString("[")
-				sb.WriteString(k)
-				sb.WriteString("=")
-				sb.WriteString(v)
-				sb.WriteString("]")
-			}
-		}
-		if i+1 != len(path.GetElem()) {
-			sb.WriteString("/")
-		}
-	}
-	return utils.StringPtr("/" + sb.String())
-}
-
-// XpathToGnmiPath convertss a xpath string to a config gnmi path
-func (p *Parser) XpathToConfigGnmiPath(xpath string, offset int) (path *config.Path) {
-	split := strings.Split(xpath, "/")
-	for i, element := range split {
-		// ignore the first element
-		//fmt.Printf("i = %d, element = %s\n", i, element)
-		if i == 0 {
-			path = &config.Path{
-				Elem: make([]*config.PathElem, 0),
-			}
-		} else {
-			// offset is used to ignore an element from the path
-			if i > offset {
-				pathElem := &config.PathElem{}
-				if element != "" {
-					if strings.Contains(element, "[") {
-						s1 := strings.Split(element, "[")
-						pathElem.Key = make(map[string]string)
-						pathElem.Name = s1[0]
-						s2 := strings.Split(s1[1], ",")
-						for _, eWithKey := range s2 {
-							// TODO if there is a "/" in the name of the path
-							s := strings.Split(eWithKey, "=")
-							var v string
-							if strings.Contains(s[1], "]") {
-								v = strings.Trim(s[1], "]")
-							} else {
-								v = s[1]
-							}
-							// trim blanks from the final element/key/value
-							pathElem.Key[strings.Trim(s[0], " ")] = strings.Trim(v, " ")
-						}
-					} else {
-						// trim blanks from the final element/key/value
-						pathElem.Name = strings.Trim(element, " ")
-					}
-					path.Elem = append(path.Elem, pathElem)
-				}
-			}
-
-		}
-	}
-	return path
 }
 
 // XpathToGnmiPath convertss a xpath string to a config gnmi path
@@ -267,16 +120,6 @@ func (p *Parser) XpathToGnmiPath(xpath string, offset int) (path *gnmi.Path) {
 
 // TransformPathToLeafRefPath returns a config gnmi path tailored for leafrefs
 // For a leafRef path the last entry of the name should be a key in the previous element
-func (p *Parser) TransformConfigPathToLeafRefPath(path *config.Path) *config.Path {
-	key := path.GetElem()[len(path.GetElem())-1].Name
-	path.Elem = path.Elem[:(len(path.GetElem()) - 1)]
-	path.GetElem()[len(path.GetElem())-1].Key = make(map[string]string)
-	path.GetElem()[len(path.GetElem())-1].Key[key] = ""
-	return path
-}
-
-// TransformPathToLeafRefPath returns a config gnmi path tailored for leafrefs
-// For a leafRef path the last entry of the name should be a key in the previous element
 func (p *Parser) TransformGnmiPathToLeafRefPath(path *gnmi.Path) *gnmi.Path {
 	key := path.GetElem()[len(path.GetElem())-1].Name
 	path.Elem = path.Elem[:(len(path.GetElem()) - 1)]
@@ -286,29 +129,9 @@ func (p *Parser) TransformGnmiPathToLeafRefPath(path *gnmi.Path) *gnmi.Path {
 }
 
 // TransformPathAsRelative2Resource returns a relative path
-func (p *Parser) TransformConfigPathAsRelative2Resource(localPath, activeResPath *config.Path) *config.Path {
-	localPath.Elem = localPath.Elem[(len(activeResPath.GetElem()) - 1):(len(localPath.GetElem()))]
-	return localPath
-}
-
-// TransformPathAsRelative2Resource returns a relative path
 func (p *Parser) TransformGnmiPathAsRelative2Resource(localPath, activeResPath *gnmi.Path) *gnmi.Path {
 	localPath.Elem = localPath.Elem[(len(activeResPath.GetElem()) - 1):(len(localPath.GetElem()))]
 	return localPath
-}
-
-// AppendElemInPath adds a pathElem to the config gnmi path
-func (p *Parser) AppendElemInConfigPath(path *config.Path, name, key string) *config.Path {
-	pathElem := &config.PathElem{
-		Name: name,
-	}
-	if key != "" {
-		pathElem.Key = make(map[string]string)
-		pathElem.Key[key] = ""
-	}
-
-	path.Elem = append(path.Elem, pathElem)
-	return path
 }
 
 // AppendElemInPath adds a pathElem to the config gnmi path
@@ -319,19 +142,6 @@ func (p *Parser) AppendElemInGnmiPath(path *gnmi.Path, name, key string) *gnmi.P
 	if key != "" {
 		pathElem.Key = make(map[string]string)
 		pathElem.Key[key] = ""
-	}
-
-	path.Elem = append(path.Elem, pathElem)
-	return path
-}
-
-// AppendElemInPath adds a pathElem to the config gnmi path
-func (p *Parser) AppendElemInConfigPathWithFullKey(path *config.Path, name string, key map[string]string) *config.Path {
-	pathElem := &config.PathElem{
-		Name: name,
-	}
-	if key != nil {
-		pathElem.Key = key
 	}
 
 	path.Elem = append(path.Elem, pathElem)
@@ -357,38 +167,6 @@ func (p *Parser) CopyPathElemKey(key map[string]string) map[string]string {
 		newKey[k] = v
 	}
 	return newKey
-}
-
-func (p *Parser) GetRemoteConfigPathsFromResolvedLeafRef(resolvedLeafRef *ResolvedLeafRef) []*config.Path {
-	remotePaths := make([]*config.Path, 0)
-	for i := 0; i < len(strings.Split(resolvedLeafRef.Value, ".")); i++ {
-		if i > 0 {
-			// this is a special case where the value is split in "." e.g. network-instance -> interface + subinterface
-			// or tunnel-interface + vxlan-interface
-			// we create a shorter path to resolve the hierarchical path
-			remotePath := &config.Path{
-				Elem: make([]*config.PathElem, 0),
-			}
-			// we return on the first reference path
-			for _, pathElem := range resolvedLeafRef.RemotePath.GetElem() {
-				if len(pathElem.GetKey()) != 0 {
-					newKey := p.CopyPathElemKey(pathElem.GetKey())
-					p.AppendElemInConfigPathWithFullKey(remotePath, pathElem.GetName(), newKey)
-					// we stop at copying the first key
-					break
-				} else {
-					p.AppendElemInConfigPathWithFullKey(remotePath, pathElem.GetName(), nil)
-				}
-			}
-			if p.log != nil {
-				p.log.Debug("GetRemotePathsFromResolvedLeafRef", "remotePath", remotePath)
-			}
-			remotePaths = append(remotePaths, remotePath)
-		} else {
-			remotePaths = append(remotePaths, resolvedLeafRef.RemotePath)
-		}
-	}
-	return remotePaths
 }
 
 func (p *Parser) GetRemoteGnmiPathsFromResolvedLeafRef(resolvedLeafRef *ResolvedLeafRefGnmi) []*gnmi.Path {
@@ -504,26 +282,6 @@ func (p *Parser) GetValue(updValue *gnmi.TypedValue) (interface{}, error) {
 	return value, nil
 }
 
-func (p *Parser) DeepCopyConfigPath(in *config.Path) *config.Path {
-	out := new(config.Path)
-	if in != nil {
-		out.Elem = make([]*config.PathElem, 0)
-		for _, pathElem := range in.GetElem() {
-			elem := &config.PathElem{
-				Name: pathElem.GetName(),
-			}
-			if len(pathElem.GetKey()) != 0 {
-				elem.Key = make(map[string]string)
-				for keyName, keyValue := range pathElem.GetKey() {
-					elem.Key[keyName] = keyValue
-				}
-			}
-			out.Elem = append(out.Elem, elem)
-		}
-	}
-	return out
-}
-
 func (p *Parser) DeepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 	out := new(gnmi.Path)
 	if in != nil {
@@ -544,46 +302,7 @@ func (p *Parser) DeepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 	return out
 }
 
-// CompareConfigPathsWithResourceKeys returns changed true when resourceKeys were provided 
-// and if they are different. In this case the deletePath is also valid, otherwise when changd is false
-// the delete path is not reliable
-func (p *Parser) CompareConfigPathsWithResourceKeys(path *config.Path, resourceKeys map[string]string) (bool, []*config.Path, map[string]string) {
-	changed := false
-	deletePaths := make([]*config.Path, 0)
-	deletePath := &config.Path{
-		Elem: make([]*config.PathElem, 0),
-	}
-	newKeys := make(map[string]string)
-	for _, pathElem := range path.GetElem() {
-		elem := &config.PathElem{
-			Name: pathElem.GetName(),
-		}
-		if len(pathElem.GetKey()) != 0 {
-			elem.Key = make(map[string]string)
-			for keyName, keyValue := range pathElem.GetKey() {
-				if len(resourceKeys) != 0 {
-					// the resource keys exists; if they dont exist there is no point comparing
-					// the data
-					if value, ok := resourceKeys[pathElem.GetName()+":"+keyName]; ok {
-						if value != keyValue {
-							changed = true
-						}
-						// use the value of the resourceKeys if the path should be deleted
-						elem.Key[keyName] = value
-					}
-				}
-				// these are the new keys which were supplied by the resource
-				newKeys[pathElem.GetName()+":"+keyName] = keyValue
-			}
-		}
-		deletePath.Elem = append(deletePath.Elem, elem)
-	}
-	deletePaths = append(deletePaths, deletePath)
-	return changed, deletePaths, newKeys
-}
-
-
-// CompareConfigPathsWithResourceKeys returns changed true when resourceKeys were provided 
+// CompareConfigPathsWithResourceKeys returns changed true when resourceKeys were provided
 // and if they are different. In this case the deletePath is also valid, otherwise when changd is false
 // the delete path is not reliable
 func (p *Parser) CompareGnmiPathsWithResourceKeys(path *gnmi.Path, resourceKeys map[string]string) (bool, []*gnmi.Path, map[string]string) {
