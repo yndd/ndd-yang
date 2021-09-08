@@ -81,6 +81,8 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	entry.Next = next
 	entry.Prev = prev
 
+	entry.NameSpace = e.Namespace().Name
+
 	// process mandatory attribute
 	switch e.Mandatory {
 	case 1: // TSTrue

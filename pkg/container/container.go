@@ -38,6 +38,7 @@ type Entry struct {
 	Mandatory     bool       `json:"mandatory,omitempty"`
 	Default       string     `json:"default,omitempty"`
 	Key           string     `json:"key,omitempty"`
+	NameSpace     string     `json:"namespace,omitempty"`
 }
 
 type ContainerOption func(c *Container)

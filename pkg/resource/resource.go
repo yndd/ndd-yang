@@ -92,6 +92,10 @@ func NewResource(opts ...Option) *Resource {
 	return r
 }
 
+func (r *Resource) GetResourcePath() *gnmi.Path {
+	return r.Path
+}
+
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
