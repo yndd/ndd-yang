@@ -84,7 +84,8 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	entry.NameSpace = e.Namespace().Name
 
 	if e.Name == "port-binding" {
-		fmt.Printf("rdnss-lifetime: entry info: %#v \n", e.IsChoice())
+		fmt.Printf("port-binding: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
+		
 	}
 
 	// process mandatory attribute
