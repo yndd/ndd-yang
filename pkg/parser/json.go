@@ -131,8 +131,9 @@ func (p *Parser) CopyAndCleanTxValues(value interface{}) interface{} {
 		for k, v := range vv {
 			switch vvv := v.(type) {
 			case string:
-				if strings.Contains(vvv, "::") {
+				if strings.Contains(vvv, "::") || strings.Contains(vvv, "/") {
 					// avoids splitting ipv6 addresses
+					// avoid splitting a port-id for sros: 1/1/c1/1
 					x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = vvv
 				} else {
 					x[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(vvv, ":")[len(strings.Split(vvv, ":"))-1]
@@ -143,8 +144,9 @@ func (p *Parser) CopyAndCleanTxValues(value interface{}) interface{} {
 		}
 		return x
 	case string:
-		if strings.Contains(vv, "::") {
+		if strings.Contains(vv, "::") || strings.Contains(vv, "/") {
 			// avoids splitting ipv6 addresses
+			// avoid splitting a port-id for sros: 1/1/c1/1
 			return vv
 		} else {
 			return strings.Split(vv, ":")[len(strings.Split(vv, ":"))-1]
@@ -201,8 +203,9 @@ func (p *Parser) CleanDeviceValueForComparison(deviceValue interface{}) (interfa
 			} else {
 				switch vv := v.(type) {
 				case string:
-					if strings.Contains(vv, "::") {
+					if strings.Contains(vv, "::") || strings.Contains(vv, "/") {
 						// avoids splitting ipv6 addresses
+						// avoid splitting a port-id for sros: 1/1/c1/1
 						// do nothing
 					} else {
 						v = strings.Split(fmt.Sprintf("%v", v), ":")[len(strings.Split(fmt.Sprintf("%v", v), ":"))-1]
