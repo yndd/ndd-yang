@@ -150,8 +150,17 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 			entry.Range = append(entry.Range, int(ra.Min.Value))
 			if ra.Max.Value < ra.Min.Value {
 				fmt.Printf("RANGE MIN: %d MAX: %d, TOTAL: %d\n", ra.Min.Value, ra.Max.Value, entry.Range)
+				switch {
+				case strings.Contains(entry.Type, "8"):
+					entry.Range = append(entry.Range, int(255))
+				case strings.Contains(entry.Type, "16"):
+					entry.Range = append(entry.Range, int(65535))
+				default:
+					entry.Range = append(entry.Range, int(4294967295))
+				}
+			} else {
+				entry.Range = append(entry.Range, int(ra.Max.Value))
 			}
-			entry.Range = append(entry.Range, int(ra.Max.Value))
 			//fmt.Printf("RANGE MIN: %d MAX: %d, TOTAL: %d\n", ra.Min.Value, ra.Max.Value, entry.Range)
 		}
 
