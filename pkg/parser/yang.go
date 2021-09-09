@@ -55,6 +55,10 @@ func (p *Parser) CreatePathElem(e *yang.Entry) *gnmi.PathElem {
 		Key:  make(map[string]string),
 	}
 
+	if e.Name == "rdnss-lifetime" {
+		fmt.Printf("rdnss-lifetime: entry info: %#v \n", e)
+	}
+
 	if e.Key != "" {
 		var keyType string
 		switch p.GetTypeName(e.Dir[e.Key]) {
