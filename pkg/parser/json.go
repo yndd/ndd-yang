@@ -635,8 +635,9 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 					// add the key of the path to the list
 					for k, v := range tc.Path.GetElem()[idx].GetKey() {
 						// add clean element to the list
-						if strings.Contains(v, "::") {
+						if strings.Contains(v, "::") || strings.Contains(v, "/") {
 							// avoids splitting ipv6 addresses
+							// avoid splitting a port-id for sros: 1/1/c1/1
 							x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
 						} else {
 							x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
@@ -670,8 +671,9 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 						// add the key of the path to the list
 						for k, v := range tc.Path.GetElem()[idx].GetKey() {
 							// add clean element to the list
-							if strings.Contains(v, "::") {
+							if strings.Contains(v, "::") || strings.Contains(v, "/") {
 								// avoids splitting ipv6 addresses
+								// avoid splitting a port-id for sros: 1/1/c1/1
 								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
 							} else {
 								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
@@ -683,8 +685,9 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 						xx := make(map[string]interface{})
 						// add the key of the path to the list
 						for k, v := range tc.Path.GetElem()[idx].GetKey() {
-							if strings.Contains(v, "::") {
+							if strings.Contains(v, "::") || strings.Contains(v, "/") {
 								// avoids splitting ipv6 addresses
+								// avoid splitting a port-id for sros: 1/1/c1/1
 								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
 							} else {
 								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
@@ -727,8 +730,9 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 						// add the key of the path to the list
 						for k, v := range tc.Path.GetElem()[idx].GetKey() {
 							// add clean element to the list
-							if strings.Contains(v, "::") {
+							if strings.Contains(v, "::") || strings.Contains(v, "/") {
 								// avoids splitting ipv6 addresses
+								// avoid splitting a port-id for sros: 1/1/c1/1
 								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
 							} else {
 								x4[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
@@ -740,8 +744,9 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 						xx := make(map[string]interface{})
 						// add the key of the path to the list
 						for k, v := range tc.Path.GetElem()[idx].GetKey() {
-							if strings.Contains(v, "::") {
+							if strings.Contains(v, "::") || strings.Contains(v, "/") {
 								// avoids splitting ipv6 addresses
+								// avoid splitting a port-id for sros: 1/1/c1/1
 								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = v
 							} else {
 								xx[strings.Split(k, ":")[len(strings.Split(k, ":"))-1]] = strings.Split(v, ":")[len(strings.Split(v, ":"))-1]
