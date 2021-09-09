@@ -147,6 +147,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	if e.Type != nil {
 		for _, ra := range e.Type.Range {
+			fmt.Printf("Range: e.Type.Range: %v, ra: %v\n", e.Type.Range, ra)
 			entry.Range = append(entry.Range, int(ra.Min.Value))
 			entry.Range = append(entry.Range, int(ra.Max.Value))
 			//fmt.Printf("RANGE MIN: %d MAX: %d, TOTAL: %d\n", ra.Min.Value, ra.Max.Value, entry.Range)

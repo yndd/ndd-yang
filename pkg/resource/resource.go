@@ -234,7 +234,7 @@ func (r *Resource) GetAbsoluteName() string {
 	})
 }
 
-// root resource have a additional entry in the path which is inconsistent with hierarchical resources
+// root resource have an additional entry in the path which is inconsistent with hierarchical resources
 // to provide consistency we introduced this method to provide a consistent result for paths
 // used mainly for leafrefs for now
 func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
