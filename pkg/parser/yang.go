@@ -68,7 +68,7 @@ func (p *Parser) CreatePathElem(e *yang.Entry) *gnmi.PathElem {
 			keyType = "string"
 		}
 		pathElem.Key[e.Key] = keyType
-		fmt.Printf("Key: %s, KeyType: %s\n", e.Key, keyType)
+		//fmt.Printf("Key: %s, KeyType: %s\n", e.Key, keyType)
 	}
 	return pathElem
 }
@@ -174,7 +174,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	// pattern post processing
 	var pattern string
 	for i, p := range entry.Pattern {
-		fmt.Printf("Pattern: %s last\n", p)
+		//fmt.Printf("Pattern: %s last\n", p)
 		if i == (len(entry.Pattern) - 1) {
 			pattern += p
 		} else {
@@ -182,7 +182,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		}
 	}
 	if len(pattern) > 0 {
-		fmt.Printf("Pattern orig: %sorig\n", pattern)
+		//fmt.Printf("Pattern orig: %sorig\n", pattern)
 		//pattern = strings.ReplaceAll(pattern, "@", "")
 		//pattern = strings.ReplaceAll(pattern, "#", "")
 		//pattern = strings.ReplaceAll(pattern, "$", "")
@@ -193,7 +193,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		} else {
 			entry.PatternString = fmt.Sprintf("`%s`", entry.PatternString)
 		}
-		fmt.Printf("Pattern processed: %sprocessed\n", pattern)
+		//fmt.Printf("Pattern processed: %sprocessed\n", pattern)
 	}
 
 	// enum post processing

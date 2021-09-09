@@ -17,7 +17,6 @@ limitations under the License.
 package resource
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,10 +99,10 @@ func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
 		for _, c := range r.ContainerList {
-			fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s\n", c.Name, llpElem.GetName())
+			//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s\n", c.Name, llpElem.GetName())
 			if c.Name == llpElem.GetName() {
 				for _, e := range c.Entries {
-					fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s, ContainerEntryName: %s\n", c.Name, llpElem.GetName(), e.GetName())
+					//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s, ContainerEntryName: %s\n", c.Name, llpElem.GetName(), e.GetName())
 					if e.GetName() == llpElem.GetName() {
 						if e.GetKey() != "" {
 							llpElem.Key = make(map[string]string)
@@ -126,14 +125,14 @@ func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 	for i, llpElem := range ll.GetElem() {
 		if i == 0 {
 			for _, c := range r.ContainerList {
-				fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, ContainerName: %s\n", i, llpElem.GetName(), c.Name)
+				//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, ContainerName: %s\n", i, llpElem.GetName(), c.Name)
 				if c.Name == llpElem.GetName() {
 					entries = c.Entries
 				}
 			}
 		}
 		for _, e := range entries {
-			fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, EntryName: %s\n", i, llpElem.GetName(), e.GetName())
+			//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, EntryName: %s\n", i, llpElem.GetName(), e.GetName())
 			if e.GetName() == llpElem.GetName() {
 				if e.GetKey() != "" {
 					llpElem.Key = make(map[string]string)
