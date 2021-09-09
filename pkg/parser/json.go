@@ -25,10 +25,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/yndd/ndd-runtime/pkg/utils"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
 	"github.com/wI2L/jsondiff"
+	"github.com/yndd/ndd-runtime/pkg/utils"
 )
 
 const (
@@ -750,7 +750,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 						x2 = append(x2, xx)
 					}
 					x1[tc.Path.GetElem()[idx].GetName()] = x2
-					tc.AddMsg(fmt.Sprintf("-^ inserting data ^-"))
+					tc.AddMsg("-^ inserting data ^-")
 					x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithActionGnmi(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
 					tc.AddMsg(fmt.Sprintf("-^ data inserted: %v ^-", x2))
 					return x2
@@ -758,7 +758,7 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 					// create an mtu in
 					tc.AddMsg("-^ without key ^-")
 					x1[tc.Path.GetElem()[idx].GetName()] = p.CopyAndCleanTxValues(tc.Value)
-					tc.AddMsg(fmt.Sprintf("-^ inserting data ^-"))
+					tc.AddMsg("-^ inserting data ^-")
 					x1[tc.Path.GetElem()[idx].GetName()] = p.ParseTreeWithActionGnmi(x1[tc.Path.GetElem()[idx].GetName()], tc, idx+1, lridx)
 					tc.AddMsg(fmt.Sprintf("-^ data inserted: %v ^-", x1))
 				}
