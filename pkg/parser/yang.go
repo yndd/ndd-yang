@@ -18,6 +18,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
@@ -55,10 +56,6 @@ func (p *Parser) CreatePathElem(e *yang.Entry) *gnmi.PathElem {
 		Key:  make(map[string]string),
 	}
 
-	if e.Name == "rdnss-lifetime" {
-		fmt.Printf("rdnss-lifetime: entry info: %#v \n", e)
-	}
-
 	if e.Key != "" {
 		var keyType string
 		switch p.GetTypeName(e.Dir[e.Key]) {
@@ -86,6 +83,10 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	entry.Prev = prev
 
 	entry.NameSpace = e.Namespace().Name
+
+	if e.Name == "rdnss-lifetime" {
+		fmt.Printf("rdnss-lifetime: entry info: %#v \n", e)
+	}
 
 	// process mandatory attribute
 	switch e.Mandatory {
@@ -184,7 +185,19 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 			entry.Enum = e.Type.Enum.Names()
 		}
 		if e.Default != "" {
-			entry.Default = e.Default
+			// if there is a default parameter and the entry type is a int, we will try to convert
+			// it and if it does not work we dont initialize the default
+			switch {
+			case strings.Contains(entry.Type, "int"):
+				// e.g. we can have rdnss-lifetime which has a default of infinite but it is an int32
+				if _, err := strconv.Atoi(e.Default); err == nil {
+					entry.Default = e.Default
+				}
+				// if the conversion does not succeed we dont initialize a default
+			default:
+				entry.Default = e.Default
+			}
+			fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
 		}
 	}
 
