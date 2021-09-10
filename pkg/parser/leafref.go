@@ -19,9 +19,9 @@ package parser
 import (
 	"strings"
 
-	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/goyang/pkg/yang"
+	"github.com/yndd/ndd-runtime/pkg/logging"
 )
 
 type LeafRefValidationKind string
@@ -270,6 +270,53 @@ func (p *Parser) ValidateLeafRefGnmi(kind LeafRefValidationKind, x1, x2 interfac
 		}
 	}
 	return success, resultResolvedLeafRefs, nil
+}
+
+// ValidateParentDependency validates the parent resource dependency
+// based on the result this function returns the result + information on the validation
+// we use a get here since we resolved the values of the keys alreay
+func (p *Parser) ValidateParentDependency(x1 interface{}, definedParentDependencies []*LeafRefGnmi, log logging.Logger) (bool, []*ResolvedLeafRefGnmi, error) {
+	// a global indication if the leafRef resolution was successfull or not
+	// we are positive so we initialize to true
+	success := true
+	// we initialize a global list for finer information on the resolution
+	resultleafRefValidation := make([]*ResolvedLeafRefGnmi, 0)
+	// for all defined parent dependencies check if the remote leafref exists
+	for _, depLeafRef := range definedParentDependencies {
+		// find the last item with a key and resolve this, since the rest of the elments dont matter
+		// and allows for more geenric code accross multiple implementations
+		// srl can have additional elments that dont matter
+		lastKeyElemIdx := 0
+		for i, pathElem := range depLeafRef.RemotePath.GetElem() {
+			if len(pathElem.GetKey()) != 0 {
+				lastKeyElemIdx = i
+			}
+		}
+		depLeafRef.RemotePath.Elem = depLeafRef.RemotePath.GetElem()[:lastKeyElemIdx]
+
+		// get the Remote leafRef in the JSON data
+		tc := &TraceCtxtGnmi{
+			Path:   p.DeepCopyGnmiPath(depLeafRef.RemotePath), // used to walk through the object -> this data will not be filled in
+			Idx:    0,
+			Msg:    make([]string, 0),
+			Action: ConfigTreeActionGet,
+		}
+
+		p.ParseTreeWithActionGnmi(x1, tc, 0, 0)
+
+		// check if the remote leafref got resolved
+		if !tc.Found {
+			success = false
+		}
+		// fill out information which will be returned
+		resolvedLeafRefValidationResult := &ResolvedLeafRefGnmi{
+			RemotePath: depLeafRef.RemotePath,
+			Resolved:   tc.Found,
+		}
+		resultleafRefValidation = append(resultleafRefValidation, resolvedLeafRefValidationResult)
+
+	}
+	return success, resultleafRefValidation, nil
 }
 
 // NOT SURE IF A SINGLE VALUE IS SOMETHING THAT WILL BE OK ACCROSS THE BOARD
