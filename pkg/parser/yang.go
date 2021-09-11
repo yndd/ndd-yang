@@ -204,12 +204,6 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 				fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
 			}
 		*/
-		if entry.Mandatory {
-			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-		}
-		if entry.Key != "" {
-			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-		}
 	}
 
 	// pattern post processing
@@ -247,5 +241,15 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	// key handling
 	entry.Key = e.Key
+
+	if entry.Mandatory {
+		fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
+	}
+	if entry.Key != "" {
+		fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
+	}
+	if entry.Name == "router-name" {
+		fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
+	}
 	return entry
 }
