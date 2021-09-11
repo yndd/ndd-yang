@@ -99,7 +99,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		entry.Mandatory = true
 	}
 
-	// process type attaribute
+	// process type attribute
 	switch p.GetTypeName(e) {
 	case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 		entry.Type = p.GetTypeName(e)
@@ -205,7 +205,10 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 			}
 		*/
 		if entry.Mandatory {
-			fmt.Printf("entry.Name: %s, entry.Key: %s\n", entry.Name, entry.Key)
+			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
+		}
+		if entry.Key != "" {
+			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
 		}
 	}
 
