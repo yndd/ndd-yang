@@ -85,7 +85,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	if e.Name == "port-binding" {
 		fmt.Printf("port-binding: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
-		
+
 	}
 
 	// process mandatory attribute
@@ -245,14 +245,16 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	// key handling
 	entry.Key = e.Key
 
-	if entry.Mandatory {
-		fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-	}
-	if entry.Key != "" {
-		fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-	}
-	if entry.Name == "router-name" {
-		fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-	}
+	/*
+		if entry.Mandatory {
+			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
+		}
+		if entry.Key != "" {
+			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
+		}
+		if entry.Name == "router-name" {
+			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
+		}
+	*/
 	return entry
 }
