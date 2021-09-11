@@ -73,7 +73,7 @@ func (p *Parser) CreatePathElem(e *yang.Entry) *gnmi.PathElem {
 	return pathElem
 }
 
-func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Container) *container.Entry {
+func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Container, containerKey string) *container.Entry {
 	// Allocate a new Entry
 	entry := container.NewEntry(e.Name)
 
@@ -96,6 +96,9 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		entry.Mandatory = false
 	}
 	if e.Key != "" {
+		entry.Mandatory = true
+	}
+	if e.Name == containerKey {
 		entry.Mandatory = true
 	}
 
