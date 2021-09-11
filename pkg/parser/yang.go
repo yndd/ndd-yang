@@ -204,6 +204,9 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 				fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
 			}
 		*/
+		if entry.Mandatory {
+			fmt.Printf("entry.Name: %s, entry.Key: %s\n", entry.Name, entry.Key)
+		}
 	}
 
 	// pattern post processing
