@@ -292,7 +292,10 @@ func (p *Parser) ValidateParentDependency(x1 interface{}, definedParentDependenc
 				lastKeyElemIdx = i
 			}
 		}
-		depLeafRef.RemotePath.Elem = depLeafRef.RemotePath.GetElem()[:lastKeyElemIdx]
+		// lastKeyElemIdx is the last index
+		depLeafRef.RemotePath.Elem = depLeafRef.RemotePath.GetElem()[:(lastKeyElemIdx+1)]
+		
+		
 
 		// get the Remote leafRef in the JSON data
 		tc := &TraceCtxtGnmi{
