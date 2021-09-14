@@ -130,7 +130,12 @@ func (p *Parser) TransformGnmiPathToLeafRefPath(path *gnmi.Path) *gnmi.Path {
 
 // TransformPathAsRelative2Resource returns a relative path
 func (p *Parser) TransformGnmiPathAsRelative2Resource(localPath, activeResPath *gnmi.Path) *gnmi.Path {
-	localPath.Elem = localPath.Elem[(len(activeResPath.GetElem()) - 1):(len(localPath.GetElem()))]
+	if len(activeResPath.GetElem()) >= 1 {
+		localPath.Elem = localPath.Elem[(len(activeResPath.GetElem()) - 1):(len(localPath.GetElem()))]
+	} else {
+		localPath.Elem = localPath.Elem[:len(localPath.GetElem())]
+	}
+	
 	return localPath
 }
 
