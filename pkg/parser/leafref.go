@@ -88,7 +88,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 		switch p.GetTypeKind(e) {
 		case "leafref":
 			//fmt.Println(e.Node.Statement().String())
-			splitData := strings.Split(e.Node.Statement().String(), "\n")
+			splitData := strings.Split(e.Node.Statement().NName(), "\n")
 			var path string
 			var elem string
 			var k string
@@ -293,9 +293,7 @@ func (p *Parser) ValidateParentDependency(x1 interface{}, definedParentDependenc
 			}
 		}
 		// lastKeyElemIdx is the last index
-		depLeafRef.RemotePath.Elem = depLeafRef.RemotePath.GetElem()[:(lastKeyElemIdx+1)]
-		
-		
+		depLeafRef.RemotePath.Elem = depLeafRef.RemotePath.GetElem()[:(lastKeyElemIdx + 1)]
 
 		// get the Remote leafRef in the JSON data
 		tc := &TraceCtxtGnmi{
