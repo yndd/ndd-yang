@@ -1186,7 +1186,11 @@ func (p *Parser) PostProcessUpdatesGnmi(rootPath *gnmi.Path, updates []*gnmi.Upd
 			updates = append([]*gnmi.Update{
 				{
 					Path: path,
-					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: b}},
+					Val: &gnmi.TypedValue{
+						Value: &gnmi.TypedValue_JsonIetfVal{
+							JsonIetfVal: bytes.Trim(b, " \r\n\t"),
+						},
+					},
 				},
 			}, updates...)
 		}
