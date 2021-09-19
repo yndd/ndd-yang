@@ -148,7 +148,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 
 				}
 			}
-			fmt.Printf("Path: %s, Elem: %s, Key: %s\n", path, elem, k)
+			fmt.Printf("LeafRef Path: %s, Elem: %s, Key: %s\n", path, elem, k)
 			remotePath := p.XpathToGnmiPath(path, 0)
 			p.AppendElemInGnmiPath(remotePath, elem, []string{k})
 
