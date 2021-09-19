@@ -17,6 +17,7 @@ limitations under the License.
 package parser
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
@@ -147,7 +148,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 
 				}
 			}
-			//fmt.Printf("Path: %s, Elem: %s, Key: %s\n", path, elem, k)
+			fmt.Printf("Path: %s, Elem: %s, Key: %s\n", path, elem, k)
 			remotePath := p.XpathToGnmiPath(path, 0)
 			p.AppendElemInGnmiPath(remotePath, elem, []string{k})
 
@@ -159,7 +160,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 			if strings.Contains(*p.GnmiPathToXPath(remotePath, false), *p.GnmiPathToXPath(activeResPath, false)) {
 				// if the remotePath and the active Path match exactly we classify this in the external leafref category
 				// since we dont allow multiple elments of the same key in the same resource
-				// E.g. interface ethernet-1/1 which reference a lag should be resolve to another interface in
+				// E.g. interface ethernet-1/1 which reference a lag should be resolved to another interface in
 				// another resource and hence this should be classified as an external leafref
 				if *p.GnmiPathToXPath(remotePath, false) != *p.GnmiPathToXPath(activeResPath, false) {
 					// this is a local leafref within the resource
