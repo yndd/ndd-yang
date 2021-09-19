@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/yndd/ndd-runtime/pkg/utils"
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/ndd-runtime/pkg/utils"
 )
 
 // GnmiPathToName converts a config gnmi path to a name where each element of the
@@ -135,18 +135,21 @@ func (p *Parser) TransformGnmiPathAsRelative2Resource(localPath, activeResPath *
 	} else {
 		localPath.Elem = localPath.Elem[:len(localPath.GetElem())]
 	}
-	
+
 	return localPath
 }
 
 // AppendElemInPath adds a pathElem to the config gnmi path
-func (p *Parser) AppendElemInGnmiPath(path *gnmi.Path, name, key string) *gnmi.Path {
+func (p *Parser) AppendElemInGnmiPath(path *gnmi.Path, name string, keys []string) *gnmi.Path {
 	pathElem := &gnmi.PathElem{
 		Name: name,
 	}
-	if key != "" {
+	if keys != nil && len(keys) > 0 {
 		pathElem.Key = make(map[string]string)
-		pathElem.Key[key] = ""
+		for _, key := range keys {
+			pathElem.Key[key] = ""
+		}
+
 	}
 
 	path.Elem = append(path.Elem, pathElem)

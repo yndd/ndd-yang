@@ -149,7 +149,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 			}
 			//fmt.Printf("Path: %s, Elem: %s, Key: %s\n", path, elem, k)
 			remotePath := p.XpathToGnmiPath(path, 0)
-			p.AppendElemInGnmiPath(remotePath, elem, k)
+			p.AppendElemInGnmiPath(remotePath, elem, []string{k})
 
 			// build a gnmi path and remove the first entry since the yang contains a duplicate path
 			localPath := p.XpathToGnmiPath(resfullPath, 1)

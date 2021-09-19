@@ -1008,7 +1008,7 @@ func (p *Parser) ParseJSONData2ConfigUpdatesGnmi(tc *TraceCtxtGnmi, path *gnmi.P
 					newPath := p.DeepCopyGnmiPath(path)
 					keys := p.GetKeyNamesFromGnmiPaths(newPath, k, refPaths)
 					if len(keys) != 0 {
-						newPath = p.AppendElemInGnmiPath(newPath, k, keys[0])
+						newPath = p.AppendElemInGnmiPath(newPath, k, keys)
 						updates, tc = p.ParseJSONData2ConfigUpdatesGnmi(tc, newPath, vv, idx+1, updates, refPaths)
 					} else {
 						// we can come here if a response from the device driver returns unmanaged resource
@@ -1026,7 +1026,7 @@ func (p *Parser) ParseJSONData2ConfigUpdatesGnmi(tc *TraceCtxtGnmi, path *gnmi.P
 			case map[string]interface{}:
 				// a list without a key, we create a dedicated path for this
 				newPath := p.DeepCopyGnmiPath(path)
-				newPath = p.AppendElemInGnmiPath(newPath, k, "")
+				newPath = p.AppendElemInGnmiPath(newPath, k, nil)
 
 				updates, tc = p.ParseJSONData2ConfigUpdatesGnmi(tc, newPath, x1, idx+1, updates, refPaths)
 				//return updates
@@ -1088,7 +1088,7 @@ func (p *Parser) GetKeyNamesFromGnmiPaths(path *gnmi.Path, lastElem string, refP
 	// create a dummy path which adds the last pathElem to the path
 	// the result will be used for comparison
 	dummyPath := p.DeepCopyGnmiPath(path)
-	dummyPath = p.AppendElemInGnmiPath(dummyPath, lastElem, "")
+	dummyPath = p.AppendElemInGnmiPath(dummyPath, lastElem, nil)
 	//p.log.Debug("FindKeyInPath", "path", *p.ConfigGnmiPathToXPath(dummyPath, true))
 	// loop over all reference paths
 	for _, refPath := range refPaths {

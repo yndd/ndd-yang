@@ -121,7 +121,7 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 
 							//split := strings.Split(operation.Path, "/")
 							//for i := 1; i <= len(split)-1; i++ {
-							p.AppendElemInGnmiPath(path, operation.Path, "")
+							p.AppendElemInGnmiPath(path, operation.Path, nil)
 							//}
 							deletes = append(deletes, path)
 						case OperationTypeUpdate:
@@ -130,7 +130,7 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 							path := p.DeepCopyGnmiPath(updatex1.Path)
 							//split := strings.Split(operation.Path, "/")
 							//for i := 1; i <= len(split)-1; i++ {
-							p.AppendElemInGnmiPath(path, operation.Path, "")
+							p.AppendElemInGnmiPath(path, operation.Path, nil)
 							//}
 
 							//fmt.Printf("Patch Replace Data: %v\n", operation.Value)
