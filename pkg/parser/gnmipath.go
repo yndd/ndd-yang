@@ -58,13 +58,17 @@ func (p *Parser) GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
 		}
 		sb.WriteString(pe)
 		if keys {
+			sb.WriteString("[")
+			i:= 0
 			for k, v := range pElem.GetKey() {
-				sb.WriteString("[")
 				sb.WriteString(k)
 				sb.WriteString("=")
 				sb.WriteString(v)
-				sb.WriteString("]")
+				if i != len(pElem.GetKey())-1 {
+					sb.WriteString(",")
+				}
 			}
+			sb.WriteString("]")
 		}
 		if i+1 != len(path.GetElem()) {
 			sb.WriteString("/")
