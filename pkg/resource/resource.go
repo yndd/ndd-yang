@@ -29,21 +29,22 @@ import (
 )
 
 type Resource struct {
-	parser             *parser.Parser                 // calls a library for parsing JSON/YANG elements
-	Path               *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
-	ActualPath         *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
-	DependsOn          *Resource                      // resource dependency
-	Excludes           []*gnmi.Path                   // relative from the the resource
-	FileName           string                         // the filename the resource is using to render out the config
-	ResFile            *os.File                       // the file reference for writing the resource file
-	RootContainerEntry *container.Entry               // this is the root element which is used to reference the hierarchical resource information
-	Container          *container.Container           // root container of the resource
-	LastContainerPtr   *container.Container           // pointer to the last container we process
-	ContainerList      []*container.Container         // List of all containers within the resource
-	ContainerLevel     int                            // the current container Level when processing the yang entries
-	ContainerLevelKeys map[int][]*container.Container // the current container Level key list
-	LocalLeafRefs      []*parser.LeafRefGnmi
-	ExternalLeafRefs   []*parser.LeafRefGnmi
+	parser               *parser.Parser                 // calls a library for parsing JSON/YANG elements
+	Path                 *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
+	ActualPath           *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
+	DependsOn            *Resource                      // resource dependency
+	Excludes             []*gnmi.Path                   // relative from the the resource
+	FileName             string                         // the filename the resource is using to render out the config
+	ResFile              *os.File                       // the file reference for writing the resource file
+	RootContainerEntry   *container.Entry               // this is the root element which is used to reference the hierarchical resource information
+	Container            *container.Container           // root container of the resource
+	LastContainerPtr     *container.Container           // pointer to the last container we process
+	ContainerList        []*container.Container         // List of all containers within the resource
+	ContainerLevel       int                            // the current container Level when processing the yang entries
+	ContainerLevelKeys   map[int][]*container.Container // the current container Level key list
+	LocalLeafRefs        []*parser.LeafRefGnmi
+	ExternalLeafRefs     []*parser.LeafRefGnmi
+	HierarchicalElements []string // this defines the hierarchical elements the resource is dependent upon
 }
 
 // Option can be used to manipulate Options.
@@ -72,15 +73,16 @@ func NewResource(opts ...Option) *Resource {
 		parser: parser.NewParser(),
 		Path:   new(gnmi.Path),
 		//DependsOn:          new(Resource),
-		Excludes:           make([]*gnmi.Path, 0),
-		RootContainerEntry: nil,
-		Container:          nil,
-		LastContainerPtr:   nil,
-		ContainerList:      make([]*container.Container, 0),
-		ContainerLevel:     0,
-		ContainerLevelKeys: make(map[int][]*container.Container),
-		LocalLeafRefs:      make([]*parser.LeafRefGnmi, 0),
-		ExternalLeafRefs:   make([]*parser.LeafRefGnmi, 0),
+		Excludes:             make([]*gnmi.Path, 0),
+		RootContainerEntry:   nil,
+		Container:            nil,
+		LastContainerPtr:     nil,
+		ContainerList:        make([]*container.Container, 0),
+		ContainerLevel:       0,
+		ContainerLevelKeys:   make(map[int][]*container.Container),
+		LocalLeafRefs:        make([]*parser.LeafRefGnmi, 0),
+		ExternalLeafRefs:     make([]*parser.LeafRefGnmi, 0),
+		HierarchicalElements: make([]string, 0),
 	}
 
 	for _, o := range opts {
@@ -149,6 +151,18 @@ func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 		LocalPath:  ll,
 		RemotePath: rl,
 	})
+}
+
+func (r *Resource) GetHierElements() []string {
+	return r.HierarchicalElements
+}
+
+func (r *Resource) SetHierElements(s []string)  {
+	r.HierarchicalElements = s
+}
+
+func (r *Resource) AppendHierElements(s string) {
+	r.HierarchicalElements = append(r.HierarchicalElements, s)
 }
 
 func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
