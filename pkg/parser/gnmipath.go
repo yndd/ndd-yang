@@ -144,7 +144,7 @@ func (p *Parser) AppendElemInGnmiPath(path *gnmi.Path, name string, keys []strin
 	pathElem := &gnmi.PathElem{
 		Name: name,
 	}
-	if keys != nil && len(keys) > 0 {
+	if len(keys) > 0 {
 		pathElem.Key = make(map[string]string)
 		for _, key := range keys {
 			pathElem.Key[key] = ""
