@@ -500,117 +500,145 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 					tc.AddMsg(fmt.Sprintf("pathElemKeyNames %v, pathElemKeyValues%v", pathElemKeyNames, pathElemKeyValues))
 					// loop over all pathElemKeyNames
 					// TODO multiple keys and values need to be tested !
-					for i, pathElemKeyName := range pathElemKeyNames {
-						if x3, ok := x2[pathElemKeyName]; ok {
-							// pathElemKeyName found
-							tc.AddMsg(fmt.Sprintf("pathElemKeyName found: %s", pathElemKeyName))
+					found := true
+					for _, pathElemKeyName := range pathElemKeyNames {
+						if _, ok := x2[pathElemKeyName]; !ok {
+							found = false
+						}
+					}
+					if found {
+						// pathElemKeyNames found
+						tc.AddMsg(fmt.Sprintf("pathElemKeyNames found: %v", pathElemKeyNames))
+						if tc.Action == ConfigResolveLeafRef {
+							// NOTE: this is only used for leafref resolution
+							// for leafref resolution, when n > 0 it means we have multiple
+							// elements that could potentially match
 							if tc.Action == ConfigResolveLeafRef {
-								// NOTE: this is only used for leafref resolution
-								// for leafref resolution, when n > 0 it means we have multiple
-								// elements that could potentially match
-								if tc.Action == ConfigResolveLeafRef {
-									if n > 0 {
-										tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, resolvedLeafRefsOrig)
-										lridx++
-									}
+								if n > 0 {
+									tc.ResolvedLeafRefs = append(tc.ResolvedLeafRefs, resolvedLeafRefsOrig)
+									lridx++
 								}
 							}
-							if idx == len(tc.Path.GetElem())-1 {
-								tc.AddMsg("end of path with key")
-								if tc.Action != ConfigResolveLeafRef {
-									// action for non leafref resolution
-									// validates if the value of the json object matches the value of the key in the pathElem
-									p.HandleEndOfListWithKeyInParseKeyWithActionGnmi(x3, pathElemKeyValues[i], tc)
-									if tc.Found {
-										// we return since we are at the end of the path and the key/value were found
-										switch tc.Action {
-										case ConfigTreeActionGet, ConfigTreeActionFind:
-											return x1[n]
-										case ConfigTreeActionDelete:
-											x1 = append(x1[:n], x1[n+1:]...)
-											return x1
-										case ConfigTreeActionUpdate:
-											x1[n] = p.CopyAndCleanTxValues(tc.Value)
-											// we also need to add the key as part of the object
-											switch x := x1[n].(type) {
-											case map[string]interface{}:
-												tc.AddMsg("adding key map[string]interface{}")
-												x[pathElemKeyName] = pathElemKeyValues[i]
-											default:
-												tc.AddMsg("adding key" + "." + fmt.Sprintf("%v", (reflect.TypeOf(x))))
-												// create the key since the object was initialized as nil
-												xx := make(map[string]interface{})
-												xx[pathElemKeyName] = pathElemKeyValues[i]
-												x1[n] = xx
-											}
-											tc.AddMsg(fmt.Sprintf("return data: %v", x1))
-											return x1
-										case ConfigTreeActionCreate:
-											// TODO if we ever come here
-											return x1
-										default:
-											// we should not return here since there can be multiple entries in the list
-											// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
-											// we need to loop over all of them and the global for loop will return if not found
-											//return x1
-										}
+						}
+						if idx == len(tc.Path.GetElem())-1 {
+							tc.AddMsg("end of path with key/keys")
+							if tc.Action != ConfigResolveLeafRef {
+								// action for non leafref resolution
+								// validates if the value of the json object matches the value of the key in the pathElem
+								// per key validate the value
+								found := true
+								for i, pathElemKeyName := range pathElemKeyNames {
+									p.HandleEndOfListWithKeyInParseKeyWithActionGnmi(x2[pathElemKeyName], pathElemKeyValues[i], tc)
+									if !tc.Found {
+										found = false
 									}
-								} else {
-									// for leafRef resolution, we resolved the leafref
-									p.PopulateLocalLeafRefValueGnmi(x3, tc, idx, lridx)
 								}
-								// we should not return here since there can be multiple entries in the list
-								// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
-								// we need to loop over all of them and the global for loop will return if not found
-								//return x1
-							} else {
-								// we hit this e.g. at interface level of interface[system0]/subinterface[index=0]
-								tc.AddMsg("not end of path with key")
 
-								if tc.Action != ConfigResolveLeafRef {
-									found := p.HandleNotEndOfListWithKeyInParseKeyWithActionGnmi(x3, pathElemKeyValues[i], tc)
-									if found {
-										switch tc.Action {
-										case ConfigTreeActionGet, ConfigTreeActionFind:
-											return p.ParseTreeWithActionGnmi(x1[n], tc, idx+1, lridx)
-										case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
-											x1[n] = p.ParseTreeWithActionGnmi(x1[n], tc, idx+1, lridx)
-											return x1
+								if found {
+									// we return since we are at the end of the path and the key/value were found
+									switch tc.Action {
+									case ConfigTreeActionGet, ConfigTreeActionFind:
+										return x1[n]
+									case ConfigTreeActionDelete:
+										x1 = append(x1[:n], x1[n+1:]...)
+										return x1
+									case ConfigTreeActionUpdate:
+										x1[n] = p.CopyAndCleanTxValues(tc.Value)
+										// we also need to add the key as part of the object
+										switch x := x1[n].(type) {
+										case map[string]interface{}:
+											tc.AddMsg("adding key map[string]interface{}")
+											for i, pathElemKeyName := range pathElemKeyNames {
+												x[pathElemKeyName] = pathElemKeyValues[i]
+											}
+										default:
+											tc.AddMsg("adding key" + "." + fmt.Sprintf("%v", (reflect.TypeOf(x))))
+											// create the key since the object was initialized as nil
+											xx := make(map[string]interface{})
+											for i, pathElemKeyName := range pathElemKeyNames {
+												xx[pathElemKeyName] = pathElemKeyValues[i]
+											}
+											x1[n] = xx
 										}
+										tc.AddMsg(fmt.Sprintf("return data: %v", x1))
+										return x1
+									case ConfigTreeActionCreate:
+										// TODO if we ever come here
+										return x1
+									default:
 										// we should not return here since there can be multiple entries in the list
 										// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
 										// we need to loop over all of them and the global for loop will return if not found
 										//return x1
 									}
-								} else {
-									// for leafRef resolution
-
-									// the value is always a string since it is part of map[string]interface{}
-									// since we are not at the end of the path we dont have leafRefValues and hence we dont need to Populate them
-									// this is PopulateLocalLeafRefKey iso PopulateLocalLeafRefValue since we are not yet at the end
-									// Data is x3 which we use to populate the pathELem key
-									p.PopulateLocalLeafRefKeyGnmi(x3, tc, idx, lridx)
-									// given that we can have multiple entries in the list we initialize a new index to increment independently
-									i := idx
-									i++
-									p.ParseTreeWithActionGnmi(x1[n], tc, i, lridx)
-
 								}
-								// we should not return here since there can be multiple entries in the list
-								// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
-								// we need to loop over all of them and the global for loop will return if not found
-								//return x1
+							} else {
+								// for leafRef resolution, we resolved the leafref
+								for _, pathElemKeyName := range pathElemKeyNames {
+									p.PopulateLocalLeafRefValueGnmi(x2[pathElemKeyName], tc, idx, lridx)
+								}
 
 							}
-						} else {
-							tc.Found = false
-							tc.Data = x1
-							tc.AddMsg(fmt.Sprintf("pathElemKeyName not found: %s", pathElemKeyName))
 							// we should not return here since there can be multiple entries in the list
 							// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
 							// we need to loop over all of them and the global for loop will return if not found
 							//return x1
+						} else {
+							// we hit this e.g. at interface level of interface[system0]/subinterface[index=0]
+							tc.AddMsg("not end of path with key/keys")
+
+							if tc.Action != ConfigResolveLeafRef {
+								found := true
+								for i, pathElemKeyName := range pathElemKeyNames {
+									f := p.HandleNotEndOfListWithKeyInParseKeyWithActionGnmi(x2[pathElemKeyName], pathElemKeyValues[i], tc)
+									if !f {
+										found = false
+									}
+								}
+								if found {
+									switch tc.Action {
+									case ConfigTreeActionGet, ConfigTreeActionFind:
+										return p.ParseTreeWithActionGnmi(x1[n], tc, idx+1, lridx)
+									case ConfigTreeActionDelete, ConfigTreeActionUpdate, ConfigTreeActionCreate:
+										x1[n] = p.ParseTreeWithActionGnmi(x1[n], tc, idx+1, lridx)
+										return x1
+									}
+									// we should not return here since there can be multiple entries in the list
+									// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+									// we need to loop over all of them and the global for loop will return if not found
+									//return x1
+								}
+							} else {
+								// for leafRef resolution
+
+								// the value is always a string since it is part of map[string]interface{}
+								// since we are not at the end of the path we dont have leafRefValues and hence we dont need to Populate them
+								// this is PopulateLocalLeafRefKey iso PopulateLocalLeafRefValue since we are not yet at the end
+								// Data is x3 which we use to populate the pathELem key
+								for _, pathElemKeyName := range pathElemKeyNames {
+									p.PopulateLocalLeafRefKeyGnmi(x2[pathElemKeyName], tc, idx, lridx)
+								}
+
+								// given that we can have multiple entries in the list we initialize a new index to increment independently
+								i := idx
+								i++
+								p.ParseTreeWithActionGnmi(x1[n], tc, i, lridx)
+
+							}
+							// we should not return here since there can be multiple entries in the list
+							// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+							// we need to loop over all of them and the global for loop will return if not found
+							//return x1
+
 						}
+					} else {
+						tc.Found = false
+						tc.Data = x1
+						tc.AddMsg(fmt.Sprintf("pathElemKeyName not found: %v", pathElemKeyNames))
+						// we should not return here since there can be multiple entries in the list
+						// e.g. interface[name=mgmt] and interface[name=etehrente-1/1]
+						// we need to loop over all of them and the global for loop will return if not found
+						//return x1
 					}
 				}
 			}
