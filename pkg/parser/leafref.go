@@ -102,7 +102,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 					s = strings.ReplaceAll(s, "\"", "")
 					s = strings.ReplaceAll(s, " ", "")
 					s = strings.ReplaceAll(s, "\t", "")
-					//fmt.Printf("LeafRef Path: %s\n", s)
+					fmt.Printf("LeafRef Path: %s\n", s)
 
 					// split the leafref per "/" and split the element and key from the path
 					// last element is the key
