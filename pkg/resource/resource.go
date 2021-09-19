@@ -328,6 +328,7 @@ func AddPathElem(p *gnmi.Path, e *container.Entry) *gnmi.Path {
 		elem.Name = e.GetName()
 	} else {
 		elem.Name = e.GetName()
+		elem.Key = make(map[string]string)
 		for _, key := range strings.Split(e.GetKey(), " ") {
 			elem.Key[key] = ""
 		}
