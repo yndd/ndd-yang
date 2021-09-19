@@ -17,6 +17,7 @@ limitations under the License.
 package resource
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -327,6 +328,10 @@ func AddPathElem(p *gnmi.Path, e *container.Entry) *gnmi.Path {
 		elem.Name = e.GetName()
 	} else {
 		elem.Name = e.GetName()
+		if len(e.GetKey()) > 1 {
+			fmt.Printf("AddPathElem: Keys %s\n", e.GetKey())
+		}
+
 		elem.Key = map[string]string{strings.Split(e.GetKey(), " ")[0]: ""}
 	}
 	p.Elem = append(p.Elem, elem)
