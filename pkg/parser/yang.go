@@ -18,6 +18,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
@@ -88,6 +89,8 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	}
 
+	
+
 	// process mandatory attribute
 	switch e.Mandatory {
 	case 1: // TSTrue
@@ -98,10 +101,15 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	if e.Key != "" {
 		entry.Mandatory = true
 	}
-	if e.Name == containerKey {
-		entry.Mandatory = true
+	// a containerkey can consists of multiple keys.
+	containerKeys := strings.Split(containerKey, " ")
+	// keys come from the previous container so we need to check the elements against these key(s)
+	for _, containerKey := range containerKeys {
+		if e.Name == containerKey {
+			entry.Mandatory = true
+		}
 	}
-
+	
 	// process type attribute
 	switch p.GetTypeName(e) {
 	case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
@@ -186,27 +194,26 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		if e.Type.Kind.String() == "enumeration" {
 			entry.Enum = e.Type.Enum.Names()
 		}
-		// I DECIDED TO REMOVE DEFAULTS SINCE IT CREATES LOTS OF DEPENDENCIES BECAUSE RESOURCES HAVE OTHER DEPENDENCIES
+		// DEFAULTS ARE NOT USED In PROVIDERS SINCE IT CREATES LOTS OF DEPENDENCIES BECAUSE RESOURCES HAVE OTHER DEPENDENCIES
 		// AND CONTEXT. E.g. allow-icmp-redirect in sros is only supported in management context; gre-termination in a primary
 		// interface is not supported in all circumstances in sros, etc etc
-		// SEEMS BETER TO REMOVE IT
-		/*
-			if e.Default != "" {
-				// if there is a default parameter and the entry type is a int, we will try to convert
-				// it and if it does not work we dont initialize the default
-				switch {
-				case strings.Contains(entry.Type, "int"):
-					// e.g. we can have rdnss-lifetime which has a default of infinite but it is an int32
-					if _, err := strconv.Atoi(e.Default); err == nil {
-						entry.Default = e.Default
-					}
-					// if the conversion does not succeed we dont initialize a default
-				default:
+		// SEEMS BETER TO NOT USE UT WITH PROVIDERS
+		if e.Default != "" {
+			// if there is a default parameter and the entry type is a int, we will try to convert
+			// it and if it does not work we dont initialize the default
+			switch {
+			case strings.Contains(entry.Type, "int"):
+				// e.g. we can have rdnss-lifetime which has a default of infinite but it is an int32
+				if _, err := strconv.Atoi(e.Default); err == nil {
 					entry.Default = e.Default
 				}
-				fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
+				// if the conversion does not succeed we dont initialize a default
+			default:
+				entry.Default = e.Default
 			}
-		*/
+			fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
+		}
+
 	}
 
 	// pattern post processing
