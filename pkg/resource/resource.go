@@ -29,6 +29,7 @@ import (
 )
 
 type Resource struct {
+	Module               string                         // Yang Module name of the resource
 	parser               *parser.Parser                 // calls a library for parsing JSON/YANG elements
 	Path                 *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
 	ActualPath           *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
@@ -68,6 +69,12 @@ func WithExclude(p string) Option {
 	}
 }
 
+func WithModule(m string) Option {
+	return func(r *Resource) {
+		r.Module = m
+	}
+}
+
 func NewResource(opts ...Option) *Resource {
 	r := &Resource{
 		parser: parser.NewParser(),
@@ -96,6 +103,10 @@ func NewResource(opts ...Option) *Resource {
 
 func (r *Resource) GetResourcePath() *gnmi.Path {
 	return r.Path
+}
+
+func (r *Resource) GetModule() string {
+	return r.Module
 }
 
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
