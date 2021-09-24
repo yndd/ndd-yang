@@ -999,10 +999,12 @@ func (p *Parser) GetUpdatesFromJSONDataGnmi(rootPath, path *gnmi.Path, x1 interf
 	if p.log != nil {
 		p.log.Debug("GetUpdatesFromJSONData", "Updates", updates, "Trace Msg", tc.Msg)
 	}
+	fmt.Printf("GetUpdatesFromJSONDataGnmi Updates %v, Trace Msg %v\n", updates, tc.Msg)
 	updates = p.PostProcessUpdatesGnmi(rootPath, updates)
 	if p.log != nil {
 		p.log.Debug("GetUpdatesFromJSONData", "Updates", updates)
 	}
+	fmt.Printf("GetUpdatesFromJSONDataGnmi Updates %v, Trace Msg %v\n", updates, tc.Msg)
 	return updates
 }
 
