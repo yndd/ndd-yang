@@ -1235,7 +1235,7 @@ func (p *Parser) PostProcessUpdatesCaptureValuesGnmi(updates []*gnmi.Update) (ma
 	objKeyValues := make(map[int]map[string][]string)
 	objKeyValuesIdx := make(map[int]map[string]int)
 	for _, update := range updates {
-		//fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.ConfigGnmiPathToXPath(update.Path, true))
+		fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.GnmiPathToXPath(update.Path, true))
 		if p.log != nil {
 			p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.GnmiPathToXPath(update.GetPath(), true))
 		}
