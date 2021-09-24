@@ -1269,8 +1269,8 @@ func (p *Parser) PostProcessUpdatesCaptureValuesGnmi(updates []*gnmi.Update) (ma
 
 func (p *Parser) PostProcessAugmentValuesGnmi(updates []*gnmi.Update, objKeyValues map[int]map[string][]string, objKeyValuesIdx map[int]map[string]int) []*gnmi.Update {
 
-	//fmt.Printf("objKeyValues   : %v\n", objKeyValues)
-	//fmt.Printf("objKeyValuesIdx: %v\n", objKeyValuesIdx)
+	fmt.Printf("objKeyValues   : %v\n", objKeyValues)
+	fmt.Printf("objKeyValuesIdx: %v\n", objKeyValuesIdx)
 	// loop vover the updates and fill the blank values
 	for _, update := range updates {
 		for i, pathElem := range update.Path.GetElem() {
