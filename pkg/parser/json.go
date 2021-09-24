@@ -999,12 +999,12 @@ func (p *Parser) GetUpdatesFromJSONDataGnmi(rootPath, path *gnmi.Path, x1 interf
 	if p.log != nil {
 		p.log.Debug("GetUpdatesFromJSONData", "Updates", updates, "Trace Msg", tc.Msg)
 	}
-	fmt.Printf("GetUpdatesFromJSONDataGnmi Updates %v, Trace Msg %v\n", updates, tc.Msg)
+	//fmt.Printf("GetUpdatesFromJSONDataGnmi Updates %v, Trace Msg %v\n", updates, tc.Msg)
 	updates = p.PostProcessUpdatesGnmi(rootPath, updates)
 	if p.log != nil {
 		p.log.Debug("GetUpdatesFromJSONData", "Updates", updates)
 	}
-	fmt.Printf("GetUpdatesFromJSONDataGnmi Updates %v, Trace Msg %v\n", updates, tc.Msg)
+	//fmt.Printf("GetUpdatesFromJSONDataGnmi Updates %v, Trace Msg %v\n", updates, tc.Msg)
 	return updates
 }
 
@@ -1237,7 +1237,7 @@ func (p *Parser) PostProcessUpdatesCaptureValuesGnmi(updates []*gnmi.Update) (ma
 	objKeyValues := make(map[int]map[string][]string)
 	objKeyValuesIdx := make(map[int]map[string]int)
 	for _, update := range updates {
-		fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.GnmiPathToXPath(update.Path, true))
+		//fmt.Printf("PostProcessUpdates objectvalues: %s\n", *p.GnmiPathToXPath(update.Path, true))
 		if p.log != nil {
 			p.log.Debug("PostProcessUpdates objectvalues", "update path", *p.GnmiPathToXPath(update.GetPath(), true))
 		}
@@ -1271,8 +1271,8 @@ func (p *Parser) PostProcessUpdatesCaptureValuesGnmi(updates []*gnmi.Update) (ma
 
 func (p *Parser) PostProcessAugmentValuesGnmi(updates []*gnmi.Update, objKeyValues map[int]map[string][]string, objKeyValuesIdx map[int]map[string]int) []*gnmi.Update {
 
-	fmt.Printf("objKeyValues   : %v\n", objKeyValues)
-	fmt.Printf("objKeyValuesIdx: %v\n", objKeyValuesIdx)
+	//fmt.Printf("objKeyValues   : %v\n", objKeyValues)
+	//fmt.Printf("objKeyValuesIdx: %v\n", objKeyValuesIdx)
 	// loop vover the updates and fill the blank values
 	for _, update := range updates {
 		for i, pathElem := range update.Path.GetElem() {
