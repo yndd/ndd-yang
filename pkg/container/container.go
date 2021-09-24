@@ -160,6 +160,9 @@ func NewEntry(n string, opts ...EntryOption) *Entry {
 }
 
 func (e *Entry) GetKey() []string {
+	if e.Key == "" {
+		return nil
+	}
 	return strings.Split(e.Key, " ")
 }
 
