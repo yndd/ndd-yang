@@ -16,6 +16,8 @@ limitations under the License.
 
 package container
 
+import "strings"
+
 type Container struct {
 	Name    string     `json:"name,omitempty"`
 	Entries []*Entry   `json:"entries,omitempty"`
@@ -157,8 +159,8 @@ func NewEntry(n string, opts ...EntryOption) *Entry {
 	return e
 }
 
-func (e *Entry) GetKey() string {
-	return e.Key
+func (e *Entry) GetKey() []string {
+	return strings.Split(e.Key, " ")
 }
 
 func (e *Entry) GetName() string {

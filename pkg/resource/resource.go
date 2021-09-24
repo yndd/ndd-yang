@@ -107,9 +107,11 @@ func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 				for _, e := range c.Entries {
 					//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s, ContainerEntryName: %s\n", c.Name, llpElem.GetName(), e.GetName())
 					if e.GetName() == llpElem.GetName() {
-						if e.GetKey() != "" {
-							llpElem.Key = make(map[string]string)
-							llpElem.Key[e.GetKey()] = ""
+						if len(e.GetKey()) != 0 {
+							for _, key := range e.GetKey() {
+								llpElem.Key = make(map[string]string)
+								llpElem.Key[key] = ""
+							}
 						}
 					}
 				}
@@ -137,9 +139,11 @@ func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 		for _, e := range entries {
 			//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, EntryName: %s\n", i, llpElem.GetName(), e.GetName())
 			if e.GetName() == llpElem.GetName() {
-				if e.GetKey() != "" {
-					llpElem.Key = make(map[string]string)
-					llpElem.Key[e.GetKey()] = ""
+				if len(e.GetKey()) != 0 {
+					for _, key := range e.GetKey() {
+						llpElem.Key = make(map[string]string)
+						llpElem.Key[key] = ""
+					}
 				}
 				if e.Next != nil {
 					entries = e.Next.Entries
@@ -157,7 +161,7 @@ func (r *Resource) GetHierElements() []string {
 	return r.HierarchicalElements
 }
 
-func (r *Resource) SetHierElements(s []string)  {
+func (r *Resource) SetHierElements(s []string) {
 	r.HierarchicalElements = s
 }
 
@@ -343,7 +347,7 @@ func AddPathElem(p *gnmi.Path, e *container.Entry) *gnmi.Path {
 	} else {
 		elem.Name = e.GetName()
 		elem.Key = make(map[string]string)
-		for _, key := range strings.Split(e.GetKey(), " ") {
+		for _, key := range e.GetKey() {
 			elem.Key[key] = ""
 		}
 		fmt.Printf("AddPathElem Key: %v \n", elem.Key)
