@@ -501,9 +501,26 @@ func (p *Parser) ParseTreeWithActionGnmi(x1 interface{}, tc *TraceCtxtGnmi, idx,
 					// loop over all pathElemKeyNames
 					// TODO multiple keys and values need to be tested !
 					found := true
-					for _, pathElemKeyName := range pathElemKeyNames {
-						if _, ok := x2[pathElemKeyName]; !ok {
+					for i, pathElemKeyName := range pathElemKeyNames {
+						if value, ok := x2[pathElemKeyName]; !ok {
 							found = false
+						} else {
+							switch x := value.(type) {
+							case string:
+								if string(x) != pathElemKeyValues[i] {
+									found = false
+								}
+							case uint32:
+								if strconv.Itoa(int(x)) != pathElemKeyValues[i] {
+									found = false
+								}
+							case float64:
+								if fmt.Sprintf("%.0f", x) !=  pathElemKeyValues[i] {
+									found = false
+								}
+							default:
+								found = false
+							}
 						}
 					}
 					if found {
