@@ -18,6 +18,7 @@ package parser
 
 import (
 	"encoding/json"
+	"sort"
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
@@ -61,15 +62,39 @@ func (p *Parser) GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
 			if len(pElem.GetKey()) != 0 {
 				sb.WriteString("[")
 				i := 0
+
+				// we need to sort the keys in the same way for compaarisons
+				type kv struct {
+					Key   string
+					Value string
+				}
+				var ss []kv
 				for k, v := range pElem.GetKey() {
-					sb.WriteString(k)
+					ss = append(ss, kv{k, v})
+				}
+				sort.Slice(ss, func(i, j int) bool {
+					return ss[i].Value > ss[j].Value
+				})
+				for _, kv := range ss {
+					sb.WriteString(kv.Key)
 					sb.WriteString("=")
-					sb.WriteString(v)
-					if i != len(pElem.GetKey())-1 {
+					sb.WriteString(kv.Value)
+					if i != len(ss)-1 {
 						sb.WriteString(",")
 					}
 					i++
 				}
+				/*
+					for k, v := range pElem.GetKey() {
+						sb.WriteString(k)
+						sb.WriteString("=")
+						sb.WriteString(v)
+						if i != len(pElem.GetKey())-1 {
+							sb.WriteString(",")
+						}
+						i++
+					}
+				*/
 				sb.WriteString("]")
 			}
 		}
