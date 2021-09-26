@@ -73,7 +73,7 @@ func (p *Parser) GnmiPathToXPath(path *gnmi.Path, keys bool) *string {
 					ss = append(ss, kv{k, v})
 				}
 				sort.Slice(ss, func(i, j int) bool {
-					return ss[i].Value > ss[j].Value
+					return ss[i].Key > ss[j].Key
 				})
 				for _, kv := range ss {
 					sb.WriteString(kv.Key)
