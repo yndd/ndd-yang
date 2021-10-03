@@ -76,6 +76,8 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 	case nil:
 		return nil, nil
 	default:
+		updates := []*gnmi.Update{}
+		updates = append(updates, u)
 		return &gnmi.Notification{
 			Timestamp: time.Now().UnixNano(),
 			Prefix: &gnmi.Path{
@@ -83,7 +85,7 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 				Origin: o,
 				//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
 			},
-			Update: []*gnmi.Update{u},
+			Update: updates,
 		}, nil
 	}
 }
