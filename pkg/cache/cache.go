@@ -87,6 +87,19 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 	}
 }
 
+func (c *Cache) GetNotificationFromDelete(t, o string, p *gnmi.Path) (*gnmi.Notification, error) {
+	return &gnmi.Notification{
+		Timestamp: time.Now().UnixNano(),
+		Prefix: &gnmi.Path{
+			Target: t,
+			Origin: o,
+			//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
+		},
+		Delete: []*gnmi.Path{{Elem: p.GetElem()}},
+	}, nil
+
+}
+
 func (c *Cache) GetGnmiUpdateAsJsonBlob(t, o string, u *gnmi.Update) error {
 
 	// to retrun the data we want to create a function that return the updates as a json blob iso individual path
