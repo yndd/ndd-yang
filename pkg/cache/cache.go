@@ -49,9 +49,12 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 	if err != nil {
 		return nil, err
 	}
+	updates := []*gnmi.Update{}
 	switch value := val.(type) {
+	case nil:
+		return nil, nil
 	case map[string]interface{}:
-		updates := []*gnmi.Update{}
+
 		for k, v := range value {
 			val, err := json.Marshal(v)
 			if err != nil {
@@ -64,30 +67,18 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 			updates = append(updates, update)
 		}
 
-		return &gnmi.Notification{
-			Timestamp: time.Now().UnixNano(),
-			Prefix: &gnmi.Path{
-				Target: t,
-				Origin: o,
-				//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
-			},
-			Update: updates,
-		}, nil
-	case nil:
-		return nil, nil
 	default:
-		updates := []*gnmi.Update{}
 		updates = append(updates, u)
-		return &gnmi.Notification{
-			Timestamp: time.Now().UnixNano(),
-			Prefix: &gnmi.Path{
-				Target: t,
-				Origin: o,
-				//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
-			},
-			Update: updates,
-		}, nil
 	}
+	return &gnmi.Notification{
+		Timestamp: time.Now().UnixNano(),
+		Prefix: &gnmi.Path{
+			Target: t,
+			Origin: o,
+			//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
+		},
+		Update: updates,
+	}, nil
 }
 
 func (c *Cache) GetNotificationFromDelete(t, o string, p *gnmi.Path) (*gnmi.Notification, error) {
