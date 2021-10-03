@@ -73,7 +73,8 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 			},
 			Update: updates,
 		}, nil
-
+	case nil:
+		return nil, nil
 	default:
 		return &gnmi.Notification{
 			Timestamp: time.Now().UnixNano(),
