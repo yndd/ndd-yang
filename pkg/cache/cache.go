@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -80,6 +81,18 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 
 	default:
 		updates = append(updates, u)
+		fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
+		for k, v := range u.Path.GetElem()[len(u.Path.GetElem())-1].GetKey() {
+			val, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			update := &gnmi.Update{
+				Path: &gnmi.Path{Elem: append(u.GetPath().GetElem(), &gnmi.PathElem{Name: k})},
+				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
+			}
+			updates = append(updates, update)
+		}
 	}
 	return &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
