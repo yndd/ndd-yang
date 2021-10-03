@@ -54,8 +54,19 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 	case nil:
 		return nil, nil
 	case map[string]interface{}:
-
 		for k, v := range value {
+			val, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			update := &gnmi.Update{
+				Path: &gnmi.Path{Elem: append(u.GetPath().GetElem(), &gnmi.PathElem{Name: k})},
+				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
+			}
+			updates = append(updates, update)
+		}
+		// add the keys as data in the last element
+		for k, v := range u.Path.GetElem()[len(u.Path.GetElem())-1].GetKey() {
 			val, err := json.Marshal(v)
 			if err != nil {
 				return nil, err
