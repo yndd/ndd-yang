@@ -28,7 +28,7 @@ func WithParser(l logging.Logger) Option {
 	}
 }
 
-func NewCache(t []string) *Cache {
+func New(t []string) *Cache {
 	return &Cache{
 		c: cache.New(t),
 	}

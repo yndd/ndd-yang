@@ -31,7 +31,7 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 			//exp: "ipam",
 		},
 	}
-	c := NewCache([]string{target})
+	c := New([]string{target})
 	for _, tt := range tests {
 		n, err := c.GetNotificationFromUpdate(target, origin, tt.inp)
 		if err != nil {
@@ -282,7 +282,7 @@ func TestGetJson(t *testing.T) {
 		},
 	}
 
-	c := NewCache([]string{target})
+	c := New([]string{target})
 	if err := c.GnmiUpdate(target, n); err != nil {
 		t.Errorf("GnmiUpdate: %v\n", err)
 	}
