@@ -479,6 +479,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	}
 	
 	for i, pe := range pathElem {
+		fmt.Printf("Index: %d, length Path: %d\n", i, len(r.Path.GetElem()))
 		switch {
 		case i == len(r.Path.GetElem())-1: // root of the resource
 			fmt.Printf("    Element at root of resource: %d, peName: %s, Key: %v \n",i, pe.GetName(), pe.Key)
