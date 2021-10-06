@@ -481,14 +481,14 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 
 	for i, pe := range pathElem {
 		switch {
-		case i == len(r.Path.GetElem())-1: // root of the resource
+		case i == len(r.Path.GetElem()): // root of the resource
 			fmt.Printf("    Element at root of resource: %d, peName: %s, Key: %v \n",i, pe.GetName(), pe.Key)
 			if r.RootContainerEntry.Key != "" {
 				pe.Key = make(map[string]string)
 				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
 			}
 			nextContainer = r.RootContainerEntry.Next
-		case i > len(r.Path.GetElem())-1:
+		case i > len(r.Path.GetElem()):
 			if nextContainer != nil {
 				for _, ce := range nextContainer.Entries {
 					fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n",i, ce.GetName(), pe.GetName(), ce.Key)
