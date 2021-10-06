@@ -89,7 +89,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	}
 
-	fmt.Printf("Element Name %s, ContainerKey %s", e.Name, containerKey)
+	fmt.Printf("Element Name %s, ContainerKey %s\n", e.Name, containerKey)
 	if e.Name == "instance" {
 		fmt.Printf("instance: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
 
