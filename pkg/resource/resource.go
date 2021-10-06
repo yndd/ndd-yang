@@ -474,7 +474,12 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	// align the path Element with the dependency Path
 	nextContainer := &container.Container{}
 	pathElem := dp.GetElem()
-	for i, pe := range dp.GetElem() {
+	if len(dp.GetElem()) == 0 {
+		pathElem = r.Path.GetElem()
+	}
+	
+
+	for i, pe := range pathElem {
 		switch {
 		case i == len(r.Path.GetElem())-1: // root of the resource
 			if r.RootContainerEntry.Key != "" {
@@ -495,6 +500,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				}
 			}
 		}
+		fmt.Printf("PathElem: Name: %s, Key: %v \n", pe.GetName(), pe.GetKey())
 	}
 	return pathElem
 }
