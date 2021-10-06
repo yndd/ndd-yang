@@ -467,6 +467,9 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 		return fp
 	}
 	pathElem := dp.GetElem()
+	if len(dp.GetElem()) == 0 {
+		pathElem = r.Path.GetElem()
+	}
 	return pathElem
 }
 
