@@ -436,6 +436,7 @@ func findActualPathElemHierarchy(r *Resource) []*gnmi.PathElem {
 	if r.DependsOn != nil {
 		fp := findActualPathElemHierarchy(r.DependsOn)
 		pathElem := r.Path.GetElem()
+		fmt.Printf("DependsOn: %v\n", pathElem)
 		if r.RootContainerEntry.Key != "" {
 			pathElem[len(r.Path.GetElem())-1].Key = make(map[string]string)
 			pathElem[len(r.Path.GetElem())-1].Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
@@ -444,6 +445,7 @@ func findActualPathElemHierarchy(r *Resource) []*gnmi.PathElem {
 		return fp
 	}
 	pathElem := r.Path.GetElem()
+	fmt.Printf("Not DependsOn: %v\n", pathElem)
 	if r.RootContainerEntry.Key != "" {
 		pathElem[len(r.Path.GetElem())-1].Key = make(map[string]string)
 		pathElem[len(r.Path.GetElem())-1].Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
