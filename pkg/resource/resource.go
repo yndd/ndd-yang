@@ -496,7 +496,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if len(dp.GetElem()) == 0 {
 		pathElem = r.Path.GetElem()
 	}
-	fmt.Printf("Path Elem: %v\n", pathElem)
+	//fmt.Printf("Path Elem: %v\n", pathElem)
 	for i, pe := range pathElem {
 		fmt.Printf("Index: %d, root Path length: %d length Path: %d\n", i, len(r.Path.GetElem()), len(pathElem))
 		switch {
@@ -528,9 +528,8 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 							// we initialaize the type as string as a dymmy type
 							split := strings.Split(ce.Key, " ")
 							for _, key := range split {
-								pe.Key[key] = "string"
+								pe.Key[key] = ce.Next.GetKeyType(key)
 							}
-
 						}
 						nextContainer = ce.Next
 						break
@@ -538,7 +537,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				}
 			}
 		}
-		fmt.Printf("  PathElem: %d Name: %s, Key: %v \n", i, pe.GetName(), pe.GetKey())
+		//fmt.Printf("  PathElem: %d Name: %s, Key: %v \n", i, pe.GetName(), pe.GetKey())
 	}
 	return pathElem
 }

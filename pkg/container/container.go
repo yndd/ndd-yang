@@ -66,6 +66,15 @@ func (c *Container) GetFullName() string {
 	return c.Name
 }
 
+func (c *Container) GetKeyType(name string) string {
+	for _, e := range c.Entries {
+		if e.Name == name {
+			return e.Type
+		}
+	}
+	return "string"
+}
+
 func getRecursiveName(c *Container) string {
 	if c.Prev != nil {
 		return getRecursiveName(c.Prev) + "-" + c.Name
