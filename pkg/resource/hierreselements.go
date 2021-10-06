@@ -41,7 +41,10 @@ func (h *HierResourceElements) AddHierResourceElement(path string) {
 func addHierResourceElement(h map[string]interface{}, e []string) map[string]interface{} {
 	if len(e) > 1 {
 		// not last element
-		h[e[0]] = make(map[string]interface{})
+		// check if it was already initialized
+		if _, ok := h[e[0]]; !ok {
+			h[e[0]] = make(map[string]interface{})
+		}
 		switch x := h[e[0]].(type) {
 		case map[string]interface{}:
 			h[e[0]] = addHierResourceElement(x, e[1:])
