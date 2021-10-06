@@ -28,6 +28,11 @@ func NewHierResourceElements() *HierResourceElements {
 	}
 }
 
+// GetHierResourceElement return the hierarchical resource element
+func (h *HierResourceElements) GetHierResourceElement() *HierResourceElements {
+	return h
+}
+
 // builds a hierarchical map[string]map[string]nil element
 func (h *HierResourceElements) GetHierResourceElements() map[string]interface{} {
 	return h.Elems
