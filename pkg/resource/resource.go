@@ -454,7 +454,7 @@ func findActualPathElemHierarchy(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if r.DependsOn != nil {
 		// we first go to the root of the resource to find the path
 		fp := findActualPathElemHierarchy(r.DependsOn, r.DependsOnPath)
-		pathElem := getResourcePathElem(r, dp)
+		pathElem := getResourcePathElem(r, r.Path)
 		fp = append(fp, pathElem...)
 		return fp
 	}
@@ -474,10 +474,12 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	// align the path Element with the dependency Path
 	nextContainer := &container.Container{}
 	pathElem := dp.GetElem()
+	// when we are at the root of the resource the dependency path is not present
+	// we initialize with the resource Path
 	if len(dp.GetElem()) == 0 {
 		pathElem = r.Path.GetElem()
 	}
-	
+	fmt.Printf("Path Elem: %v\n", pathElem)
 	for i, pe := range pathElem {
 		fmt.Printf("Index: %d, root Path length: %d length Path: %d\n", i, len(r.Path.GetElem()), len(pathElem))
 		switch {
