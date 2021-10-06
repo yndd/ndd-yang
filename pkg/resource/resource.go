@@ -317,7 +317,7 @@ func (r *Resource) GetAbsoluteXPath() *string {
 
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithKeys(r, r.DependsOnPath),
 	}
 	// the first element is a dummy container we can skip
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
