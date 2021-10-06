@@ -482,8 +482,8 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 		fmt.Printf("Index: %d, root Path length: %d length Path: %d\n", i, len(r.Path.GetElem()), len(pathElem))
 		switch {
 		case i == len(r.Path.GetElem())-1: // root of the resource
-			fmt.Printf("    Element at root of resource: %d, peName: %s, Key: %v \n",i, pe.GetName(), pe.Key)
-			fmt.Printf("       RootContainerEntry: %#v\n", r.RootContainerEntry)
+			//fmt.Printf("    Element at root of resource: %d, peName: %s, Key: %v \n",i, pe.GetName(), pe.Key)
+			//fmt.Printf("       RootContainerEntry: %#v\n", r.RootContainerEntry)
 			if r.RootContainerEntry.Key != "" {
 				pe.Key = make(map[string]string)
 				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
@@ -491,7 +491,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 			nextContainer = r.Container
 		case i > len(r.Path.GetElem())-1:
 			if nextContainer != nil {
-				fmt.Printf("       Container Entries: %#v\n", nextContainer.Entries)
+				//fmt.Printf("       Container Entries: %#v\n", nextContainer.Entries)
 				for _, ce := range nextContainer.Entries {
 					fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n",i, ce.GetName(), pe.GetName(), ce.Key)
 					if ce.Name == pe.GetName() {
@@ -500,6 +500,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 							pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
 						}
 						nextContainer = ce.Next
+						break
 					}
 				}
 			}
