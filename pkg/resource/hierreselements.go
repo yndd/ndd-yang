@@ -38,7 +38,7 @@ func (h *HierResourceElements) GetHierResourceElements() map[string]interface{} 
 
 // builds a hierarchical map[string]map[string]nil element
 func (h *HierResourceElements) AddHierResourceElement(path string) {
-	h.Elems = addHierResourceElement(h.Elems, strings.Split(path, "/")[1:])
+	h.Elems = addHierResourceElement(h.Elems, strings.Split(path, "/"))
 }
 
 func addHierResourceElement(h map[string]interface{}, e []string) map[string]interface{} {
