@@ -284,7 +284,7 @@ func (r *Resource) GetAbsoluteName() string {
 // used mainly for leafrefs for now
 func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithKeys(r, r.DependsOnPath),
 	}
 
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
@@ -293,7 +293,7 @@ func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 
 func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
 	}
 
 	return actPath
@@ -301,7 +301,7 @@ func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
 
 func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
 	}
 	// the first element is a dummy container we can skip
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
@@ -311,12 +311,21 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 
 func (r *Resource) GetAbsoluteXPath() *string {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
 	}
 	// the first element is a dummy container we can skip
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
 
 	return r.parser.GnmiPathToXPath(actPath, true)
+}
+
+func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
+	actPath := &gnmi.Path{
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
+	}
+	// the first element is a dummy container we can skip
+	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
+	return actPath
 }
 
 func (r *Resource) GetExcludeRelativeXPath() []string {
@@ -449,38 +458,39 @@ type HeInfo struct {
 	Type string `json:"type,omitempty"`
 }
 
-func (r *Resource) GetActualGnmiFullPath() *gnmi.Path {
-	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
-	}
-	// the first element is a dummy container we can skip
-	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
-	return actPath
-}
 
-// findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
-// to find the full resourcePath with all Path Elements (Names, Keys)
-func findActualPathElemHierarchy(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
+// findActualPathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
+// to find the full resourcePath with all Path Elements but does not try to find the keys
+// used before the generator is run or during the generator
+func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if r.DependsOn != nil {
 		// we first go to the root of the resource to find the path
-		fp := findActualPathElemHierarchy(r.DependsOn, r.DependsOnPath)
-		pathElem := getResourcePathElem(r, r.Path)
+		fp := findActualPathElemHierarchyWithKeys(r.DependsOn, r.DependsOnPath)
+		pathElem := r.Path.GetElem()
 		fp = append(fp, pathElem...)
 		return fp
 	}
-	pathElem := getResourcePathElem(r, dp)
+	pathElem := dp.GetElem()
 	return pathElem
 }
 
-func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
-	//pathElem := r.Path.GetElem()
-	//fmt.Printf("  Not DependsOn: %v\n", pathElem)
-	//if r.RootContainerEntry.Key != "" {
-	//	pathElem[len(r.Path.GetElem())-1].Key = make(map[string]string)
-	//	pathElem[len(r.Path.GetElem())-1].Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
-	//}
-	//return pathElem
 
+// findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
+// to find the full resourcePath with all Path Elements (Names, Keys)
+// used after the generator is run, to get the full path including the keys of the pathElements
+func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
+	if r.DependsOn != nil {
+		// we first go to the root of the resource to find the path
+		fp := findActualPathElemHierarchyWithKeys(r.DependsOn, r.DependsOnPath)
+		pathElem := getResourcePathElemWithKeys(r, r.Path)
+		fp = append(fp, pathElem...)
+		return fp
+	}
+	pathElem := getResourcePathElemWithKeys(r, dp)
+	return pathElem
+}
+
+func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	// align the path Element with the dependency Path
 	nextContainer := &container.Container{}
 	pathElem := dp.GetElem()
