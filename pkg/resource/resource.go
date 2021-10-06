@@ -488,8 +488,9 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
 			}
 			nextContainer = r.RootContainerEntry.Next
-		case i > (len(r.Path.GetElem())-1):
+		case i > len(r.Path.GetElem())-1:
 			if nextContainer != nil {
+				fmt.Printf("       Container Entries: %#v\n", nextContainer.Entries)
 				for _, ce := range nextContainer.Entries {
 					fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n",i, ce.GetName(), pe.GetName(), ce.Key)
 					if ce.Name == pe.GetName() {
