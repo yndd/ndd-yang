@@ -34,6 +34,7 @@ type Resource struct {
 	Path                 *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
 	ActualPath           *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
 	DependsOn            *Resource                      // resource dependency
+	DependsOnPath        *gnmi.Path                     // the full path the resource depends upon
 	Excludes             []*gnmi.Path                   // relative from the the resource
 	FileName             string                         // the filename the resource is using to render out the config
 	ResFile              *os.File                       // the file reference for writing the resource file
@@ -60,6 +61,12 @@ func WithXPath(p string) Option {
 func WithDependsOn(d *Resource) Option {
 	return func(r *Resource) {
 		r.DependsOn = d
+	}
+}
+
+func WithDependsOnPath(p *gnmi.Path) Option {
+	return func(r *Resource) {
+		r.DependsOnPath = p
 	}
 }
 
