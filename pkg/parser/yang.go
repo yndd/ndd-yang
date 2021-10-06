@@ -89,7 +89,11 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	}
 
-	
+	fmt.Printf("Element Name %s, ContainerKey %s", e.Name, containerKey)
+	if e.Name == "instance" {
+		fmt.Printf("instance: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
+
+	}
 
 	// process mandatory attribute
 	switch e.Mandatory {
