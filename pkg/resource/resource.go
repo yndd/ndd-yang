@@ -124,6 +124,11 @@ func (r *Resource) GetDependsOnPath() *gnmi.Path {
 	return r.DependsOnPath
 }
 
+// GetHierResourceElement return the hierarchical resource element
+func (r *Resource) GetHierResourceElement() *HierResourceElements {
+	return r.HierResourceElements
+}
+
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
