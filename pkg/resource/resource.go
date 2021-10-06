@@ -497,7 +497,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 					if ce.Name == pe.GetName() {
 						if ce.Key != "" {
 							pe.Key = make(map[string]string)
-							pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
+							pe.Key[ce.Key] = "string"
 						}
 						nextContainer = ce.Next
 						break
