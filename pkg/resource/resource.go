@@ -120,6 +120,10 @@ func (r *Resource) GetDependsOn() *Resource {
 	return r.DependsOn
 }
 
+func (r *Resource) GetDependsOnPath() *gnmi.Path {
+	return r.DependsOnPath
+}
+ 
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
