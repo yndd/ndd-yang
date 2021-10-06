@@ -123,7 +123,7 @@ func (r *Resource) GetDependsOn() *Resource {
 func (r *Resource) GetDependsOnPath() *gnmi.Path {
 	return r.DependsOnPath
 }
- 
+
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
@@ -441,30 +441,60 @@ type HeInfo struct {
 
 func (r *Resource) GetActualGnmiFullPath() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchy(r),
+		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
 	}
 	// the first element is a dummy container we can skip
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
 	return actPath
 }
 
-func findActualPathElemHierarchy(r *Resource) []*gnmi.PathElem {
+// findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
+// to find the full resourcePath with all Path Elements (Names, Keys)
+func findActualPathElemHierarchy(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if r.DependsOn != nil {
-		fp := findActualPathElemHierarchy(r.DependsOn)
-		pathElem := r.Path.GetElem()
-		fmt.Printf("  DependsOn: %v\n", pathElem)
-		if r.RootContainerEntry.Key != "" {
-			pathElem[len(r.Path.GetElem())-1].Key = make(map[string]string)
-			pathElem[len(r.Path.GetElem())-1].Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
-		}
+		// we first go to the root of the resource to find the path
+		fp := findActualPathElemHierarchy(r.DependsOn, r.DependsOnPath)
+		pathElem := getResourcePathElem(r, dp)
 		fp = append(fp, pathElem...)
 		return fp
 	}
-	pathElem := r.Path.GetElem()
-	fmt.Printf("  Not DependsOn: %v\n", pathElem)
-	if r.RootContainerEntry.Key != "" {
-		pathElem[len(r.Path.GetElem())-1].Key = make(map[string]string)
-		pathElem[len(r.Path.GetElem())-1].Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
+	pathElem := getResourcePathElem(r, dp)
+	return pathElem
+}
+
+func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
+	//pathElem := r.Path.GetElem()
+	//fmt.Printf("  Not DependsOn: %v\n", pathElem)
+	//if r.RootContainerEntry.Key != "" {
+	//	pathElem[len(r.Path.GetElem())-1].Key = make(map[string]string)
+	//	pathElem[len(r.Path.GetElem())-1].Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
+	//}
+	//return pathElem
+
+	// align the path Element with the dependency Path
+	nextContainer := &container.Container{}
+	pathElem := dp.GetElem()
+	for i, pe := range dp.GetElem() {
+		switch {
+		case i == len(r.Path.GetElem())-1: // root of the resource
+			if r.RootContainerEntry.Key != "" {
+				pe.Key = make(map[string]string)
+				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
+			}
+			nextContainer = r.RootContainerEntry.Next
+		case i > len(r.Path.GetElem())-1:
+			if nextContainer != nil {
+				for _, ce := range nextContainer.Entries {
+					if ce.Name == pe.GetName() {
+						if ce.Key != "" {
+							pe.Key = make(map[string]string)
+							pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
+						}
+						nextContainer = ce.Next
+					}
+				}
+			}
+		}
 	}
 	return pathElem
 }
