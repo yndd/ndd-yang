@@ -454,7 +454,6 @@ type HeInfo struct {
 	Type string `json:"type,omitempty"`
 }
 
-
 // findActualPathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements but does not try to find the keys
 // used before the generator is run or during the generator
@@ -472,7 +471,6 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 	}
 	return pathElem
 }
-
 
 // findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements (Names, Keys)
@@ -507,6 +505,13 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 			//fmt.Printf("       RootContainerEntry: %#v\n", r.RootContainerEntry)
 			if r.RootContainerEntry.Key != "" {
 				pe.Key = make(map[string]string)
+				// multiple keys in yang are supplied as a string and they delineation is a space
+				// we split them here so we have access to each key indivifually
+				// we initialaize the type as string as a dymmy type
+				split := strings.Split(r.RootContainerEntry.Key, " ")
+				for _, key := range split {
+					pe.Key[key] = "string"
+				}
 				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
 			}
 			nextContainer = r.Container
@@ -514,11 +519,18 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 			if nextContainer != nil {
 				//fmt.Printf("       Container Entries: %#v\n", nextContainer.Entries)
 				for _, ce := range nextContainer.Entries {
-					fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n",i, ce.GetName(), pe.GetName(), ce.Key)
+					fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n", i, ce.GetName(), pe.GetName(), ce.Key)
 					if ce.Name == pe.GetName() {
 						if ce.Key != "" {
 							pe.Key = make(map[string]string)
-							pe.Key[ce.Key] = "string"
+							// multiple keys in yang are supplied as a string and they delineation is a space
+							// we split them here so we have access to each key indivifually
+							// we initialaize the type as string as a dymmy type
+							split := strings.Split(ce.Key, " ")
+							for _, key := range split {
+								pe.Key[key] = "string"
+							}
+
 						}
 						nextContainer = ce.Next
 						break
@@ -526,7 +538,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				}
 			}
 		}
-		fmt.Printf("  PathElem: %d Name: %s, Key: %v \n",i, pe.GetName(), pe.GetKey())
+		fmt.Printf("  PathElem: %d Name: %s, Key: %v \n", i, pe.GetName(), pe.GetKey())
 	}
 	return pathElem
 }
