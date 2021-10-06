@@ -46,7 +46,7 @@ type Resource struct {
 	ContainerLevelKeys   map[int][]*container.Container // the current container Level key list
 	LocalLeafRefs        []*parser.LeafRefGnmi
 	ExternalLeafRefs     []*parser.LeafRefGnmi
-	HierarchicalElements []string // this defines the hierarchical elements the resource is dependent upon
+	HierResourceElements *HierResourceElements // this defines the hierarchical elements the resource is dependent upon
 }
 
 // Option can be used to manipulate Options.
@@ -96,7 +96,7 @@ func NewResource(opts ...Option) *Resource {
 		ContainerLevelKeys:   make(map[int][]*container.Container),
 		LocalLeafRefs:        make([]*parser.LeafRefGnmi, 0),
 		ExternalLeafRefs:     make([]*parser.LeafRefGnmi, 0),
-		HierarchicalElements: make([]string, 0),
+		HierResourceElements: NewHierResourceElements(),
 	}
 
 	for _, o := range opts {
@@ -183,16 +183,8 @@ func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 	})
 }
 
-func (r *Resource) GetHierElements() []string {
-	return r.HierarchicalElements
-}
-
-func (r *Resource) SetHierElements(s []string) {
-	r.HierarchicalElements = s
-}
-
-func (r *Resource) AppendHierElements(s string) {
-	r.HierarchicalElements = append(r.HierarchicalElements, s)
+func (r *Resource) GetHierResourceElements() *HierResourceElements {
+	return r.HierResourceElements
 }
 
 func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
