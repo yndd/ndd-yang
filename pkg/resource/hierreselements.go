@@ -16,7 +16,10 @@ limitations under the License.
 
 package resource
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type HierResourceElements struct {
 	Elems map[string]interface{}
@@ -39,6 +42,7 @@ func (h *HierResourceElements) AddHierResourceElement(path string) {
 }
 
 func addHierResourceElement(h map[string]interface{}, e []string) map[string]interface{} {
+	fmt.Printf("addHierResourceElement: %v\n", e)
 	if len(e) > 1 {
 		// not last element
 		// check if it was already initialized
