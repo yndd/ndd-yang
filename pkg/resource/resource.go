@@ -284,7 +284,7 @@ func (r *Resource) GetAbsoluteName() string {
 // used mainly for leafrefs for now
 func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findPathElemHierarchy(r),
+		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
 	}
 
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
@@ -292,21 +292,31 @@ func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 }
 
 func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
-	return &gnmi.Path{
-		Elem: findPathElemHierarchy(r),
+	actPath := &gnmi.Path{
+		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
 	}
+
+	return actPath
 }
 
 func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
-	return r.parser.GnmiPathToXPath(&gnmi.Path{
-		Elem: findPathElemHierarchy(r),
-	}, false)
+	actPath := &gnmi.Path{
+		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
+	}
+	// the first element is a dummy container we can skip
+	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
+
+	return r.parser.GnmiPathToXPath(actPath, false)
 }
 
 func (r *Resource) GetAbsoluteXPath() *string {
-	return r.parser.GnmiPathToXPath(&gnmi.Path{
-		Elem: findPathElemHierarchy(r),
-	}, true)
+	actPath := &gnmi.Path{
+		Elem: findActualPathElemHierarchy(r, r.DependsOnPath),
+	}
+	// the first element is a dummy container we can skip
+	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
+
+	return r.parser.GnmiPathToXPath(actPath, true)
 }
 
 func (r *Resource) GetExcludeRelativeXPath() []string {
