@@ -102,14 +102,16 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	default: // TSTrue
 		entry.Mandatory = false
 	}
-	if e.Key != "" {
-		entry.Mandatory = true
-	}
+	// it is not because an element has a key it is mandatory, if the list is defined the key Elments should become mandatory
+	//if e.Key != "" {
+	//	entry.Mandatory = true
+	//}
 	// a containerkey can consists of multiple keys.
 	containerKeys := strings.Split(containerKey, " ")
 	// keys come from the previous container so we need to check the elements against these key(s)
 	for _, containerKey := range containerKeys {
 		if e.Name == containerKey {
+			fmt.Printf("container key match: %#v\n", e.Name)
 			entry.Mandatory = true
 		}
 	}
@@ -255,6 +257,11 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	// key handling
 	entry.Key = e.Key
+
+	if e.Name == "instance" {
+		fmt.Printf("instance key: %#v\n", entry)
+
+	}
 
 	/*
 		if entry.Mandatory {
