@@ -482,6 +482,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	for i, pe := range pathElem {
 		switch {
 		case i == len(r.Path.GetElem())-1: // root of the resource
+			fmt.Printf("    Element at root of resource: %d, peName: %s, Key: %v \n",i, pe.GetName(), pe.Key)
 			if r.RootContainerEntry.Key != "" {
 				pe.Key = make(map[string]string)
 				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
@@ -490,6 +491,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 		case i > len(r.Path.GetElem())-1:
 			if nextContainer != nil {
 				for _, ce := range nextContainer.Entries {
+					fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n",i, ce.GetName(), pe.GetName(), ce.Key)
 					if ce.Name == pe.GetName() {
 						if ce.Key != "" {
 							pe.Key = make(map[string]string)
@@ -500,7 +502,7 @@ func getResourcePathElem(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				}
 			}
 		}
-		fmt.Printf("PathElem: Name: %s, Key: %v \n", pe.GetName(), pe.GetKey())
+		fmt.Printf("  PathElem: %d Name: %s, Key: %v \n",i, pe.GetName(), pe.GetKey())
 	}
 	return pathElem
 }
