@@ -284,7 +284,7 @@ func (r *Resource) GetAbsoluteName() string {
 // used mainly for leafrefs for now
 func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithKeys(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
 	}
 
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
