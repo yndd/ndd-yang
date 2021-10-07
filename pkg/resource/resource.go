@@ -46,7 +46,8 @@ type Resource struct {
 	ContainerLevelKeys   map[int][]*container.Container // the current container Level key list
 	LocalLeafRefs        []*parser.LeafRefGnmi
 	ExternalLeafRefs     []*parser.LeafRefGnmi
-	HierResourceElements *HierResourceElements // this defines the hierarchical elements the resource is dependent upon
+	HierResourceElements *HierResourceElements // this defines the hierarchical elements the resource is dependent upon (map[string]interface -> map[string]map[string]map[string]interface{})
+	SubResources         []*gnmi.Path          // for the fine grain reosurce allocation we sometimes see we need subresources: e.g. ipam has rir and instance within the parent
 }
 
 // Option can be used to manipulate Options.
@@ -79,6 +80,12 @@ func WithExclude(p string) Option {
 func WithModule(m string) Option {
 	return func(r *Resource) {
 		r.Module = m
+	}
+}
+
+func WithSubResources(s []*gnmi.Path) Option {
+	return func(r *Resource) {
+		r.SubResources = s
 	}
 }
 
@@ -127,6 +134,10 @@ func (r *Resource) GetDependsOnPath() *gnmi.Path {
 // GetHierResourceElement return the hierarchical resource element
 func (r *Resource) GetHierResourceElement() *HierResourceElements {
 	return r.HierResourceElements
+}
+
+func (r *Resource) GetSubResources() []*gnmi.Path {
+	return r.SubResources
 }
 
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
