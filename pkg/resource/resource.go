@@ -480,7 +480,7 @@ type HeInfo struct {
 func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path, subp *gnmi.Path) []*gnmi.PathElem {
 	if r.DependsOn != nil {
 		// we first go to the root of the resource to find the path
-		fp := findActualSubResourcePathElemHierarchyWithoutKeys(r.DependsOn, r.DependsOnPath, subp)
+		fp := findActualSubResourcePathElemHierarchyWithoutKeys(r.DependsOn, r.DependsOnPath, r.DependsOnPath)
 		pathElem := subp.GetElem()
 		fp = append(fp, pathElem...)
 		return fp
