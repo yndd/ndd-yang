@@ -140,6 +140,16 @@ func (r *Resource) GetSubResources() []*gnmi.Path {
 	return r.SubResources
 }
 
+func (r *Resource) GetActualSubResources() []*gnmi.Path {
+	paths := make([]*gnmi.Path, 0)
+	for _, subres := range r.SubResources {
+		paths = append(paths, &gnmi.Path{
+			Elem: findActualSubResourcePathElemHierarchyWithoutKeys(r, r.DependsOnPath, subres),
+		})
+	}
+	return paths
+}
+
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
@@ -460,6 +470,24 @@ type HeInfo struct {
 	Name string `json:"name,omitempty"`
 	Key  string `json:"key,omitempty"`
 	Type string `json:"type,omitempty"`
+}
+
+// findActualSubResourcePathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
+// to find the full resourcePath with all Path Elements but does not try to find the keys
+// used before the generator is run or during the generator
+func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path, subp *gnmi.Path) []*gnmi.PathElem {
+	if r.DependsOn != nil {
+		// we first go to the root of the resource to find the path
+		fp := findActualPathElemHierarchyWithoutKeys(r.DependsOn, r.DependsOnPath)
+		pathElem := subp.GetElem()
+		fp = append(fp, pathElem...)
+		return fp
+	}
+	pathElem := dp.GetElem()
+	if len(dp.GetElem()) == 0 {
+		pathElem = r.Path.GetElem()
+	}
+	return pathElem
 }
 
 // findActualPathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
