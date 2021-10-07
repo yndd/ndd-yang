@@ -140,6 +140,8 @@ func (r *Resource) GetSubResources() []*gnmi.Path {
 	return r.SubResources
 }
 
+// GetActualSubResources contaians the full path of all subresources
+// the first pathElement is a Dummy but is used in the structs so we retain it inn the response
 func (r *Resource) GetActualSubResources() []*gnmi.Path {
 	paths := make([]*gnmi.Path, 0)
 	for _, subres := range r.SubResources {
@@ -478,14 +480,14 @@ type HeInfo struct {
 func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path, subp *gnmi.Path) []*gnmi.PathElem {
 	if r.DependsOn != nil {
 		// we first go to the root of the resource to find the path
-		fp := findActualPathElemHierarchyWithoutKeys(r.DependsOn, r.DependsOnPath)
+		fp := findActualSubResourcePathElemHierarchyWithoutKeys(r.DependsOn, r.DependsOnPath, subp)
 		pathElem := subp.GetElem()
 		fp = append(fp, pathElem...)
 		return fp
 	}
 	pathElem := dp.GetElem()
 	if len(dp.GetElem()) == 0 {
-		pathElem = r.Path.GetElem()
+		pathElem = subp.GetElem()
 	}
 	return pathElem
 }
