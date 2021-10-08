@@ -60,8 +60,9 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 			if err != nil {
 				return nil, err
 			}
+			p := c.p.DeepCopyGnmiPath(u.GetPath())
 			update := &gnmi.Update{
-				Path: &gnmi.Path{Elem: append(u.GetPath().GetElem(), &gnmi.PathElem{Name: k})},
+				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
 				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
 			}
 			updates = append(updates, update)
@@ -72,8 +73,9 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 			if err != nil {
 				return nil, err
 			}
+			p := c.p.DeepCopyGnmiPath(u.GetPath())
 			update := &gnmi.Update{
-				Path: &gnmi.Path{Elem: append(u.GetPath().GetElem(), &gnmi.PathElem{Name: k})},
+				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
 				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
 			}
 			updates = append(updates, update)
