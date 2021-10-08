@@ -81,7 +81,7 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 
 	default:
 		updates = append(updates, u)
-		//fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
+		fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
 		for k, v := range u.Path.GetElem()[len(u.Path.GetElem())-1].GetKey() {
 			val, err := json.Marshal(v)
 			if err != nil {

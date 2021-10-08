@@ -9,11 +9,18 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 )
 
+//{"level":"debug","ts":1633674399.5347052,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]","Value":"json_ietf_val:\"{\\\"address-allocation-strategy\\\":\\\"first-address\\\",\\\"admin-state\\\":\\\"enable\\\"}\""}
+//{"level":"debug","ts":1633674399.5347154,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]/tag[key=purpose]","Value":"json_ietf_val:\"{\\\"value\\\":\\\"isl\\\"}\""}
+
 func TestGetNotificationFromUpdate(t *testing.T) {
 	target := "dev1"
 	origin := "test"
-	x := map[string]interface{}{"admin-state": "enable", "rir-name": "rfc1918"}
-	b, _ := json.Marshal(x)
+	x1 := map[string]interface{}{"admin-state": "enable", "rir-name": "rfc1918"}
+	b1, _ := json.Marshal(x1)
+	x2 := map[string]interface{}{"address-allocation-strategy": "first-address", "admin-state": "enable"}
+	b2, _ := json.Marshal(x2)
+	x3 := map[string]interface{}{"value": "isl"}
+	b3, _ := json.Marshal(x3)
 	tests := []struct {
 		inp *gnmi.Update
 		exp interface{}
@@ -26,8 +33,40 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 						{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "10.0.0.0/8", "network-instance": "default"}},
 					},
 				},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: b}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: b1}},
 			},
+			
+			//exp: "ipam",
+		},
+		{
+			inp: &gnmi.Update{
+				Path: &gnmi.Path{
+					Elem: []*gnmi.PathElem{
+						{Name: "ipam"},
+						{Name: "tenant", Key: map[string]string{"name": "default"}},
+						{Name: "network-instance", Key: map[string]string{"name": "default"}},
+						{Name: "ip-prefix", Key: map[string]string{"prefix": "1.1.1.1/24"}},
+					},
+				},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: b2}},
+			},
+			
+			//exp: "ipam",
+		},
+		{
+			inp: &gnmi.Update{
+				Path: &gnmi.Path{
+					Elem: []*gnmi.PathElem{
+						{Name: "ipam"},
+						{Name: "tenant", Key: map[string]string{"name": "default"}},
+						{Name: "network-instance", Key: map[string]string{"name": "default"}},
+						{Name: "ip-prefix", Key: map[string]string{"prefix": "1.1.1.1/24"}},
+						{Name: "tag", Key: map[string]string{"key": "purpose"}},
+					},
+				},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: b3}},
+			},
+			
 			//exp: "ipam",
 		},
 	}
@@ -72,7 +111,30 @@ func TestGetJson(t *testing.T) {
 				Origin: origin,
 				Elem: []*gnmi.PathElem{
 					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "10.0.0.0/8", "network-instance": "default"}},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+				},
+			},
+			//exp: map[string]interface {}{"Prefix":"10.0.0.0/8", "admin-state":"enable", "network-instance":"default", "rir-name":"rfc1918", "tenant":"default"},
+		},
+		{
+			inp: &gnmi.Path{
+				Origin: origin,
+				Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+				},
+			},
+			//exp: map[string]interface {}{"Prefix":"10.0.0.0/8", "admin-state":"enable", "network-instance":"default", "rir-name":"rfc1918", "tenant":"default"},
+		},
+		{
+			inp: &gnmi.Path{
+				Origin: origin,
+				Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "ip-prefix", Key: map[string]string{"prefix": "100.64.0.0/16"}},
 				},
 			},
 			//exp: map[string]interface {}{"Prefix":"10.0.0.0/8", "admin-state":"enable", "network-instance":"default", "rir-name":"rfc1918", "tenant":"default"},
@@ -87,166 +149,6 @@ func TestGetJson(t *testing.T) {
 			//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
 		},
 		Update: []*gnmi.Update{
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "10.0.0.0/8", "network-instance": "default"}},
-					{Name: "admin-state"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "enable"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "10.0.0.0/8", "network-instance": "default"}},
-					{Name: "rir-name"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "10.0.0.0/8", "network-instance": "default"}},
-					{Name: "tenant"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "10.0.0.0/8", "network-instance": "default"}},
-					{Name: "network-instance"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "10.0.0.0/8", "network-instance": "default"}},
-					{Name: "Prefix"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "10.0.0.0/8"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.64.0.0/16", "network-instance": "default"}},
-					{Name: "admin-state"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "enable"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.64.0.0/16", "network-instance": "default"}},
-					{Name: "rir-name"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.64.0.0/16", "network-instance": "default"}},
-					{Name: "tenant"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.64.0.0/16", "network-instance": "default"}},
-					{Name: "network-instance"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.64.0.0/16", "network-instance": "default"}},
-					{Name: "Prefix"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "100.64.0.0/16"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.112.0.0/16", "network-instance": "default"}},
-					{Name: "admin-state"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "enable"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.112.0.0/16", "network-instance": "default"}},
-					{Name: "rir-name"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.112.0.0/16", "network-instance": "default"}},
-					{Name: "tenant"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.112.0.0/16", "network-instance": "default"}},
-					{Name: "network-instance"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "100.112.0.0/16", "network-instance": "default"}},
-					{Name: "Prefix"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "100.112.0.0/16"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "3100::/16", "network-instance": "default"}},
-					{Name: "admin-state"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "enable"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "3100::/16", "network-instance": "default"}},
-					{Name: "rir-name"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "3100::/16", "network-instance": "default"}},
-					{Name: "tenant"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "3100::/16", "network-instance": "default"}},
-					{Name: "network-instance"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
-			},
-			{
-				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
-					{Name: "ipam"},
-					{Name: "aggregate", Key: map[string]string{"tenant": "default", "prefix": "3100::/16", "network-instance": "default"}},
-					{Name: "Prefix"},
-				}},
-				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "3100::/16"}},
-			},
 			{
 				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
 					{Name: "ipam"},
@@ -278,6 +180,101 @@ func TestGetJson(t *testing.T) {
 					{Name: "name"},
 				}},
 				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "ripe"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "name"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "admin-state"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "enable"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "aname"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "default"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "admin-state"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "enable"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "address-allocation-strategy"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "first-address"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "ip-prefix", Key: map[string]string{"prefix": "100.64.0.0/16"}},
+					{Name: "prefix"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "100.64.0.0/16"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "ip-prefix", Key: map[string]string{"prefix": "100.64.0.0/16"}},
+					{Name: "admin-state"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "enable"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "ip-prefix", Key: map[string]string{"prefix": "100.64.0.0/16"}},
+					{Name: "address-allocation-strategy"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "first-address"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "ip-prefix", Key: map[string]string{"prefix": "100.64.0.0/16"}},
+					{Name: "tag", Key: map[string]string{"key": "purpose"}},
+					{Name: "key"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "purpose"}},
+			},
+			{
+				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
+					{Name: "ipam"},
+					{Name: "tenant", Key: map[string]string{"name": "default"}},
+					{Name: "network-instance", Key: map[string]string{"name": "default"}},
+					{Name: "ip-prefix", Key: map[string]string{"prefix": "100.64.0.0/16"}},
+					{Name: "tag", Key: map[string]string{"key": "purpose"}},
+					{Name: "value"},
+				}},
+				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "isl"}},
 			},
 		},
 	}
