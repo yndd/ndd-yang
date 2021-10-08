@@ -81,7 +81,7 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 
 	default:
 		updates = append(updates, u)
-		fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
+		//fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
 		for k, v := range u.Path.GetElem()[len(u.Path.GetElem())-1].GetKey() {
 			val, err := json.Marshal(v)
 			if err != nil {
@@ -147,7 +147,7 @@ func (c *Cache) GetJson(t string, p *gnmi.Path) (interface{}, error) {
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if notification, ok := n.(*gnmi.Notification); ok {
 				for _, u := range notification.GetUpdate() {
-					fmt.Printf("Notif: %v\n", u)
+					//fmt.Printf("Notif: %v\n", u)
 					if data, err = c.addData(data, u.GetPath().GetElem(), pp[1:], u.GetVal()); err != nil {
 						return err
 					}
@@ -214,7 +214,7 @@ func (c *Cache) addListValue(d interface{}, e string, k map[string]string, val *
 func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
 	// initialize the data
-	fmt.Printf("addContainer QueryPathElems: %v pathElem: %s\n", qelems, e)
+	//fmt.Printf("addContainer QueryPathElems: %v pathElem: %s\n", qelems, e)
 	if len(qelems) > 0 && qelems[0] == e {
 		// ignore the data
 		d, err = c.addData(d, elems[1:], qelems[1:], val)
@@ -237,7 +237,7 @@ func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, qe
 
 func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
-	fmt.Printf("addList QueryPathElems: %v pathElem: %s, d: %v\n", qelems, e, d)
+	//fmt.Printf("addList QueryPathElems: %v pathElem: %s, d: %v\n", qelems, e, d)
 	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
 	if len(qelems) > 0 {
 		d, err = c.addData(d, elems[1:], qelems[1+len(k):], val)
@@ -325,7 +325,7 @@ func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, qelems []string, 
 	var err error
 	e := elems[0].GetName()
 	k := elems[0].GetKey()
-	fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, QElems: %v, Data: %v\n", len(elems), e, k, qelems, d)
+	//fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, QElems: %v, Data: %v\n", len(elems), e, k, qelems, d)
 	if len(elems)-1 == 0 {
 		// last element
 		if len(k) == 0 {
