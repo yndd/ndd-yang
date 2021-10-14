@@ -43,6 +43,91 @@ func (c *Cache) GnmiUpdate(t string, n *gnmi.Notification) error {
 	return c.GetCache().GetTarget(t).GnmiUpdate(n)
 }
 
+// GetNotificationFromJson provides fine granular notifications from the json blob
+func (c *Cache) GetNotificationFromJSON(t, o string, p *gnmi.Path, val interface{}, refPaths []*gnmi.Path) (*gnmi.Notification, error) {
+	updates := make([]*gnmi.Update, 0)
+	var err error
+	updates, err = c.getNotificationFromJSON(p, val, updates, refPaths)
+	if err != nil {
+		return nil, err
+	}
+	return &gnmi.Notification{
+		Timestamp: time.Now().UnixNano(),
+		Prefix: &gnmi.Path{
+			Target: t,
+			Origin: o,
+		},
+		Update: updates,
+	}, nil
+}
+
+func (c *Cache) getNotificationFromJSON(p *gnmi.Path, val interface{}, u []*gnmi.Update, refPaths []*gnmi.Path) ([]*gnmi.Update, error) {
+	var err error
+	switch value := val.(type) {
+	case nil:
+		return u, nil
+	case map[string]interface{}:
+		// add the keys as data in the last element
+		for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
+			val, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			p := c.p.DeepCopyGnmiPath(p)
+			update := &gnmi.Update{
+				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
+			}
+			u = append(u, update)
+		}
+
+		// add the values and add further processing
+		for k, v := range value {
+			switch value := v.(type) {
+			case []interface{}:
+				for _, v := range value {
+					switch value := v.(type) {
+					case map[string]interface{}:
+						newPath := c.p.DeepCopyGnmiPath(p)
+						keys := c.p.GetKeyNamesFromGnmiPaths(newPath, k, refPaths)
+						pathKeys := make(map[string]string)
+						if len(keys) != 0 {
+							for _, key := range keys {
+								pathKeys[key] = fmt.Sprintf("%v", value[key])
+							}
+							newPath = c.p.AppendElemInGnmiPathWithFullKey(newPath, k, pathKeys)
+						} else {
+							newPath = c.p.AppendElemInGnmiPath(newPath, k, nil)
+						}
+
+						// TODO expand keys
+						u, err = c.getNotificationFromJSON(newPath, v, u, refPaths)
+						if err != nil {
+							return nil, err
+						}
+					}
+				}
+			default:
+				// this would be map[string]interface{}
+				val, err := json.Marshal(v)
+				if err != nil {
+					return nil, err
+				}
+				p := c.p.DeepCopyGnmiPath(p)
+				update := &gnmi.Update{
+					Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
+				}
+				u = append(u, update)
+			}
+		}
+
+	case []interface{}:
+
+	}
+	return u, nil
+}
+
 // GetNotificationFromUpdate provides fine granular notifications from the gnmi update by expanding the json blob value into
 // inividual notifications.
 func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.Notification, error) {
