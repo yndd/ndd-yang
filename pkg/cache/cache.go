@@ -121,9 +121,6 @@ func (c *Cache) getNotificationFromJSON(p *gnmi.Path, val interface{}, u []*gnmi
 				u = append(u, update)
 			}
 		}
-
-	case []interface{}:
-
 	}
 	return u, nil
 }
