@@ -223,6 +223,10 @@ func (c *Cache) Query(t string, p *gnmi.Path) (*gnmi.Notification, error) {
 	return notification, nil
 }
 
+func (c *Cache) CQuery(t string, query []string, fn ctree.VisitFunc) error {
+	return c.c.Query(t, query, fn)
+}
+
 func (c *Cache) GetJson(t string, p *gnmi.Path) (interface{}, error) {
 	var err error
 	var data interface{}
