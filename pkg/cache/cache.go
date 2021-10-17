@@ -208,10 +208,14 @@ func (c *Cache) GetGnmiUpdateAsJsonBlob(t, o string, u *gnmi.Update) error {
 	return nil
 }
 
-func (c *Cache) Query(t string, p *gnmi.Path) (*gnmi.Notification, error) {
+func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notification, error) {
 	var notification *gnmi.Notification
-	pp := path.ToStrings(p, true)
-	if err := c.c.Query(t, pp,
+	fp, err := path.CompletePath(prefix, p)
+	if err != nil {
+		return nil, err
+	}
+	//pp := path.ToStrings(fp, true)
+	if err := c.c.Query(t, fp,
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				notification = n
@@ -223,20 +227,21 @@ func (c *Cache) Query(t string, p *gnmi.Path) (*gnmi.Notification, error) {
 	return notification, nil
 }
 
-func (c *Cache) CQuery(t string, query []string, fn ctree.VisitFunc) error {
-	return c.c.Query(t, query, fn)
-}
-
-func (c *Cache) GetJson(t string, p *gnmi.Path) (interface{}, error) {
+func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{}, error) {
 	var err error
+	fp, err := path.CompletePath(prefix, p)
+	if err != nil {
+		return nil, err
+	}
 	var data interface{}
-	pp := path.ToStrings(p, true)
-	if err := c.c.Query(t, pp,
+	//pp := path.ToStrings(p, true)
+	if err := c.c.Query(t, fp,
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if notification, ok := n.(*gnmi.Notification); ok {
 				for _, u := range notification.GetUpdate() {
 					//fmt.Printf("Notif: %v\n", u)
-					if data, err = c.addData(data, u.GetPath().GetElem(), pp[1:], u.GetVal()); err != nil {
+					// fp[2:]
+					if data, err = c.addData(data, u.GetPath().GetElem(), fp[1:], u.GetVal()); err != nil {
 						return err
 					}
 				}

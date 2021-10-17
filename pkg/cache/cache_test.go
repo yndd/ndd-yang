@@ -35,7 +35,7 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 				},
 				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: b1}},
 			},
-			
+
 			//exp: "ipam",
 		},
 		{
@@ -50,7 +50,7 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 				},
 				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: b2}},
 			},
-			
+
 			//exp: "ipam",
 		},
 		{
@@ -66,16 +66,17 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 				},
 				Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: b3}},
 			},
-			
+
 			//exp: "ipam",
 		},
 	}
 	c := New([]string{target})
-	for _, tt := range tests {
+	for i, tt := range tests {
 		n, err := c.GetNotificationFromUpdate(target, origin, tt.inp)
 		if err != nil {
 			t.Errorf("GetNotificationFromUpdate: %v\n", err)
 		}
+		fmt.Printf("##### TestGetNotificationFromUpdate Nbr: %d ###### \n", i)
 		for _, u := range n.GetUpdate() {
 			fmt.Printf("Update: %v\n", u)
 		}
@@ -91,14 +92,14 @@ func TestGetJson(t *testing.T) {
 	}{
 		{
 			inp: &gnmi.Path{
-				Origin: origin,
+				//Origin: origin,
 				Elem:   []*gnmi.PathElem{},
 			},
 			//exp: "ipam",
 		},
 		{
 			inp: &gnmi.Path{
-				Origin: origin,
+				//Origin: origin,
 				Elem: []*gnmi.PathElem{
 					{Name: "ipam"},
 				},
@@ -108,7 +109,7 @@ func TestGetJson(t *testing.T) {
 
 		{
 			inp: &gnmi.Path{
-				Origin: origin,
+				//Origin: origin,
 				Elem: []*gnmi.PathElem{
 					{Name: "ipam"},
 					{Name: "tenant", Key: map[string]string{"name": "default"}},
@@ -118,7 +119,7 @@ func TestGetJson(t *testing.T) {
 		},
 		{
 			inp: &gnmi.Path{
-				Origin: origin,
+				//Origin: origin,
 				Elem: []*gnmi.PathElem{
 					{Name: "ipam"},
 					{Name: "tenant", Key: map[string]string{"name": "default"}},
@@ -129,7 +130,7 @@ func TestGetJson(t *testing.T) {
 		},
 		{
 			inp: &gnmi.Path{
-				Origin: origin,
+				//Origin: origin,
 				Elem: []*gnmi.PathElem{
 					{Name: "ipam"},
 					{Name: "tenant", Key: map[string]string{"name": "default"}},
@@ -141,13 +142,15 @@ func TestGetJson(t *testing.T) {
 		},
 	}
 
+	prefix := &gnmi.Path{
+		Target: target,
+		Origin: origin,
+		//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
+	}
+
 	n := &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
-		Prefix: &gnmi.Path{
-			Target: target,
-			Origin: origin,
-			//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
-		},
+		Prefix:    prefix,
 		Update: []*gnmi.Update{
 			{
 				Path: &gnmi.Path{Elem: []*gnmi.PathElem{
@@ -284,7 +287,8 @@ func TestGetJson(t *testing.T) {
 		t.Errorf("GnmiUpdate: %v\n", err)
 	}
 
-	for _, tt := range tests {
+	for i, tt := range tests {
+		fmt.Printf("##### TestGetJson Nbr: %d ###### \n", i)
 		/*
 			pp := path.ToStrings(tt.inp, true)
 			fmt.Printf("pp %v\n", pp)
@@ -294,7 +298,7 @@ func TestGetJson(t *testing.T) {
 			})
 		*/
 
-		d, err := c.GetJson(target, tt.inp)
+		d, err := c.GetJson(target, prefix, tt.inp)
 		if err != nil {
 			t.Errorf("GetConfig: %v\n", err)
 		}
