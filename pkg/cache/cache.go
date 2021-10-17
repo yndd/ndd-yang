@@ -127,7 +127,7 @@ func (c *Cache) getNotificationFromJSON(p *gnmi.Path, val interface{}, u []*gnmi
 
 // GetNotificationFromUpdate provides fine granular notifications from the gnmi update by expanding the json blob value into
 // inividual notifications.
-func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.Notification, error) {
+func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*gnmi.Notification, error) {
 	val, err := c.p.GetValue(u.GetVal())
 	if err != nil {
 		return nil, err
@@ -180,11 +180,7 @@ func (c *Cache) GetNotificationFromUpdate(t, o string, u *gnmi.Update) (*gnmi.No
 	}
 	return &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
-		Prefix: &gnmi.Path{
-			Target: t,
-			Origin: o,
-			//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
-		},
+		Prefix: prefix,
 		Update: updates,
 	}, nil
 }

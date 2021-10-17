@@ -13,8 +13,14 @@ import (
 //{"level":"debug","ts":1633674399.5347154,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]/tag[key=purpose]","Value":"json_ietf_val:\"{\\\"value\\\":\\\"isl\\\"}\""}
 
 func TestGetNotificationFromUpdate(t *testing.T) {
+
 	target := "dev1"
 	origin := "test"
+	prefix := &gnmi.Path{
+		Target: target,
+		Origin: origin,
+		//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
+	}
 	x1 := map[string]interface{}{"admin-state": "enable", "rir-name": "rfc1918"}
 	b1, _ := json.Marshal(x1)
 	x2 := map[string]interface{}{"address-allocation-strategy": "first-address", "admin-state": "enable"}
@@ -72,7 +78,7 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 	}
 	c := New([]string{target})
 	for i, tt := range tests {
-		n, err := c.GetNotificationFromUpdate(target, origin, tt.inp)
+		n, err := c.GetNotificationFromUpdate(prefix, tt.inp)
 		if err != nil {
 			t.Errorf("GetNotificationFromUpdate: %v\n", err)
 		}
@@ -86,6 +92,12 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 func TestGetJson(t *testing.T) {
 	target := "dev1"
 	origin := "test"
+	prefix := &gnmi.Path{
+		Target: target,
+		Origin: origin,
+		//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
+	}
+	
 	tests := []struct {
 		inp *gnmi.Path
 		exp interface{}
@@ -140,12 +152,6 @@ func TestGetJson(t *testing.T) {
 			},
 			//exp: map[string]interface {}{"Prefix":"10.0.0.0/8", "admin-state":"enable", "network-instance":"default", "rir-name":"rfc1918", "tenant":"default"},
 		},
-	}
-
-	prefix := &gnmi.Path{
-		Target: target,
-		Origin: origin,
-		//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
 	}
 
 	n := &gnmi.Notification{
