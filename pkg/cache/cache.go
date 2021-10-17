@@ -44,7 +44,7 @@ func (c *Cache) GnmiUpdate(t string, n *gnmi.Notification) error {
 }
 
 // GetNotificationFromJson provides fine granular notifications from the json blob
-func (c *Cache) GetNotificationFromJSON(t, o string, p *gnmi.Path, val interface{}, refPaths []*gnmi.Path) (*gnmi.Notification, error) {
+func (c *Cache) GetNotificationFromJSON(prefix *gnmi.Path, p *gnmi.Path, val interface{}, refPaths []*gnmi.Path) (*gnmi.Notification, error) {
 	updates := make([]*gnmi.Update, 0)
 	var err error
 	updates, err = c.getNotificationFromJSON(p, val, updates, refPaths)
@@ -53,10 +53,7 @@ func (c *Cache) GetNotificationFromJSON(t, o string, p *gnmi.Path, val interface
 	}
 	return &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
-		Prefix: &gnmi.Path{
-			Target: t,
-			Origin: o,
-		},
+		Prefix: prefix,
 		Update: updates,
 	}, nil
 }
@@ -185,14 +182,10 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 	}, nil
 }
 
-func (c *Cache) GetNotificationFromDelete(t, o string, p *gnmi.Path) (*gnmi.Notification, error) {
+func (c *Cache) GetNotificationFromDelete(prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notification, error) {
 	return &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
-		Prefix: &gnmi.Path{
-			Target: t,
-			Origin: o,
-			//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
-		},
+		Prefix: prefix,
 		Delete: []*gnmi.Path{{Elem: p.GetElem()}},
 	}, nil
 
