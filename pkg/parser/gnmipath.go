@@ -366,6 +366,26 @@ func (p *Parser) DeepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 	return out
 }
 
+func GnmiPathDeepCopy(in *gnmi.Path) *gnmi.Path {
+	out := new(gnmi.Path)
+	if in != nil {
+		out.Elem = make([]*gnmi.PathElem, 0)
+		for _, pathElem := range in.GetElem() {
+			elem := &gnmi.PathElem{
+				Name: pathElem.GetName(),
+			}
+			if len(pathElem.GetKey()) != 0 {
+				elem.Key = make(map[string]string)
+				for keyName, keyValue := range pathElem.GetKey() {
+					elem.Key[keyName] = keyValue
+				}
+			}
+			out.Elem = append(out.Elem, elem)
+		}
+	}
+	return out
+}
+
 // CompareConfigPathsWithResourceKeys returns changed true when resourceKeys were provided
 // and if they are different. In this case the deletePath is also valid, otherwise when changd is false
 // the delete path is not reliable
