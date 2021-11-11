@@ -98,7 +98,12 @@ func (c *Container) GetFullNameWithRoot() string {
 
 func getRecursiveNameWithRoot(c *Container) string {
 	if c.Prev != nil {
-		return getRecursiveNameWithRoot(c.Prev) + "-" + c.Name
+		if getRecursiveNameWithRoot(c.Prev) == "" {
+			return c.Name
+		} else {
+			return getRecursiveNameWithRoot(c.Prev) + "-" + c.Name
+		}
+		
 	}
 	return ""
 }
