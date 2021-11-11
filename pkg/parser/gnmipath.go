@@ -205,7 +205,6 @@ func (p *Parser) AppendElemInGnmiPath(path *gnmi.Path, name string, keys []strin
 		for _, key := range keys {
 			pathElem.Key[key] = ""
 		}
-
 	}
 
 	path.Elem = append(path.Elem, pathElem)

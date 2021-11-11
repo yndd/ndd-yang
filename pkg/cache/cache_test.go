@@ -3,14 +3,118 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
+	"github.com/openconfig/gnmi/ctree"
+	"github.com/openconfig/gnmi/path"
 	"github.com/openconfig/gnmi/proto/gnmi"
 )
 
 //{"level":"debug","ts":1633674399.5347052,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]","Value":"json_ietf_val:\"{\\\"address-allocation-strategy\\\":\\\"first-address\\\",\\\"admin-state\\\":\\\"enable\\\"}\""}
 //{"level":"debug","ts":1633674399.5347154,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]/tag[key=purpose]","Value":"json_ietf_val:\"{\\\"value\\\":\\\"isl\\\"}\""}
+
+func Callback(n *ctree.Leaf) {
+	switch v := n.Value().(type) {
+	case *gnmi.Notification:
+		fmt.Printf("Cache change notification, Alias: %v, Prefix: %v, Path: %v, Value: %v\n", v.GetAlias() , path.ToStrings(v.GetPrefix(), true), path.ToStrings(v.GetUpdate()[0].GetPath(), true), v.GetUpdate()[0].GetVal())
+	default:
+		fmt.Printf("State CacheUpdates unexpected type: %v\n", reflect.TypeOf(n.Value()))
+	}
+}
+
+func TestDynamicUpdates(t *testing.T) {
+	target := "dev1"
+	origin := "test"
+	prefix := &gnmi.Path{
+		Target: target,
+		Origin: origin,
+	}
+	tests := []struct {
+		inp *gnmi.Notification
+		exp interface{}
+	}{
+		{
+			inp: &gnmi.Notification{
+				Prefix: prefix,
+				Alias: "config",
+				Update: []*gnmi.Update{
+					{
+						Path: &gnmi.Path{
+							Elem: []*gnmi.PathElem{
+								{Name: "ipam"},
+								{Name: "rir", Key: map[string]string{"name": "rfc1918"}},
+							},
+						},
+						Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
+					},
+				},
+			},
+		},
+		{
+			inp: &gnmi.Notification{
+				Prefix: prefix,
+				Alias: "Config",
+				Update: []*gnmi.Update{
+					{
+						Path: &gnmi.Path{
+							Elem: []*gnmi.PathElem{
+								{Name: "ipam"},
+								{Name: "rir", Key: map[string]string{"name": "rfc1918"}},
+							},
+						},
+						Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
+					},
+				},
+			},
+		},
+		{
+			inp: &gnmi.Notification{
+				Prefix: prefix,
+				Alias: "Config",
+				Update: []*gnmi.Update{
+					{
+						Path: &gnmi.Path{
+							Elem: []*gnmi.PathElem{
+								{Name: "ipam"},
+								{Name: "rir", Key: map[string]string{"name": "rfc1918"}},
+							},
+						},
+						Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
+					},
+				},
+			},
+		},
+		{
+			inp: &gnmi.Notification{
+				Prefix: prefix,
+				Alias: "Config",
+				Update: []*gnmi.Update{
+					{
+						Path: &gnmi.Path{
+							Elem: []*gnmi.PathElem{
+								{Name: "ipam"},
+								{Name: "rir", Key: map[string]string{"name": "rfc1918"}},
+							},
+						},
+						Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: "rfc1918"}},
+					},
+				},
+			},
+		},
+	}
+
+	c := New([]string{target})
+	c.GetCache().SetClient(Callback)
+	for i, tt := range tests {
+		fmt.Printf("##### TestGetNotificationFromUpdate Nbr: %d ###### \n", i)
+		tt.inp.Timestamp = time.Now().UnixNano()
+		if err := c.GnmiUpdate(target, tt.inp); err != nil {
+			t.Errorf("GetNotificationFromUpdate: %v\n", err)
+		}
+	}
+}
 
 func TestGetNotificationFromUpdate(t *testing.T) {
 
@@ -97,7 +201,7 @@ func TestGetJson(t *testing.T) {
 		Origin: origin,
 		//Elem:   []*gnmi.PathElem{{Name: "a"}, {Name: "b", Key: map[string]string{"key": "value"}}},
 	}
-	
+
 	tests := []struct {
 		inp *gnmi.Path
 		exp interface{}
@@ -105,7 +209,7 @@ func TestGetJson(t *testing.T) {
 		{
 			inp: &gnmi.Path{
 				//Origin: origin,
-				Elem:   []*gnmi.PathElem{},
+				Elem: []*gnmi.PathElem{},
 			},
 			//exp: "ipam",
 		},

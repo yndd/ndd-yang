@@ -40,6 +40,7 @@ type Entry struct {
 	Mandatory     bool       `json:"mandatory,omitempty"`
 	Default       string     `json:"default,omitempty"`
 	Key           string     `json:"key,omitempty"`
+	KeyBool       bool       `json:"keyBool,omitempty"`
 	NameSpace     string     `json:"namespace,omitempty"`
 }
 
@@ -86,7 +87,7 @@ func (c *Container) GetKeyType(name string) string {
 func (c *Container) GetKeyNames() []string {
 	n := make([]string, 0)
 	for _, e := range c.GetEntries() {
-		if e.Key != "" {
+		if e.GetKeyBool() {
 			n = append(n, e.Name)
 		}
 	}
@@ -199,4 +200,8 @@ func (e *Entry) GetName() string {
 
 func (e *Entry) GetType() string {
 	return e.Type
+}
+
+func (e *Entry) GetKeyBool() bool {
+	return e.KeyBool
 }

@@ -113,6 +113,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		if e.Name == containerKey {
 			fmt.Printf("container key match: %#v\n", e.Name)
 			entry.Mandatory = true
+			entry.KeyBool = true
 		}
 	}
 	
