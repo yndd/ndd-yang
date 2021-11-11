@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Wim Henderickx.
+Copyright 2020 Yndd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,32 +16,10 @@ limitations under the License.
 
 package container
 
-import "strings"
-
 type Container struct {
 	Name    string     `json:"name,omitempty"`
 	Entries []*Entry   `json:"entries,omitempty"`
 	Prev    *Container `json:"prev,omitempty"`
-}
-
-// Entry structure keeps track of the elements in a struct/list
-type Entry struct {
-	Next          *Container `json:"prev,omitempty"`
-	Prev          *Container `json:"next,omitempty"`
-	Name          string     `json:"name,omitempty"`
-	Type          string     `json:"type,omitempty"`
-	Enum          []string   `json:"enum,omitempty"`
-	EnumString    string     `json:"enumString,omitempty"`
-	Range         []int      `json:"range,omitempty"`
-	Length        []int      `json:"length,omitempty"`
-	Pattern       []string   `json:"pattern,omitempty"`
-	PatternString string     `json:"patternString,omitempty"`
-	Union         bool       `json:"union,omitempty"`
-	Mandatory     bool       `json:"mandatory,omitempty"`
-	Default       string     `json:"default,omitempty"`
-	Key           string     `json:"key,omitempty"`
-	KeyBool       bool       `json:"keyBool,omitempty"`
-	NameSpace     string     `json:"namespace,omitempty"`
 }
 
 type ContainerOption func(c *Container)
@@ -97,8 +75,8 @@ func (c *Container) GetKeyNames() []string {
 func (c *Container) GetChildren() []string {
 	n := make([]string, 0)
 	for _, e := range c.GetEntries() {
-		if e.GetKey() != nil {
-			n = append(n, e.GetKey()...)
+		if e.Next != nil {
+			n = append(n, e.GetName())
 		}
 	}
 	return n
@@ -175,43 +153,3 @@ func WithKeyType(s string) Option {
 	}
 }
 */
-
-func NewEntry(n string, opts ...EntryOption) *Entry {
-	if n == "ethernet-segment" {
-		n = "esi"
-	}
-	e := &Entry{
-		Name:    n,
-		Next:    nil,
-		Prev:    nil,
-		Enum:    make([]string, 0),
-		Range:   make([]int, 0),
-		Length:  make([]int, 0),
-		Pattern: make([]string, 0),
-	}
-
-	for _, o := range opts {
-		o(e)
-	}
-
-	return e
-}
-
-func (e *Entry) GetKey() []string {
-	if e.Key == "" {
-		return nil
-	}
-	return strings.Split(e.Key, " ")
-}
-
-func (e *Entry) GetName() string {
-	return e.Name
-}
-
-func (e *Entry) GetType() string {
-	return e.Type
-}
-
-func (e *Entry) GetKeyBool() bool {
-	return e.KeyBool
-}
