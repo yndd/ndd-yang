@@ -93,14 +93,14 @@ func (c *Container) GetFullNameWithRoot() string {
 	if c.Prev != nil {
 		return getRecursiveNameWithRoot(c.Prev) + "-" + c.Name
 	}
-	return c.Name
+	return "root"
 }
 
 func getRecursiveNameWithRoot(c *Container) string {
 	if c.Prev != nil {
 		return getRecursiveNameWithRoot(c.Prev) + "-" + c.Name
 	}
-	return "root"
+	return ""
 }
 
 // Option can be used to manipulate Options.
