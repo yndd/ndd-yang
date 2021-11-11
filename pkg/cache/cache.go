@@ -13,6 +13,7 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/parser"
+	"github.com/yndd/ndd-yang/pkg/yentry"
 )
 
 type Cache struct {
@@ -43,7 +44,89 @@ func (c *Cache) GnmiUpdate(t string, n *gnmi.Notification) error {
 	return c.GetCache().GetTarget(t).GnmiUpdate(n)
 }
 
-// GetNotificationFromJson provides fine granular notifications from the json blob
+// GetNotificationFromJson provides fine granular notifications from a JSON blob
+func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val interface{}, rs yentry.Handler) (*gnmi.Notification, error) {
+	updates := make([]*gnmi.Update, 0)
+	var err error
+	updates, err = c.getNotificationFromJSON2(p, val, updates, rs)
+	if err != nil {
+		return nil, err
+	}
+	return &gnmi.Notification{
+		Timestamp: time.Now().UnixNano(),
+		Prefix:    prefix,
+		Update:    updates,
+	}, nil
+}
+
+func (c *Cache) getNotificationFromJSON2(p *gnmi.Path, val interface{}, u []*gnmi.Update, rs yentry.Handler) ([]*gnmi.Update, error) {
+	var err error
+	switch value := val.(type) {
+	case nil:
+		return u, nil
+	case map[string]interface{}:
+		// add the keys as data in the last element
+		for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
+			val, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			p := c.p.DeepCopyGnmiPath(p)
+			update := &gnmi.Update{
+				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
+			}
+			u = append(u, update)
+		}
+
+		// add the values and add further processing
+		for k, v := range value {
+			switch value := v.(type) {
+			case []interface{}:
+				for _, v := range value {
+					switch value := v.(type) {
+					case map[string]interface{}:
+						newPath := c.p.DeepCopyGnmiPath(p)
+						// k = lastElem
+						newPath = c.p.AppendElemInGnmiPath(newPath, k, nil)
+						keys := rs.GetKeys(newPath)
+						//keys := c.p.GetKeyNamesFromGnmiPaths(newPath, k, refPaths)
+						pathKeys := make(map[string]string)
+						if len(keys) != 0 {
+							for _, key := range keys {
+								pathKeys[key] = fmt.Sprintf("%v", value[key])
+							}
+							newPath = c.p.AppendElemInGnmiPathWithFullKey(newPath, k, pathKeys)
+						} else {
+							newPath = c.p.AppendElemInGnmiPath(newPath, k, nil)
+						}
+
+						// TODO expand keys
+						u, err = c.getNotificationFromJSON2(newPath, v, u, rs)
+						if err != nil {
+							return nil, err
+						}
+					}
+				}
+			default:
+				// this would be map[string]interface{}
+				val, err := json.Marshal(v)
+				if err != nil {
+					return nil, err
+				}
+				p := c.p.DeepCopyGnmiPath(p)
+				update := &gnmi.Update{
+					Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
+				}
+				u = append(u, update)
+			}
+		}
+	}
+	return u, nil
+}
+
+// GetNotificationFromJson provides fine granular notifications from a JSON blob
 func (c *Cache) GetNotificationFromJSON(prefix *gnmi.Path, p *gnmi.Path, val interface{}, refPaths []*gnmi.Path) (*gnmi.Notification, error) {
 	updates := make([]*gnmi.Update, 0)
 	var err error
@@ -53,8 +136,8 @@ func (c *Cache) GetNotificationFromJSON(prefix *gnmi.Path, p *gnmi.Path, val int
 	}
 	return &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
-		Prefix: prefix,
-		Update: updates,
+		Prefix:    prefix,
+		Update:    updates,
 	}, nil
 }
 
@@ -177,16 +260,16 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 	}
 	return &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
-		Prefix: prefix,
-		Update: updates,
+		Prefix:    prefix,
+		Update:    updates,
 	}, nil
 }
 
 func (c *Cache) GetNotificationFromDelete(prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notification, error) {
 	return &gnmi.Notification{
 		Timestamp: time.Now().UnixNano(),
-		Prefix: prefix,
-		Delete: []*gnmi.Path{{Elem: p.GetElem()}},
+		Prefix:    prefix,
+		Delete:    []*gnmi.Path{{Elem: p.GetElem()}},
 	}, nil
 
 }
