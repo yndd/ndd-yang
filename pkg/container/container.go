@@ -59,6 +59,14 @@ func NewContainer(n string, prev *Container, opts ...ContainerOption) *Container
 	return e
 }
 
+func (c *Container) GetName() string {
+	return c.Name
+}
+
+func (c *Container) GetEntries() []*Entry {
+	return c.Entries
+}
+
 func (c *Container) GetFullName() string {
 	if c.Prev != nil {
 		return getRecursiveName(c.Prev) + "-" + c.Name
@@ -67,7 +75,7 @@ func (c *Container) GetFullName() string {
 }
 
 func (c *Container) GetKeyType(name string) string {
-	for _, e := range c.Entries {
+	for _, e := range c.GetEntries() {
 		if e.Name == name {
 			return e.Type
 		}
