@@ -1,5 +1,7 @@
 package yentry
 
+import "github.com/openconfig/gnmi/proto/gnmi"
+
 type Entry struct {
 	Name     string
 	Key      []string
@@ -8,7 +10,7 @@ type Entry struct {
 }
 
 type Handler interface {
-	
+	GetKeys(p *gnmi.Path) []string
 }
 
 type HandleInitFunc func(parent interface{}) Handler
