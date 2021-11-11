@@ -46,13 +46,6 @@ func (c *Container) GetEntries() []*Entry {
 	return c.Entries
 }
 
-func (c *Container) GetFullName() string {
-	if c.Prev != nil {
-		return getRecursiveName(c.Prev) + "-" + c.Name
-	}
-	return c.Name
-}
-
 func (c *Container) GetKeyType(name string) string {
 	for _, e := range c.GetEntries() {
 		if e.Name == name {
@@ -82,11 +75,32 @@ func (c *Container) GetChildren() []string {
 	return n
 }
 
+func (c *Container) GetFullName() string {
+	if c.Prev != nil {
+		return getRecursiveName(c.Prev) + "-" + c.Name
+	}
+	return c.Name
+}
+
 func getRecursiveName(c *Container) string {
 	if c.Prev != nil {
 		return getRecursiveName(c.Prev) + "-" + c.Name
 	}
 	return c.Name
+}
+
+func (c *Container) GetFullNameWithRoot() string {
+	if c.Prev != nil {
+		return getRecursiveNameWithRoot(c.Prev) + "-" + c.Name
+	}
+	return c.Name
+}
+
+func getRecursiveNameWithRoot(c *Container) string {
+	if c.Prev != nil {
+		return getRecursiveName(c.Prev) + "-" + c.Name
+	}
+	return "root"
 }
 
 // Option can be used to manipulate Options.
