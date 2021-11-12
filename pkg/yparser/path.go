@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/yndd/ndd-runtime/pkg/utils"
 )
 
 // Xpath2GnmiPath convertss a xpath string to a gnmi path
@@ -68,7 +67,7 @@ func Xpath2GnmiPath(xpath string, offset int) (path *gnmi.Path) {
 }
 
 // GnmiPath2XPath converts a gnmi path with or without keys to a string pointer
-func GnmiPath2XPath(path *gnmi.Path, keys bool) *string {
+func GnmiPath2XPath(path *gnmi.Path, keys bool) string {
 	sb := strings.Builder{}
 	for i, pElem := range path.GetElem() {
 		pes := strings.Split(pElem.GetName(), ":")
@@ -112,7 +111,7 @@ func GnmiPath2XPath(path *gnmi.Path, keys bool) *string {
 			sb.WriteString("/")
 		}
 	}
-	return utils.StringPtr("/" + sb.String())
+	return "/" + sb.String()
 }
 
 // RemoveFirstEntryFromXpath removes the first entry of the xpath,

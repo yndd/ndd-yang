@@ -104,12 +104,12 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 			// the last element hould be a key in the previous element
 			//localPath = TransformPathToLeafRefPath(localPath)
 
-			if strings.Contains(*GnmiPath2XPath(remotePath, false), *GnmiPath2XPath(activeResPath, false)) {
+			if strings.Contains(GnmiPath2XPath(remotePath, false), GnmiPath2XPath(activeResPath, false)) {
 				// if the remotePath and the active Path match exactly we classify this in the external leafref category
 				// since we dont allow multiple elments of the same key in the same resource
 				// E.g. interface ethernet-1/1 which reference a lag should be resolved to another interface in
 				// another resource and hence this should be classified as an external leafref
-				if *GnmiPath2XPath(remotePath, false) != *GnmiPath2XPath(activeResPath, false) {
+				if GnmiPath2XPath(remotePath, false) != GnmiPath2XPath(activeResPath, false) {
 					// this is a local leafref within the resource
 					// make the localPath and remotePath relative to the resource
 					//fmt.Printf("localPath: %v, remotePath %v, activePath %v\n", localPath, remotePath, activeResPath)
