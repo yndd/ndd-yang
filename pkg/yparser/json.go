@@ -18,9 +18,10 @@ package yparser
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/yentry"
@@ -240,4 +241,21 @@ func RemoveHierIDsFomData(hids []string, x interface{}) interface{} {
 		}
 	}
 	return x
+}
+
+func AddDataToList(x interface{}) (interface{}, error) {
+	x1 := make(map[string]interface{})
+	switch x := x.(type) {
+	case map[string]interface{}:
+		for k1, v1 := range x {
+			x2 := make([]interface{}, 0)
+			x2 = append(x2, v1)
+			x1[k1] = x2
+		}
+		return x1, nil
+	}
+
+	// wrong data input
+	return x1, errors.New(fmt.Sprintf("data transformation, wrong data input %v", x))
+
 }
