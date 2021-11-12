@@ -28,7 +28,7 @@ type Option func(c *Cache)
 
 func WithLogging(l logging.Logger) Option {
 	return func(c *Cache) {
-		c.p = parser.NewParser(parser.WithLogger(l))
+		c.log = l
 	}
 }
 
