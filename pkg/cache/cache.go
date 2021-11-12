@@ -74,21 +74,20 @@ func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val in
 	}, nil
 }
 
-func (c *Cache) getNotificationFromJSON2(p *gnmi.Path, val interface{}, u []*gnmi.Update, rs yentry.Handler) ([]*gnmi.Update, error) {
+func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*gnmi.Update, rs yentry.Handler) ([]*gnmi.Update, error) {
 	var err error
 	switch value := val.(type) {
 	case nil:
 		return u, nil
 	case map[string]interface{}:
 		// add the keys as data in the last element
-		for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
+		for k, v := range path.GetElem()[len(path.GetElem())-1].GetKey() {
 			val, err := json.Marshal(v)
 			if err != nil {
 				return nil, err
 			}
-			p := c.p.DeepCopyGnmiPath(p)
 			update := &gnmi.Update{
-				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+				Path: &gnmi.Path{Elem: append(path.GetElem(), &gnmi.PathElem{Name: k})},
 				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
 			}
 			u = append(u, update)
@@ -101,7 +100,7 @@ func (c *Cache) getNotificationFromJSON2(p *gnmi.Path, val interface{}, u []*gnm
 				for _, v := range value {
 					switch value := v.(type) {
 					case map[string]interface{}:
-						newPath := c.p.DeepCopyGnmiPath(p)
+						newPath := c.p.DeepCopyGnmiPath(path)
 						// k = lastElem
 						newPath = c.p.AppendElemInGnmiPath(newPath, k, nil)
 						keys := rs.GetKeys(newPath)
@@ -111,9 +110,9 @@ func (c *Cache) getNotificationFromJSON2(p *gnmi.Path, val interface{}, u []*gnm
 							for _, key := range keys {
 								pathKeys[key] = fmt.Sprintf("%v", value[key])
 							}
-							newPath = c.p.AppendElemInGnmiPathWithFullKey(newPath, k, pathKeys)
+							newPath = c.p.AppendElemInGnmiPathWithFullKey(path, k, pathKeys)
 						} else {
-							newPath = c.p.AppendElemInGnmiPath(newPath, k, nil)
+							newPath = c.p.AppendElemInGnmiPath(path, k, nil)
 						}
 
 						// TODO expand keys
@@ -129,9 +128,8 @@ func (c *Cache) getNotificationFromJSON2(p *gnmi.Path, val interface{}, u []*gnm
 				if err != nil {
 					return nil, err
 				}
-				p := c.p.DeepCopyGnmiPath(p)
 				update := &gnmi.Update{
-					Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+					Path: &gnmi.Path{Elem: append(path.GetElem(), &gnmi.PathElem{Name: k})},
 					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
 				}
 				u = append(u, update)
