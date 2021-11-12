@@ -6,6 +6,7 @@ import (
 )
 
 type Entry struct {
+	Log      logging.Logger
 	Name     string
 	Key      []string
 	Parent   Handler
