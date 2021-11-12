@@ -38,10 +38,16 @@ func WithParser(l logging.Logger) Option {
 	}
 }
 
-func New(t []string) *Cache {
-	return &Cache{
+func New(t []string, opts ...Option) *Cache {
+	c := &Cache{
 		c: cache.New(t),
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 func (c *Cache) GetCache() *cache.Cache {
