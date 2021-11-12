@@ -172,7 +172,7 @@ func getPathWithKeys(p *gnmi.Path, keys []string, k string, value map[string]int
 				Name: k,
 				Key:  pathKeys,
 			})}, nil
-	} 
+	}
 	// we should never come here
 	return nil, errors.New("[]interface{} without keys is not expected")
 	//newPath = &gnmi.Path{
@@ -211,4 +211,33 @@ func getUpdatesFromContainer(p *gnmi.Path, value map[string]interface{}) (*gnmi.
 		Path: p,
 		Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
 	}, nil
+}
+
+// GetHierIDsFromPath from path gets the hierarchical ids from the gnmi path
+func GetHierIDsFromPath(p *gnmi.Path) []string {
+	// get the hierarchical ids from the path
+	hids := make([]string, 0)
+	for i, pathElem := range p.GetElem() {
+		if i < len(p.GetElem())-1 {
+			if len(pathElem.GetKey()) != 0 {
+				for k := range pathElem.GetKey() {
+					hids = append(hids, pathElem.GetName()+"-"+k)
+				}
+			}
+		}
+	}
+	return hids
+}
+
+// RemoveHierIDs removes the hierarchical IDs from the data
+func RemoveHierIDsFomData(hids []string, x interface{}) interface{} {
+	switch x := x.(type) {
+	case map[string]interface{}:
+		if len(hids) != 0 {
+			for _, hid := range hids {
+				delete(x, hid)
+			}
+		}
+	}
+	return x
 }
