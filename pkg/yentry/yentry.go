@@ -26,7 +26,7 @@ type Handler interface {
 	GetKeys(p *gnmi.Path) []string
 }
 
-type HandleInitFunc func(parent Handler) Handler
+type HandleInitFunc func(parent Handler, opts ...HandlerOption) Handler
 
 func (e *Entry) GetName() string {
 	return e.Name
