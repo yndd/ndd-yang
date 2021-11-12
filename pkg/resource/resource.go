@@ -545,7 +545,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				pe.Key = make(map[string]string)
 				// multiple keys in yang are supplied as a string and they delineation is a space
 				// we split them here so we have access to each key indivifually
-				// we initialaize the type as string as a dymmy type
+				// we initialaize the type as string as a dummy type
 				split := strings.Split(r.RootContainerEntry.Key, " ")
 				for _, key := range split {
 					pe.Key[key] = r.RootContainerEntry.Next.GetKeyType(key)
