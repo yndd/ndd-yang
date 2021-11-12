@@ -14,15 +14,23 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yentry"
+	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Cache struct {
-	c *cache.Cache
-	p *parser.Parser
+	c   *cache.Cache
+	p   *parser.Parser
+	log logging.Logger
 }
 
 // Option can be used to manipulate Options.
 type Option func(c *Cache)
+
+func WithLogging(l logging.Logger) Option {
+	return func(c *Cache) {
+		c.p = parser.NewParser(parser.WithLogger(l))
+	}
+}
 
 func WithParser(l logging.Logger) Option {
 	return func(c *Cache) {
@@ -46,6 +54,7 @@ func (c *Cache) GnmiUpdate(t string, n *gnmi.Notification) error {
 
 // GetNotificationFromJson provides fine granular notifications from a JSON blob
 func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val interface{}, rs yentry.Handler) (*gnmi.Notification, error) {
+	c.log.Debug("GetNotificationFromJSON2", "Path", yparser.GnmiPath2XPath(p, true), "Value", val)
 	updates := make([]*gnmi.Update, 0)
 	var err error
 	updates, err = c.getNotificationFromJSON2(p, val, updates, rs)
