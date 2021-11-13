@@ -49,7 +49,7 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 				return nil, err
 			}
 			u = append(u, &gnmi.Update{
-				Path: &gnmi.Path{Elem: append(DeepCopyGnmiPathElem(p.GetElem()), &gnmi.PathElem{Name: k})},
+				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
 				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
 			})
 		}
@@ -63,7 +63,7 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 					case map[string]interface{}:
 						// gets the keys from the yangschema based on the gnmi path
 						keys := rs.GetKeys(&gnmi.Path{
-							Elem: append(DeepCopyGnmiPathElem(p.GetElem()), &gnmi.PathElem{Name: k}),
+							Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 						})
 						// get the gnmi path with the key data
 						newPath, err := getPathWithKeys(p, keys, k, value)
@@ -84,7 +84,7 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 					return nil, err
 				}
 				u = append(u, &gnmi.Update{
-					Path: &gnmi.Path{Elem: append(DeepCopyGnmiPathElem(p.GetElem()), &gnmi.PathElem{Name: k})},
+					Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
 					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
 				})
 			}
@@ -120,7 +120,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry
 					case map[string]interface{}:
 						// gets the keys from the yangschema based on the gnmi path
 						keys := rs.GetKeys(&gnmi.Path{
-							Elem: append(DeepCopyGnmiPathElem(p.GetElem()), &gnmi.PathElem{Name: k}),
+							Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 						})
 						// get the gnmipath with the key data
 						newPath, err := getPathWithKeys(DeepCopyGnmiPath(p), keys, k, value)
@@ -137,7 +137,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry
 				// yang new container -> we provide a dedicated update
 				u, err = getUpdatesFromJSON(
 					&gnmi.Path{
-						Elem: append(DeepCopyGnmiPathElem(p.GetElem()), &gnmi.PathElem{Name: k}),
+						Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 					}, v, u, rs)
 				if err != nil {
 					return nil, err
