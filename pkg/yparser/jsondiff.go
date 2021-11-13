@@ -24,7 +24,6 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
-	"github.com/yndd/ndd-runtime/pkg/logging"
 )
 
 const (
@@ -53,7 +52,7 @@ type Operation struct {
 	Value interface{}
 }
 
-func FindResourceDelta(updatesx1, updatesx2 []*gnmi.Update, log logging.Logger) ([]*gnmi.Path, []*gnmi.Update, error) {
+func FindResourceDelta(updatesx1, updatesx2 []*gnmi.Update) ([]*gnmi.Path, []*gnmi.Update, error) {
 
 	deletes := make([]*gnmi.Path, 0)
 	updates := make([]*gnmi.Update, 0)
