@@ -115,6 +115,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry
 		for k, v := range x {
 			switch val := v.(type) {
 			case []interface{}:
+				fmt.Printf("getUpdatesFromJSON []interface{}: path: %s, k:%s, v: %v\n", GnmiPath2XPath(p, true), k, v)
 				for _, v := range val {
 					switch value := v.(type) {
 					case map[string]interface{}:
@@ -135,6 +136,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry
 				}
 			case map[string]interface{}:
 				// yang new container -> we provide a dedicated update
+				fmt.Printf("getUpdatesFromJSON map[string]interface{}: path: %s, k:%s, v: %v\n", GnmiPath2XPath(p, true), k, v)
 				u, err = getUpdatesFromJSON(
 					&gnmi.Path{
 						Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
@@ -143,6 +145,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry
 					return nil, err
 				}
 			default:
+				fmt.Printf("getUpdatesFromJSON default: path: %s, k:%s, v: %v\n", GnmiPath2XPath(p, true), k, v)
 				// string, other types -> we are at the end of the path
 				// collect all the data for further processing
 				value[k] = v
