@@ -17,6 +17,7 @@ limitations under the License.
 package yparser
 
 import (
+	"encoding/json"
 	"sort"
 	"strings"
 
@@ -147,8 +148,9 @@ func DeepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 	return out
 }
 
-// AppendPathElem2GnmiPath adds a pathElem to the config gnmi path
-func AppendPathElem2GnmiPath(path *gnmi.Path, name string, keys []string) *gnmi.Path {
+// AppendPathElem2GnmiPath adds a pathElem to the gnmi path
+// used in leafref
+func appendPathElem2GnmiPath(path *gnmi.Path, name string, keys []string) *gnmi.Path {
 	pathElem := &gnmi.PathElem{
 		Name: name,
 	}
@@ -164,7 +166,7 @@ func AppendPathElem2GnmiPath(path *gnmi.Path, name string, keys []string) *gnmi.
 }
 
 // TransformPathAsRelative2Resource returns a relative path
-func TransformGnmiPathAsRelative2Resource(localPath, activeResPath *gnmi.Path) *gnmi.Path {
+func transformGnmiPathAsRelative2Resource(localPath, activeResPath *gnmi.Path) *gnmi.Path {
 	if len(activeResPath.GetElem()) >= 1 {
 		localPath.Elem = localPath.Elem[(len(activeResPath.GetElem()) - 1):(len(localPath.GetElem()))]
 	} else {
@@ -172,4 +174,48 @@ func TransformGnmiPathAsRelative2Resource(localPath, activeResPath *gnmi.Path) *
 	}
 
 	return localPath
+}
+
+// GetValue return the data of the gnmi typed value
+func GetValue(updValue *gnmi.TypedValue) (interface{}, error) {
+	if updValue == nil {
+		return nil, nil
+	}
+	var value interface{}
+	var jsondata []byte
+	switch updValue.Value.(type) {
+	case *gnmi.TypedValue_AsciiVal:
+		value = updValue.GetAsciiVal()
+	case *gnmi.TypedValue_BoolVal:
+		value = updValue.GetBoolVal()
+	case *gnmi.TypedValue_BytesVal:
+		value = updValue.GetBytesVal()
+	case *gnmi.TypedValue_DecimalVal:
+		value = updValue.GetDecimalVal()
+	case *gnmi.TypedValue_FloatVal:
+		value = updValue.GetFloatVal()
+	case *gnmi.TypedValue_IntVal:
+		value = updValue.GetIntVal()
+	case *gnmi.TypedValue_StringVal:
+		value = updValue.GetStringVal()
+	case *gnmi.TypedValue_UintVal:
+		value = updValue.GetUintVal()
+	case *gnmi.TypedValue_JsonIetfVal:
+		jsondata = updValue.GetJsonIetfVal()
+	case *gnmi.TypedValue_JsonVal:
+		jsondata = updValue.GetJsonVal()
+	case *gnmi.TypedValue_LeaflistVal:
+		value = updValue.GetLeaflistVal()
+	case *gnmi.TypedValue_ProtoBytes:
+		value = updValue.GetProtoBytes()
+	case *gnmi.TypedValue_AnyVal:
+		value = updValue.GetAnyVal()
+	}
+	if value == nil && len(jsondata) != 0 {
+		err := json.Unmarshal(jsondata, &value)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return value, nil
 }
