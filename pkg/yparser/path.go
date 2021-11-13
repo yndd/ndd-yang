@@ -148,6 +148,23 @@ func DeepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 	return out
 }
 
+func DeepCopyGnmiPathElem(in []*gnmi.PathElem) []*gnmi.PathElem {
+	out := make([]*gnmi.PathElem, 0)
+	for _, pathElem := range in {
+		elem := &gnmi.PathElem{
+			Name: pathElem.GetName(),
+		}
+		if len(pathElem.GetKey()) != 0 {
+			elem.Key = make(map[string]string)
+			for keyName, keyValue := range pathElem.GetKey() {
+				elem.Key[keyName] = keyValue
+			}
+		}
+		out = append(out, elem)
+	}
+	return out
+}
+
 // AppendPathElem2GnmiPath adds a pathElem to the gnmi path
 // used in leafref
 func appendPathElem2GnmiPath(path *gnmi.Path, name string, keys []string) *gnmi.Path {
