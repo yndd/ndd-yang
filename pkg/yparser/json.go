@@ -123,6 +123,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry
 						keys := rs.GetKeys(&gnmi.Path{
 							Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 						})
+						fmt.Printf("getUpdatesFromJSON []interface{} keys: %v\n", keys)
 						// get the gnmipath with the key data
 						newPath, err := getPathWithKeys(DeepCopyGnmiPath(p), keys, k, value)
 						if err != nil {
