@@ -24,7 +24,9 @@ func WithLogging(log logging.Logger) HandlerOption {
 
 type Handler interface {
 	WithLogging(log logging.Logger)
+	GetName() string
 	GetKeys(p *gnmi.Path) []string
+	GetHierarchicalResources(p *gnmi.Path, hierElements []string) []string
 }
 
 type HandleInitFunc func(parent Handler, opts ...HandlerOption) Handler
