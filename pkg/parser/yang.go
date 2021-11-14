@@ -116,7 +116,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 			entry.KeyBool = true
 		}
 	}
-	
+
 	// process type attribute
 	switch p.GetTypeName(e) {
 	case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":

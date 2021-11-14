@@ -25,9 +25,8 @@ import (
 )
 
 
-
-// ProcessLeafRef processes the leafref and returns 
-// if this is a leafref and if so the leafrefs local and remote path 
+// ProcessLeafRef processes the leafref and returns
+// if this is a leafref and if so the leafrefs local and remote path
 // if the leafRef is local or external to the resource
 func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.Path) (*gnmi.Path, *gnmi.Path, bool) {
 	switch GetTypeName(e) {

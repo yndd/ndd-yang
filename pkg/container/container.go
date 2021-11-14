@@ -16,20 +16,27 @@ limitations under the License.
 
 package container
 
+import (
+	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/ndd-yang/pkg/leafref"
+)
+
 type Container struct {
-	Name            string     `json:"name,omitempty"`
-	Entries         []*Entry   `json:"entries,omitempty"`
-	Prev            *Container `json:"prev,omitempty"`
-	ResourceBoundry bool       `json:"resourceBoundry,omitempty"`
+	Name             string             `json:"name,omitempty"`
+	Entries          []*Entry           `json:"entries,omitempty"`
+	Prev             *Container         `json:"prev,omitempty"`
+	ResourceBoundry  bool               `json:"resourceBoundry,omitempty"`
+	LocalLeafRefs    []*leafref.LeafRef `json:"localLeafRefs,omitempty"`
+	ExternalLeafRefs []*leafref.LeafRef `json:"externalLeafRefs,omitempty"`
 }
 
 type ContainerOption func(c *Container)
 
 func NewContainer(n string, resourceBoundry bool, prev *Container, opts ...ContainerOption) *Container {
 	e := &Container{
-		Name:    n,
-		Entries: make([]*Entry, 0),
-		Prev:    prev,
+		Name:            n,
+		Entries:         make([]*Entry, 0),
+		Prev:            prev,
 		ResourceBoundry: resourceBoundry,
 	}
 
@@ -115,4 +122,60 @@ func getRecursiveNameWithRoot(c *Container) string {
 
 func (c *Container) GetResourceBoundary() bool {
 	return c.ResourceBoundry
+}
+
+func (c *Container) AddLocalLeafRef(ll, rl *gnmi.Path) {
+	// add key entries to local leafrefs
+	for _, llpElem := range ll.GetElem() {
+		//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s\n", c.Name, llpElem.GetName())
+		if c.Name == llpElem.GetName() {
+			for _, e := range c.Entries {
+				//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s, ContainerEntryName: %s\n", c.Name, llpElem.GetName(), e.GetName())
+				if e.GetName() == llpElem.GetName() {
+					if len(e.GetKey()) != 0 {
+						for _, key := range e.GetKey() {
+							llpElem.Key = make(map[string]string)
+							llpElem.Key[key] = ""
+						}
+					}
+				}
+			}
+		}
+	}
+	c.LocalLeafRefs = append(c.LocalLeafRefs, &leafref.LeafRef{
+		LocalPath:  ll,
+		RemotePath: rl,
+	})
+}
+
+func (c *Container) AddExternalLeafRef(ll, rl *gnmi.Path) {
+	// add key entries to local leafrefs
+	entries := make([]*Entry, 0)
+	for i, llpElem := range ll.GetElem() {
+		if i == 0 {
+			//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, ContainerName: %s\n", i, llpElem.GetName(), c.Name)
+			if c.Name == llpElem.GetName() {
+				entries = c.Entries
+			}
+
+		}
+		for _, e := range entries {
+			//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, EntryName: %s\n", i, llpElem.GetName(), e.GetName())
+			if e.GetName() == llpElem.GetName() {
+				if len(e.GetKey()) != 0 {
+					for _, key := range e.GetKey() {
+						llpElem.Key = make(map[string]string)
+						llpElem.Key[key] = ""
+					}
+				}
+				if e.Next != nil {
+					entries = e.Next.Entries
+				}
+			}
+		}
+	}
+	c.ExternalLeafRefs = append(c.ExternalLeafRefs, &leafref.LeafRef{
+		LocalPath:  ll,
+		RemotePath: rl,
+	})
 }
