@@ -184,6 +184,6 @@ func (c *Container) GetLocalLeafRefs() []*leafref.LeafRef {
 	return c.LocalLeafRefs
 }
 
-func (c *Container) GetExternalLeafrefs() []*leafref.LeafRef {
+func (c *Container) GetExternalLeafRefs() []*leafref.LeafRef {
 	return c.ExternalLeafRefs
 }
