@@ -3,6 +3,7 @@ package yentry
 import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
+	"github.com/yndd/ndd-yang/pkg/leafref"
 )
 
 type Entry struct {
@@ -12,6 +13,8 @@ type Entry struct {
 	Parent           Handler
 	Children         map[string]Handler
 	ResourceBoundary bool
+	LocalLeafRefs    []*leafref.LeafRef
+	ExternalLeafRefs []*leafref.LeafRef
 }
 
 type HandlerOption func(Handler)
@@ -48,6 +51,14 @@ func (e *Entry) GetChildren() map[string]Handler {
 	return e.Children
 }
 
-func (e *Entry) GetResourceBoundary() bool {
-	return e.ResourceBoundary
+func (e *Entry) GetResourceBoundary() []*leafref.LeafRef {
+	return e.LocalLeafRefs
+}
+
+func (e *Entry) GetLocalLeafRef() []*leafref.LeafRef {
+	return e.LocalLeafRefs
+}
+
+func (e *Entry) GetExternalLeafRef() []*leafref.LeafRef {
+	return e.ExternalLeafRefs
 }
