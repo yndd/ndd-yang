@@ -6,11 +6,12 @@ import (
 )
 
 type Entry struct {
-	Log      logging.Logger
-	Name     string
-	Key      []string
-	Parent   Handler
-	Children map[string]Handler
+	Log              logging.Logger
+	Name             string
+	Key              []string
+	Parent           Handler
+	Children         map[string]Handler
+	ResourceBoundary bool
 }
 
 type HandlerOption func(Handler)
@@ -42,4 +43,8 @@ func (e *Entry) GetParent() Handler {
 
 func (e *Entry) GetChildren() map[string]Handler {
 	return e.Children
+}
+
+func (e *Entry) GetResourceBoundary() bool {
+	return e.ResourceBoundary
 }
