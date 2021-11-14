@@ -39,6 +39,9 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 			fmt.Printf("LeafRef Node: %v \n", e.Node.Statement().SubStatements())
 			for _, s := range e.Node.Statement().SubStatements() {
 				fmt.Printf("LeafRef Node Substatement: %v \n", s)
+				for _, ss := range s.SubStatements() {
+					fmt.Printf("LeafRef Node Substatement: %v \n", ss)
+				}
 			}
 			fmt.Printf("LeafRef: %v \n", e.Node.Statement().NName())
 			splitData := strings.Split(e.Node.Statement().NName(), "\n")
