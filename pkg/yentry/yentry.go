@@ -27,7 +27,7 @@ type Handler interface {
 	GetName() string
 	GetKeys(p *gnmi.Path) []string
 	GetResourceBoundary() bool
-	GetHierarchicalResources(p *gnmi.Path, hierElements []string) []string
+	GetHierarchicalResources(p *gnmi.Path, cp *gnmi.Path, hierPaths []*gnmi.Path) []*gnmi.Path
 }
 
 type HandleInitFunc func(parent Handler, opts ...HandlerOption) Handler
