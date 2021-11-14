@@ -25,11 +25,12 @@ type Container struct {
 
 type ContainerOption func(c *Container)
 
-func NewContainer(n string, prev *Container, opts ...ContainerOption) *Container {
+func NewContainer(n string, resourceBoundry bool, prev *Container, opts ...ContainerOption) *Container {
 	e := &Container{
 		Name:    n,
 		Entries: make([]*Entry, 0),
 		Prev:    prev,
+		ResourceBoundry: resourceBoundry,
 	}
 
 	for _, o := range opts {
