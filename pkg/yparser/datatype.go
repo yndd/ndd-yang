@@ -19,22 +19,22 @@ package yparser
 import "github.com/openconfig/gnmi/proto/gnmi"
 
 const (
-	cacheTypeState  = "STATE"
-	cacheTypeConfig = "CONFIG"
+	CacheTypeState  = "STATE"
+	CacheTypeConfig = "CONFIG"
 )
 
 func GetDataType(t gnmi.GetRequest_DataType) string {
 	// check dattype of the get
 	if _, ok := gnmi.GetRequest_DataType_name[int32(t)]; !ok {
-		return cacheTypeState
+		return CacheTypeState
 	} else {
 		switch gnmi.GetRequest_DataType_name[int32(t)] {
 		case "ALL", "STATE", "OPERATIONAL":
-			return cacheTypeState
+			return CacheTypeState
 		case "CONFIG":
-			return cacheTypeConfig
+			return CacheTypeConfig
 		default:
-			return cacheTypeState
+			return CacheTypeState
 		}
 	}
 }
