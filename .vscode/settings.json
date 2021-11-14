@@ -6,4 +6,5 @@
     "go.toolsEnvVars": {
         "GOPROXY": ""
     },
+    "go.survey.prompt": false,
 }
