@@ -17,9 +17,10 @@ limitations under the License.
 package container
 
 type Container struct {
-	Name    string     `json:"name,omitempty"`
-	Entries []*Entry   `json:"entries,omitempty"`
-	Prev    *Container `json:"prev,omitempty"`
+	Name            string     `json:"name,omitempty"`
+	Entries         []*Entry   `json:"entries,omitempty"`
+	Prev            *Container `json:"prev,omitempty"`
+	ResourceBoundry bool       `json:"resourceBoundry,omitempty"`
 }
 
 type ContainerOption func(c *Container)
@@ -111,67 +112,6 @@ func getRecursiveNameWithRoot(c *Container) string {
 	return ""
 }
 
-// Option can be used to manipulate Options.
-type EntryOption func(c *Entry)
-
-func WithType(s string) EntryOption {
-	return func(c *Entry) {
-		c.Type = s
-	}
+func (c *Container) GetResourceBoundary() bool {
+	return c.ResourceBoundry
 }
-
-func WithEnum(s []string) EntryOption {
-	return func(c *Entry) {
-		c.Enum = s
-	}
-}
-
-func WithRange(s []int) EntryOption {
-	return func(c *Entry) {
-		c.Range = s
-	}
-}
-
-func WithLength(s []int) EntryOption {
-	return func(c *Entry) {
-		c.Length = s
-	}
-}
-
-func WithPattern(s []string) EntryOption {
-	return func(c *Entry) {
-		c.Pattern = s
-	}
-}
-
-func WithUnion(b bool) EntryOption {
-	return func(c *Entry) {
-		c.Union = b
-	}
-}
-
-func WithMandatory(b bool) EntryOption {
-	return func(c *Entry) {
-		c.Mandatory = b
-	}
-}
-
-func WithDefault(s string) EntryOption {
-	return func(c *Entry) {
-		c.Default = s
-	}
-}
-
-/*
-func WithKey(s string) Option {
-	return func(c *Entry) {
-		c.Key = s
-	}
-}
-
-func WithKeyType(s string) Option {
-	return func(c *Entry) {
-		c.KeyType = s
-	}
-}
-*/

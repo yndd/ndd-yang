@@ -38,6 +38,71 @@ type Entry struct {
 	NameSpace     string     `json:"namespace,omitempty"`
 }
 
+// Option can be used to manipulate Options.
+type EntryOption func(c *Entry)
+
+func WithType(s string) EntryOption {
+	return func(c *Entry) {
+		c.Type = s
+	}
+}
+
+func WithEnum(s []string) EntryOption {
+	return func(c *Entry) {
+		c.Enum = s
+	}
+}
+
+func WithRange(s []int) EntryOption {
+	return func(c *Entry) {
+		c.Range = s
+	}
+}
+
+func WithLength(s []int) EntryOption {
+	return func(c *Entry) {
+		c.Length = s
+	}
+}
+
+func WithPattern(s []string) EntryOption {
+	return func(c *Entry) {
+		c.Pattern = s
+	}
+}
+
+func WithUnion(b bool) EntryOption {
+	return func(c *Entry) {
+		c.Union = b
+	}
+}
+
+func WithMandatory(b bool) EntryOption {
+	return func(c *Entry) {
+		c.Mandatory = b
+	}
+}
+
+func WithDefault(s string) EntryOption {
+	return func(c *Entry) {
+		c.Default = s
+	}
+}
+
+/*
+func WithKey(s string) Option {
+	return func(c *Entry) {
+		c.Key = s
+	}
+}
+
+func WithKeyType(s string) Option {
+	return func(c *Entry) {
+		c.KeyType = s
+	}
+}
+*/
+
 func NewEntry(n string, opts ...EntryOption) *Entry {
 	if n == "ethernet-segment" {
 		n = "esi"
