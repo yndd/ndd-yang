@@ -26,6 +26,7 @@ type Handler interface {
 	WithLogging(log logging.Logger)
 	GetName() string
 	GetKeys(p *gnmi.Path) []string
+	GetResourceBoundary() bool
 	GetHierarchicalResources(p *gnmi.Path, hierElements []string) []string
 }
 
