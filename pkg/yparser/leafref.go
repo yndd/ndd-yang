@@ -33,7 +33,8 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 	default:
 		switch GetTypeKind(e) {
 		case "leafref":
-			fmt.Printf("LeafRef Entry: %#v \n", e)
+			//fmt.Printf("LeafRef Entry: %#v \n", e)
+			fmt.Printf("LeafRef Name: %#v \n", e.Name)
 			fmt.Printf("LeafRef: %v \n", e.Node.Statement().NName())
 			splitData := strings.Split(e.Node.Statement().NName(), "\n")
 			var path string
