@@ -55,10 +55,10 @@ func (e *Entry) GetResourceBoundary() []*leafref.LeafRef {
 	return e.LocalLeafRefs
 }
 
-func (e *Entry) GetLocalLeafRef() []*leafref.LeafRef {
+func (e *Entry) GetLocalLeafRefs() []*leafref.LeafRef {
 	return e.LocalLeafRefs
 }
 
-func (e *Entry) GetExternalLeafRef() []*leafref.LeafRef {
+func (e *Entry) GetExternalLeafRefs() []*leafref.LeafRef {
 	return e.ExternalLeafRefs
 }

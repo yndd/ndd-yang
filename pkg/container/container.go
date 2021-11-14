@@ -179,3 +179,11 @@ func (c *Container) AddExternalLeafRef(ll, rl *gnmi.Path) {
 		RemotePath: rl,
 	})
 }
+
+func (c *Container) GetLocalLeafRefs() []*leafref.LeafRef {
+	return c.LocalLeafRefs
+}
+
+func (c *Container) GetExternalLeafrefs() []*leafref.LeafRef {
+	return c.ExternalLeafRefs
+}
