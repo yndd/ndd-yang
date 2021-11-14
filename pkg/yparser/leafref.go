@@ -100,7 +100,7 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 			remotePath = appendPathElem2GnmiPath(remotePath, elem, []string{k})
 
 			// build a gnmi path and remove the first entry since the yang contains a duplicate path
-			localPath := Xpath2GnmiPath(resfullPath, 1)
+			// localPath := Xpath2GnmiPath(resfullPath, 1)
 			// the last element hould be a key in the previous element
 			//localPath = TransformPathToLeafRefPath(localPath)
 
@@ -113,20 +113,20 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 					// this is a local leafref within the resource
 					// make the localPath and remotePath relative to the resource
 					//fmt.Printf("localPath: %v, remotePath %v, activePath %v\n", localPath, remotePath, activeResPath)
-					localPath = transformGnmiPathAsRelative2Resource(localPath, activeResPath)
+					////////localPath = transformGnmiPathAsRelative2Resource(localPath, activeResPath)
 					remotePath = transformGnmiPathAsRelative2Resource(remotePath, activeResPath)
 					//fmt.Printf("localPath: %v, remotePath %v\n", localPath, remotePath)
-					return localPath, remotePath, true
+					return &gnmi.Path{Elem: []*gnmi.PathElem{{Name: e.Name}}}, remotePath, true
 				}
 
 			}
 			// leafref is external to the resource
 			//fmt.Printf("localPath: %v, remotePath %v, activePath %v\n", localPath, remotePath, activeResPath)
 			// make the localPath relative to the resource
-			localPath = transformGnmiPathAsRelative2Resource(localPath, activeResPath)
+			/////// localPath = transformGnmiPathAsRelative2Resource(localPath, activeResPath)
 			//fmt.Printf("localPath: %v, remotePath %v\n", localPath, remotePath)
 
-			return localPath, remotePath, false
+			return &gnmi.Path{Elem: []*gnmi.PathElem{{Name: e.Name}}}, remotePath, false
 		}
 	}
 	return nil, nil, false
