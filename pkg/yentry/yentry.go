@@ -30,8 +30,9 @@ type Handler interface {
 	GetKey() []string
 	GetKeys(p *gnmi.Path) []string
 	GetResourceBoundary() bool
-	GetHierarchicalResources(p *gnmi.Path, cp *gnmi.Path, hierPaths []*gnmi.Path) []*gnmi.Path
-	GetLeafRefs(p *gnmi.Path, cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*leafref.LeafRef
+	GetHierarchicalResourcesRemote(p *gnmi.Path, cp *gnmi.Path, hierPaths []*gnmi.Path) []*gnmi.Path
+	GetHierarchicalResourcesLocal(root bool, p *gnmi.Path, cp *gnmi.Path, hierPaths []*gnmi.Path) []*gnmi.Path
+	GetLeafRefsLocal(root bool, p *gnmi.Path, cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*leafref.LeafRef
 }
 
 type HandleInitFunc func(parent Handler, opts ...HandlerOption) Handler
