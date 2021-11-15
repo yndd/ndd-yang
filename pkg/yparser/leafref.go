@@ -24,7 +24,6 @@ import (
 	"github.com/openconfig/goyang/pkg/yang"
 )
 
-
 // ProcessLeafRef processes the leafref and returns
 // if this is a leafref and if so the leafrefs local and remote path
 // if the leafRef is local or external to the resource
@@ -34,71 +33,68 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 		switch GetTypeKind(e) {
 		case "leafref":
 			//fmt.Printf("LeafRef Entry: %#v \n", e)
-			fmt.Printf("LeafRef Name: %#v \n", e.Name)
-			
+			//fmt.Printf("LeafRef Name: %#v \n", e.Name)
+
 			pathReference, found := getLeafRefPathRefernce(e.Node.Statement())
 			if !found {
 				fmt.Printf("ERROR LEAFREF NOT FOUND: %v \n", e.Node.Statement())
 			}
-			fmt.Printf("LeafRef: %v \n", pathReference)
+			fmt.Printf("LeafRef pathReference: %v \n", pathReference)
 			splitData := strings.Split(pathReference, "\n")
 			var path string
 			var elem string
 			var k string
 			for _, s := range splitData {
-				if strings.Contains(s, "path ") {
-					// strip the junk from the leafref to get a plain xpath
-					//fmt.Printf("LeafRef Path: %s\n", s)
-					s = strings.ReplaceAll(s, "path ", "")
-					s = strings.ReplaceAll(s, ";", "")
-					s = strings.ReplaceAll(s, "\"", "")
-					s = strings.ReplaceAll(s, " ", "")
-					s = strings.ReplaceAll(s, "\t", "")
-					fmt.Printf("LeafRef Path: %s\n", s)
+				// strip the junk from the leafref to get a plain xpath
+				//fmt.Printf("LeafRef Path: %s\n", s)
+				s = strings.ReplaceAll(s, ";", "")
+				s = strings.ReplaceAll(s, "\"", "")
+				s = strings.ReplaceAll(s, " ", "")
+				s = strings.ReplaceAll(s, "\t", "")
+				fmt.Printf("LeafRef pathReference clean: %s\n", s)
 
-					// split the leafref per "/" and split the element and key from the path
-					// last element is the key
-					// 2nd last element is the element
-					split2data := strings.Split(s, "/")
-					//fmt.Printf("leafRef Len Split2 %d\n", len(split2data))
+				// split the leafref per "/" and split the element and key from the path
+				// last element is the key
+				// 2nd last element is the element
+				split2data := strings.Split(s, "/")
+				//fmt.Printf("leafRef Len Split2 %d\n", len(split2data))
 
-					for i, s2 := range split2data {
-						switch i {
-						case 0: // the first element in the leafref split is typically "", since the string before the "/" is empty
-							if s2 != "" { // if not empty ensure we use the right data and split the string before ":" sign
-								path += "/" + strings.Split(s2, ":")[len(strings.Split(s2, ":"))-1]
-
-							}
-						case (len(split2data) - 1): // last element is the key
-							k = strings.Split(s2, ":")[len(strings.Split(s2, ":"))-1]
-						case (len(split2data) - 2): // 2nd last element is the element
-							elem = strings.Split(s2, ":")[len(strings.Split(s2, ":"))-1]
-						default: // any other element gets added to the list
+				for i, s2 := range split2data {
+					switch i {
+					case 0: // the first element in the leafref split is typically "", since the string before the "/" is empty
+						if s2 != "" { // if not empty ensure we use the right data and split the string before ":" sign
 							path += "/" + strings.Split(s2, ":")[len(strings.Split(s2, ":"))-1]
 
 						}
-					}
-					// if no path element exits we take the root "/" path
-					if path == "" {
-						path = "/"
-					}
-					// if the path contains /.. this is a relative leafref path
-					relativeIndex := strings.Count(path, "/..")
-					if relativeIndex > 0 {
-						// fmt.Printf("leafRef Relative Path: %s, Element: %s, Key: %s, '/..' count %d\n", path, elem, k, relativeIndex)
-						// check if the final p contains relative indirection to the resourcePath -> "/.."
-						resSplitData := strings.Split(RemoveFirstEntryFromXpath(resfullPath), "/")
-						//fmt.Printf("ResPath Split Length: %d data: %v\n", len(resSplitData), resSplitData)
-						var addString string
-						for i := 1; i <= (len(resSplitData) - 1 - strings.Count(path, "/..")); i++ {
-							addString += "/" + resSplitData[i]
-						}
-						//fmt.Printf("leafRef Absolute Path Add string: %s\n", addString)
-						path = addString + strings.ReplaceAll(path, "/..", "")
-					}
-					//fmt.Printf("leafRef Absolute Path: %s, Element: %v, Key: %s, '/..' count %d\n", path, e, k, relativeIndex)
+					case (len(split2data) - 1): // last element is the key
+						k = strings.Split(s2, ":")[len(strings.Split(s2, ":"))-1]
+					case (len(split2data) - 2): // 2nd last element is the element
+						elem = strings.Split(s2, ":")[len(strings.Split(s2, ":"))-1]
+					default: // any other element gets added to the list
+						path += "/" + strings.Split(s2, ":")[len(strings.Split(s2, ":"))-1]
 
+					}
 				}
+				// if no path element exits we take the root "/" path
+				if path == "" {
+					path = "/"
+				}
+				// if the path contains /.. this is a relative leafref path
+				relativeIndex := strings.Count(path, "/..")
+				if relativeIndex > 0 {
+					// fmt.Printf("leafRef Relative Path: %s, Element: %s, Key: %s, '/..' count %d\n", path, elem, k, relativeIndex)
+					// check if the final p contains relative indirection to the resourcePath -> "/.."
+					resSplitData := strings.Split(RemoveFirstEntryFromXpath(resfullPath), "/")
+					//fmt.Printf("ResPath Split Length: %d data: %v\n", len(resSplitData), resSplitData)
+					var addString string
+					for i := 1; i <= (len(resSplitData) - 1 - strings.Count(path, "/..")); i++ {
+						addString += "/" + resSplitData[i]
+					}
+					//fmt.Printf("leafRef Absolute Path Add string: %s\n", addString)
+					path = addString + strings.ReplaceAll(path, "/..", "")
+				}
+				//fmt.Printf("leafRef Absolute Path: %s, Element: %v, Key: %s, '/..' count %d\n", path, e, k, relativeIndex)
+
 			}
 			fmt.Printf("LeafRef Path: %s, Elem: %s, Key: %s\n", path, elem, k)
 			remotePath := Xpath2GnmiPath(path, 0)
@@ -140,7 +136,7 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 func getLeafRefPathRefernce(s *yang.Statement) (string, bool) {
 	if s.Kind() != "path" {
 		for _, s := range s.SubStatements() {
-			fmt.Printf("statement: %#v\n", s)
+			//fmt.Printf("statement: %#v\n", s)
 			pr, found := getLeafRefPathRefernce(s)
 			if found {
 				return pr, true
@@ -148,8 +144,8 @@ func getLeafRefPathRefernce(s *yang.Statement) (string, bool) {
 		}
 		return "", false
 	} else {
-		fmt.Printf("statement: %#v\n", s)
+		//fmt.Printf("statement: %#v\n", s)
 		return s.NName(), true
 	}
-		
+
 }
