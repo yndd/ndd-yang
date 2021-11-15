@@ -35,16 +35,13 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 		case "leafref":
 			//fmt.Printf("LeafRef Entry: %#v \n", e)
 			fmt.Printf("LeafRef Name: %#v \n", e.Name)
-			fmt.Printf("LeafRef Node: %v \n", e.Node.Statement())
-			fmt.Printf("LeafRef Node: %v \n", e.Node.Statement().SubStatements())
-			for _, s := range e.Node.Statement().SubStatements() {
-				fmt.Printf("LeafRef Node Substatement: %v \n", s)
-				for _, ss := range s.SubStatements() {
-					fmt.Printf("LeafRef Node Substatement: %v \n", ss)
-				}
+			
+			pathReference, found := getLeafRefPathRefernce(e.Node.Statement())
+			if !found {
+				fmt.Printf("ERROR LEAFREF NOT FOUND: %v \n", e.Node.Statement())
 			}
-			fmt.Printf("LeafRef: %v \n", e.Node.Statement().NName())
-			splitData := strings.Split(e.Node.Statement().NName(), "\n")
+			fmt.Printf("LeafRef: %v \n", pathReference)
+			splitData := strings.Split(pathReference, "\n")
 			var path string
 			var elem string
 			var k string
@@ -138,4 +135,21 @@ func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.P
 		}
 	}
 	return nil, nil, false
+}
+
+func getLeafRefPathRefernce(s *yang.Statement) (string, bool) {
+	if s.Kind() != "path" {
+		for _, s := range s.SubStatements() {
+			fmt.Printf("statement: %#v\n", s)
+			pr, found := getLeafRefPathRefernce(s)
+			if found {
+				return pr, true
+			}
+		}
+		return "", false
+	} else {
+		fmt.Printf("statement: %#v\n", s)
+		return s.NName(), true
+	}
+		
 }
