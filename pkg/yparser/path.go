@@ -148,6 +148,7 @@ func DeepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 	return out
 }
 
+/*
 // AppendPathElem2GnmiPath adds a pathElem to the gnmi path
 // used in leafref
 func appendPathElem2GnmiPath(path *gnmi.Path, name string, keys []string) *gnmi.Path {
@@ -164,6 +165,7 @@ func appendPathElem2GnmiPath(path *gnmi.Path, name string, keys []string) *gnmi.
 	path.Elem = append(path.Elem, pathElem)
 	return path
 }
+*/
 
 // TransformPathAsRelative2Resource returns a relative path
 func transformGnmiPathAsRelative2Resource(localPath, activeResPath *gnmi.Path) *gnmi.Path {

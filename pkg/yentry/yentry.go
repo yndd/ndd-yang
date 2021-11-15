@@ -13,8 +13,7 @@ type Entry struct {
 	Parent           Handler
 	Children         map[string]Handler
 	ResourceBoundary bool
-	LocalLeafRefs    []*leafref.LeafRef
-	ExternalLeafRefs []*leafref.LeafRef
+	LeafRefs         []*leafref.LeafRef
 }
 
 type HandlerOption func(Handler)
@@ -31,6 +30,7 @@ type Handler interface {
 	GetKeys(p *gnmi.Path) []string
 	GetResourceBoundary() bool
 	GetHierarchicalResources(p *gnmi.Path, cp *gnmi.Path, hierPaths []*gnmi.Path) []*gnmi.Path
+	GetLeafRefs(p *gnmi.Path, cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*leafref.LeafRef
 }
 
 type HandleInitFunc func(parent Handler, opts ...HandlerOption) Handler
@@ -51,14 +51,10 @@ func (e *Entry) GetChildren() map[string]Handler {
 	return e.Children
 }
 
-func (e *Entry) GetResourceBoundary() []*leafref.LeafRef {
-	return e.LocalLeafRefs
+func (e *Entry) GetResourceBoundary() bool {
+	return e.ResourceBoundary
 }
 
-func (e *Entry) GetLocalLeafRefs() []*leafref.LeafRef {
-	return e.LocalLeafRefs
-}
-
-func (e *Entry) GetExternalLeafRefs() []*leafref.LeafRef {
-	return e.ExternalLeafRefs
+func (e *Entry) GetLeafRef() []*leafref.LeafRef {
+	return e.LeafRefs
 }
