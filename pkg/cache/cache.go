@@ -59,7 +59,7 @@ func (c *Cache) GnmiUpdate(t string, n *gnmi.Notification) error {
 }
 
 // GetNotificationFromJson provides fine granular notifications from a JSON blob
-func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val interface{}, rs yentry.Handler) (*gnmi.Notification, error) {
+func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val interface{}, rs *yentry.Entry) (*gnmi.Notification, error) {
 	c.log.Debug("GetNotificationFromJSON2", "Path", yparser.GnmiPath2XPath(p, true), "Value", val)
 	updates := make([]*gnmi.Update, 0)
 	var err error
@@ -74,7 +74,7 @@ func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val in
 	}, nil
 }
 
-func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*gnmi.Update, rs yentry.Handler) ([]*gnmi.Update, error) {
+func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*gnmi.Update, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	var err error
 	switch value := val.(type) {
 	case nil:

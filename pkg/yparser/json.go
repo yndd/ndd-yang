@@ -28,7 +28,7 @@ import (
 )
 
 // GetGranularUpdatesFromJSON provides an update per leaf level
-func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs yentry.Handler) ([]*gnmi.Update, error) {
+func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	u := make([]*gnmi.Update, 0)
 	var err error
 	u, err = getGranularUpdatesFromJSON(p, d, u, rs)
@@ -39,7 +39,7 @@ func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs yentry.Handler) 
 }
 
 // getGranularUpdatesFromJSON provides an update per leaf level
-func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry.Handler) ([]*gnmi.Update, error) {
+func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	switch x := d.(type) {
 	case map[string]interface{}:
 		// add the keys as data in the last element
@@ -95,7 +95,7 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 }
 
 // GetUpdatesFromJSON provides an update per container, list and leaflist level
-func GetUpdatesFromJSON(p *gnmi.Path, d interface{}, rs yentry.Handler) ([]*gnmi.Update, error) {
+func GetUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	u := make([]*gnmi.Update, 0)
 	var err error
 	u, err = getUpdatesFromJSON(p, d, u, rs)
@@ -107,7 +107,7 @@ func GetUpdatesFromJSON(p *gnmi.Path, d interface{}, rs yentry.Handler) ([]*gnmi
 
 // getUpdatesFromJSON creates a gnmi update
 // every list and container is put in a seperate update
-func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs yentry.Handler) ([]*gnmi.Update, error) {
+func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	var err error
 	switch x := d.(type) {
 	case map[string]interface{}:

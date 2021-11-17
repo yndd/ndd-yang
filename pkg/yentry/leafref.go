@@ -102,7 +102,7 @@ func (e *Entry) appendLeafRefs(cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*le
 // ResolveLeafRefs is a runtime function that resolves the leafrefs
 // it recursively walks to the data and validates if the local leafref and data match up
 // if the resolution is successfull the function returns the resolved leafrefs
-func (e *Entry) ResolveLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) {
+func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) {
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
 		e.Children[p.GetElem()[0].GetName()].ResolveLocalLeafRefs(&gnmi.Path{Elem: p.GetElem()[1:]}, lrp, x1, rlrs, lridx)
@@ -269,7 +269,7 @@ func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 func (e *Entry) IsRemoteLeafRefPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 interface{}) bool {
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
-		return e.Children[p.GetElem()[0].GetName()].IsRemoteLeafRefPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, x1)
+		return e.Children[p.GetElem()[0].GetName()].IsRemoteLeafRefPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
 	} else {
 		// check length is for protection
 		if len(rp.GetElem()) >= 1 {
@@ -287,7 +287,7 @@ func (e *Entry) IsRemoteLeafRefPresent(p *gnmi.Path, rp *gnmi.Path, value string
 										// remote leafref was found
 										return true
 									} else {
-										return e.Children[rp.GetElem()[0].GetName()].IsRemoteLeafRefPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, v)
+										return e.Children[rp.GetElem()[0].GetName()].IsRemoteLeafRefPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, v)
 									}
 								}
 								// even if not found there might be other elements in the list that match
@@ -300,7 +300,7 @@ func (e *Entry) IsRemoteLeafRefPresent(p *gnmi.Path, rp *gnmi.Path, value string
 						// check if the value matches, if so remote leafRef was found
 						return x == value
 					} else {
-						return e.Children[rp.GetElem()[0].GetName()].IsRemoteLeafRefPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, x)
+						return e.Children[rp.GetElem()[0].GetName()].IsRemoteLeafRefPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, x)
 					}
 				}
 			}

@@ -153,7 +153,7 @@ func getLeafRefPathRefernce(s *yang.Statement) (string, bool) {
 
 }
 
-func ValidateLeafRefGnmi(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []*leafref.LeafRef, rs yentry.Handler) (bool, []*leafref.ResolvedLeafRef, error) {
+func ValidateLeafRefGnmi(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []*leafref.LeafRef, rs *yentry.Entry) (bool, []*leafref.ResolvedLeafRef, error) {
 	// a global indication if the leafRef resolution was successfull or not
 	// we are positive so we initialize to true
 	success := true
@@ -185,12 +185,12 @@ func ValidateLeafRefGnmi(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRef
 					// external leafref
 					remotePath := buildExternalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
 					// resolve remote leafRef with rootpath: / and the global config data
-					found = rs.IsRemoteLeafRefPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, remotePath, x2)
+					found = rs.IsRemoteLeafRefPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, remotePath, resolvedLeafRef.Value, x2)
 				} else {
 					// local leafref
 					remotePath := buildLocalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
 					// resolve remote leafRef with original rootpath and the global config data
-					found = rs.IsRemoteLeafRefPresent(rootPath, remotePath, x1)
+					found = rs.IsRemoteLeafRefPresent(rootPath, remotePath, resolvedLeafRef.Value, x1)
 				}
 				if !found {
 					success = false

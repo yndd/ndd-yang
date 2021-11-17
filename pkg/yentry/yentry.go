@@ -26,6 +26,30 @@ type Entry struct {
 	Log              logging.Logger
 	Name             string
 	Key              []string
+	Parent           *Entry
+	Children         map[string]*Entry
+	ResourceBoundary bool
+	LeafRefs         []*leafref.LeafRef
+}
+
+type EntryOption func(Entry)
+
+func WithLogging(log logging.Logger) EntryOption {
+	return func(o Entry) {
+		o.WithLogging(log)
+	}
+}
+
+func (e *Entry) WithLogging(log logging.Logger) {
+	e.Log = log
+}
+
+/*
+
+type Entry struct {
+	Log              logging.Logger
+	Name             string
+	Key              []string
 	Parent           Handler
 	Children         map[string]Handler
 	ResourceBoundary bool
@@ -40,6 +64,7 @@ func WithLogging(log logging.Logger) HandlerOption {
 	}
 }
 
+
 type Handler interface {
 	WithLogging(log logging.Logger)
 	GetName() string
@@ -53,7 +78,10 @@ type Handler interface {
 	IsRemoteLeafRefPresent(p *gnmi.Path, rp *gnmi.Path, x interface{}) bool
 }
 
+
 type HandleInitFunc func(parent Handler, opts ...HandlerOption) Handler
+*/
+type EntryInitFunc func(parent Entry, opts ...EntryOption) Entry
 
 func (e *Entry) GetName() string {
 	return e.Name
@@ -63,11 +91,11 @@ func (e *Entry) GetKey() []string {
 	return e.Key
 }
 
-func (e *Entry) GetParent() Handler {
+func (e *Entry) GetParent() *Entry {
 	return e.Parent
 }
 
-func (e *Entry) GetChildren() map[string]Handler {
+func (e *Entry) GetChildren() map[string]*Entry {
 	return e.Children
 }
 
