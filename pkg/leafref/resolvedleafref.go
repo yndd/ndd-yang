@@ -20,14 +20,14 @@ import "github.com/openconfig/gnmi/proto/gnmi"
 
 
 
-type ResolvedLeafRefGnmi struct {
- 	LeafRef
+type ResolvedLeafRef struct {
+ 	*LeafRef
 	Value      string     `json:"value,omitempty"`
 	Resolved   bool       `json:"resolved,omitempty"`
 }
 
-func (in *ResolvedLeafRefGnmi) DeepCopy() (out *ResolvedLeafRefGnmi) {
-	out = new(ResolvedLeafRefGnmi)
+func (in *ResolvedLeafRef) DeepCopy() (out *ResolvedLeafRef) {
+	out = new(ResolvedLeafRef)
 	if in.LocalPath != nil {
 		out.LocalPath = new(gnmi.Path)
 		out.LocalPath.Elem = make([]*gnmi.PathElem, 0)
