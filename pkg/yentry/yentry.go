@@ -81,7 +81,7 @@ type Handler interface {
 
 type HandleInitFunc func(parent Handler, opts ...HandlerOption) Handler
 */
-type EntryInitFunc func(parent *Entry, opts ...EntryOption) Entry
+type EntryInitFunc func(parent *Entry, opts ...EntryOption) *Entry
 
 func (e *Entry) GetName() string {
 	return e.Name
