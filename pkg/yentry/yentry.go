@@ -32,10 +32,10 @@ type Entry struct {
 	LeafRefs         []*leafref.LeafRef
 }
 
-type EntryOption func(Entry)
+type EntryOption func(*Entry)
 
 func WithLogging(log logging.Logger) EntryOption {
-	return func(o Entry) {
+	return func(o *Entry) {
 		o.WithLogging(log)
 	}
 }
