@@ -34,6 +34,12 @@ type Entry struct {
 
 type EntryOption func(Entry)
 
+func WithLogging(log logging.Logger) EntryOption {
+	return func(o Entry) {
+		o.WithLogging(log)
+	}
+}
+
 func (e *Entry) WithLogging(log logging.Logger) {
 	e.Log = log
 }
