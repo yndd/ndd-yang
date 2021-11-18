@@ -271,6 +271,7 @@ func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 interface{}) bool {
 	fmt.Printf("IsPathPresent: rootpath: %s, remotePath: %s, value: %s\n", GnmiPath2XPath(p, true), GnmiPath2XPath(rp, true), value)
 	fmt.Printf("IsPathPresent: data: %v\n", x1)
+	fmt.Printf("IsPathPresent: len: %v\n", len(p.GetElem()))
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
 		return e.Children[p.GetElem()[0].GetName()].IsPathPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
