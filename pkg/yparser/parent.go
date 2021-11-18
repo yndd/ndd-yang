@@ -37,7 +37,7 @@ func ValidateParentDependency(x1 interface{}, parentDependencies []*leafref.Leaf
 	for _, leafRef := range parentDependencies {
 		if len(leafRef.RemotePath.GetElem()) > 0 {
 			fmt.Printf("ValidateParentDependency: %s\n", GnmiPath2XPath(leafRef.RemotePath, true))
-			found := rs.IsPathPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, leafRef.RemotePath, "", x1)
+			found := rs.IsPathPresent(&gnmi.Path{}, leafRef.RemotePath, "", x1)
 			if !found {
 				success = false
 			}
