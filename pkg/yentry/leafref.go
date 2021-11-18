@@ -273,9 +273,10 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 	} else {
 		// check length is for protection
 		if len(rp.GetElem()) >= 1 {
+			pathElemName := rp.GetElem()[0].GetName()
 			if x, ok := isDataPresent(rp, x1, 0); ok {
 				// data element exists
-				if len(rp.GetElem()[0].GetKey()) != 0 {
+				if len(pathElemName) != 0 {
 					// when a key is present, check if one entry matches
 					switch x1 := x.(type) {
 					case []interface{}:
@@ -287,7 +288,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 										// remote leafref was found
 										return true
 									} else {
-										return e.Children[rp.GetElem()[0].GetName()].IsPathPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, v)
+										return e.Children[pathElemName].IsPathPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, v)
 									}
 								}
 								// even if not found there might be other elements in the list that match
@@ -303,7 +304,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 						}
 						return x == value
 					} else {
-						return e.Children[rp.GetElem()[0].GetName()].IsPathPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, x)
+						return e.Children[pathElemName].IsPathPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, x)
 					}
 				}
 			}
