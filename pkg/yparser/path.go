@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/ndd-yang/pkg/leafref"
 )
 
 // Xpath2GnmiPath convertss a xpath string to a gnmi path
@@ -220,4 +221,32 @@ func GetValue(updValue *gnmi.TypedValue) (interface{}, error) {
 		}
 	}
 	return value, nil
+}
+
+func GetRemotePathsFromResolvedLeafRef(resolvedLeafRef *leafref.ResolvedLeafRef) []*gnmi.Path {
+	remotePaths := make([]*gnmi.Path, 0)
+	for i := 0; i < len(strings.Split(resolvedLeafRef.Value, ".")); i++ {
+		if i > 0 {
+			// this is a special case where the value is split in "." e.g. network-instance -> interface + subinterface
+			// or tunnel-interface + vxlan-interface
+			// we create a shorter path to resolve the hierarchical path
+			remotePath := &gnmi.Path{
+				Elem: make([]*gnmi.PathElem, 0),
+			}
+			// we return on the first reference path
+			for _, pathElem := range resolvedLeafRef.RemotePath.GetElem() {
+				if len(pathElem.GetKey()) != 0 {
+					remotePath.Elem = append(remotePath.Elem, &gnmi.PathElem{Name: pathElem.GetName(), Key: pathElem.GetKey()})
+					// we stop at copying the first key
+					break
+				} else {
+					remotePath.Elem = append(remotePath.Elem, &gnmi.PathElem{Name: pathElem.GetName()})
+				}
+			}
+			remotePaths = append(remotePaths, remotePath)
+		} else {
+			remotePaths = append(remotePaths, resolvedLeafRef.RemotePath)
+		}
+	}
+	return remotePaths
 }
