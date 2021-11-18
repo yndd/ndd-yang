@@ -20,6 +20,7 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/resource"
+	"github.com/yndd/ndd-yang/pkg/leafref"
 )
 
 type Resource struct {
@@ -34,6 +35,7 @@ func (r *Resource) WithLogging(log logging.Logger) {
 type Handler interface {
 	WithLogging(log logging.Logger)
 	GetRootPath(mg resource.Managed) []*gnmi.Path
+	GetParentDependency(mg resource.Managed) []*leafref.LeafRef
 }
 
 type Option func(Handler)
