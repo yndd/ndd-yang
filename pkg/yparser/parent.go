@@ -33,19 +33,20 @@ func ValidateParentDependency(x1 interface{}, parentDependencies []*leafref.Leaf
 	resultValidations := make([]*leafref.ResolvedLeafRef, 0)
 	// for all defined parent dependencies check if the remote leafref exists
 	for _, leafRef := range parentDependencies {
-
-		found := rs.IsPathPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, leafRef.RemotePath, "", x1)
-		if !found {
-			success = false
+		if len(leafRef.RemotePath.GetElem()) > 0 {
+			found := rs.IsPathPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, leafRef.RemotePath, "", x1)
+			if !found {
+				success = false
+			}
+			resultValidation := &leafref.ResolvedLeafRef{
+				LeafRef: &leafref.LeafRef{
+					RemotePath: leafRef.RemotePath,
+				},
+				Value:    "",
+				Resolved: found,
+			}
+			resultValidations = append(resultValidations, resultValidation)
 		}
-		resultValidation := &leafref.ResolvedLeafRef{
-			LeafRef: &leafref.LeafRef{
-				RemotePath: leafRef.RemotePath,
-			},
-			Value:    "",
-			Resolved: found,
-		}
-		resultValidations = append(resultValidations, resultValidation)
 	}
 	return success, resultValidations, nil
 }
