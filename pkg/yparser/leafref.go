@@ -153,7 +153,7 @@ func getLeafRefPathRefernce(s *yang.Statement) (string, bool) {
 
 }
 
-func ValidateLeafRefGnmi(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []*leafref.LeafRef, rs *yentry.Entry) (bool, []*leafref.ResolvedLeafRef, error) {
+func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []*leafref.LeafRef, rs *yentry.Entry) (bool, []*leafref.ResolvedLeafRef, error) {
 	// a global indication if the leafRef resolution was successfull or not
 	// we are positive so we initialize to true
 	success := true

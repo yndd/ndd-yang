@@ -33,6 +33,7 @@ func ValidateParentDependency(x1 interface{}, parentDependencies []*leafref.Leaf
 	resultValidations := make([]*leafref.ResolvedLeafRef, 0)
 	// for all defined parent dependencies check if the remote leafref exists
 	for _, leafRef := range parentDependencies {
+
 		found := rs.IsPathPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, leafRef.RemotePath, "", x1)
 		if !found {
 			success = false
