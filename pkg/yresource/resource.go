@@ -36,10 +36,14 @@ type Handler interface {
 	GetRootPath(mg resource.Managed) ([]*gnmi.Path, error)
 }
 
-type HandlerOption func(Handler)
+type Option func(Handler)
 
-func WithLogging(log logging.Logger) HandlerOption {
+func WithLogging(log logging.Logger) Option {
 	return func(o Handler) {
 		o.WithLogging(log)
 	}
+}
+
+func (r *Resource) GetrootPath() []*gnmi.Path {
+	return r.rootPath
 }
