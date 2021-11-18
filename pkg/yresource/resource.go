@@ -33,7 +33,7 @@ func (r *Resource) WithLogging(log logging.Logger) {
 
 type Handler interface {
 	WithLogging(log logging.Logger)
-	GetRootPath(mg resource.Managed) ([]*gnmi.Path, error)
+	GetRootPath(mg resource.Managed) []*gnmi.Path
 }
 
 type Option func(Handler)
