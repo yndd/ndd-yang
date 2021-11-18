@@ -275,7 +275,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 		// continue finding the root of the resource we want to get the data from
 		return e.Children[p.GetElem()[0].GetName()].IsPathPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
 	} else {
-
+		fmt.Printf("IsPathPresent: rootpth: 0, remotePath: %s, value: %s\n", GnmiPath2XPath(rp, true), value)
 		// check length is for protection
 		if len(rp.GetElem()) >= 1 {
 			pathElemName := rp.GetElem()[0].GetName()
