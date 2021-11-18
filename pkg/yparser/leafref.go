@@ -29,7 +29,7 @@ import (
 // ProcessLeafRef processes the leafref and returns
 // if this is a leafref and if so the leafrefs local and remote path
 // if the leafRef is local or external to the resource
-func ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeResPath *gnmi.Path) (*gnmi.Path, *gnmi.Path, bool) {
+func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *gnmi.Path) (*gnmi.Path, *gnmi.Path, bool) {
 	switch GetTypeName(e) {
 	default:
 		switch GetTypeKind(e) {
@@ -158,7 +158,7 @@ func ValidateLeafRefGnmi(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRef
 	// we are positive so we initialize to true
 	success := true
 	// variable to return a fine grane result
-	resultResolvedLeafRefs := make([]*leafref.ResolvedLeafRef, 0)
+	resultValidations := make([]*leafref.ResolvedLeafRef, 0)
 
 	// for all defined leafrefs check if the local leafref exists
 	// if the local leafref is resolved, validate if the remote leafref is present
@@ -184,18 +184,18 @@ func ValidateLeafRefGnmi(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRef
 				if isRemoteLeafRefExternal(rootPath, leafRef.RemotePath) {
 					// external leafref
 					remotePath := buildExternalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
-					// resolve remote leafRef with rootpath: / and the global config data
-					found = rs.IsRemoteLeafRefPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, remotePath, resolvedLeafRef.Value, x2)
+					// find remote leafRef with rootpath: / and the global config data
+					found = rs.IsPathPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, remotePath, resolvedLeafRef.Value, x2)
 				} else {
 					// local leafref
 					remotePath := buildLocalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
-					// resolve remote leafRef with original rootpath and the global config data
-					found = rs.IsRemoteLeafRefPresent(rootPath, remotePath, resolvedLeafRef.Value, x1)
+					// find remote leafRef with original rootpath and the global config data
+					found = rs.IsPathPresent(rootPath, remotePath, resolvedLeafRef.Value, x1)
 				}
 				if !found {
 					success = false
 				}
-				resultResolvedLeafRef := &leafref.ResolvedLeafRef{
+				resultValidation := &leafref.ResolvedLeafRef{
 					LeafRef: &leafref.LeafRef{
 						LocalPath:  resolvedLeafRef.LocalPath,
 						RemotePath: resolvedLeafRef.RemotePath,
@@ -203,11 +203,11 @@ func ValidateLeafRefGnmi(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRef
 					Value:    resolvedLeafRef.Value,
 					Resolved: found,
 				}
-				resultResolvedLeafRefs = append(resultResolvedLeafRefs, resultResolvedLeafRef)
+				resultValidations = append(resultValidations, resultValidation)
 			}
 		}
 	}
-	return success, resultResolvedLeafRefs, nil
+	return success, resultValidations, nil
 }
 
 func isRemoteLeafRefExternal(rootPath, remotePath *gnmi.Path) bool {
@@ -237,24 +237,24 @@ func buildLocalRemotePath(rootPath, remotePath *gnmi.Path, value string) *gnmi.P
 func buildExternalRemotePath(rootPath, remotePath *gnmi.Path, value string) *gnmi.Path {
 	// 1. create a new path based on the keys from the rootpath + remove the common elements from the remotePath
 	// 2. populate the value in the remaining remotePath
-	// 3. append the newPath with the remotePath 
+	// 3. append the newPath with the remotePath
 	newPath := &gnmi.Path{Elem: make([]*gnmi.PathElem, 0)}
 	for n, pathElem := range rootPath.GetElem() {
 		// for each overlapping pathElem, except for the last one copy the pathElem from rootpath
 		if pathElem.GetName() == remotePath.GetElem()[n].GetName() && n < (len(rootPath.GetElem())-1) {
 			newPath.Elem = append(newPath.GetElem(), pathElem)
 			// cut the elemt from the remote path
-			remotePath.Elem = remotePath.GetElem()[1:] 
+			remotePath.Elem = remotePath.GetElem()[1:]
 		} else {
 			break
 		}
 	}
 	remotePath = addValue2Path(remotePath, value)
 	newPath.Elem = append(newPath.GetElem(), remotePath.GetElem()...)
-	return newPath 
+	return newPath
 }
 
-func addValue2Path(p *gnmi.Path, value string) *gnmi.Path{
+func addValue2Path(p *gnmi.Path, value string) *gnmi.Path {
 	// for interface.subinterface we have a special handling where the value is seperated by a ethernet-1/1.4
 	// the part before the dot represents the interface value in the key and the 2nd part represents the subinterface index
 	// not sure how generic this is

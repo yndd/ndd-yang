@@ -266,10 +266,10 @@ func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 	return true
 }
 
-func (e *Entry) IsRemoteLeafRefPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 interface{}) bool {
+func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 interface{}) bool {
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
-		return e.Children[p.GetElem()[0].GetName()].IsRemoteLeafRefPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
+		return e.Children[p.GetElem()[0].GetName()].IsPathPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
 	} else {
 		// check length is for protection
 		if len(rp.GetElem()) >= 1 {
@@ -287,7 +287,7 @@ func (e *Entry) IsRemoteLeafRefPresent(p *gnmi.Path, rp *gnmi.Path, value string
 										// remote leafref was found
 										return true
 									} else {
-										return e.Children[rp.GetElem()[0].GetName()].IsRemoteLeafRefPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, v)
+										return e.Children[rp.GetElem()[0].GetName()].IsPathPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, v)
 									}
 								}
 								// even if not found there might be other elements in the list that match
@@ -298,9 +298,12 @@ func (e *Entry) IsRemoteLeafRefPresent(p *gnmi.Path, rp *gnmi.Path, value string
 					// data element exists without keys
 					if len(rp.GetElem()) == 1 {
 						// check if the value matches, if so remote leafRef was found
+						if value == "" {
+							return true
+						}
 						return x == value
 					} else {
-						return e.Children[rp.GetElem()[0].GetName()].IsRemoteLeafRefPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, x)
+						return e.Children[rp.GetElem()[0].GetName()].IsPathPresent(p, &gnmi.Path{Elem: rp.GetElem()[1:]}, value, x)
 					}
 				}
 			}
