@@ -23,12 +23,12 @@ import (
 )
 
 type Resource struct {
-	log      logging.Logger
-	rootPath []*gnmi.Path
+	Log      logging.Logger
+	RootPath []*gnmi.Path
 }
 
 func (r *Resource) WithLogging(log logging.Logger) {
-	r.log = log
+	r.Log = log
 }
 
 type Handler interface {
@@ -42,8 +42,4 @@ func WithLogging(log logging.Logger) Option {
 	return func(o Handler) {
 		o.WithLogging(log)
 	}
-}
-
-func (r *Resource) GetrootPath() []*gnmi.Path {
-	return r.rootPath
 }
