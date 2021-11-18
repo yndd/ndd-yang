@@ -280,10 +280,12 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 		// check length is for protection
 		if len(rp.GetElem()) >= 1 {
 			pathElemName := rp.GetElem()[0].GetName()
+			pathElemKey := rp.GetElem()[0].GetKey()
 			if x, ok := isDataPresent(rp, x1, 0); ok {
 				// data element exists
-				if len(pathElemName) != 0 {
+				if len(pathElemKey) != 0 {
 					// when a key is present, check if one entry matches
+					fmt.Printf("IsPathPresent: dat present with key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
 					switch x1 := x.(type) {
 					case []interface{}:
 						for _, v := range x1 {
@@ -303,6 +305,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 					}
 				} else {
 					// data element exists without keys
+					fmt.Printf("IsPathPresent: dat present without key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
 					if len(rp.GetElem()) == 1 {
 						// check if the value matches, if so remote leafRef was found
 						if value == "" {
