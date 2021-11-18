@@ -18,7 +18,9 @@ package yentry
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/leafref"
@@ -267,10 +269,13 @@ func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 }
 
 func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 interface{}) bool {
+	fmt.Printf("IsPathPresent: rootpath: %s, remotePath: %s, value: %s\n", GnmiPath2XPath(p, true), GnmiPath2XPath(rp, true), value)
+	fmt.Printf("IsPathPresent: data: %v\n", x1)
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
 		return e.Children[p.GetElem()[0].GetName()].IsPathPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
 	} else {
+
 		// check length is for protection
 		if len(rp.GetElem()) >= 1 {
 			pathElemName := rp.GetElem()[0].GetName()
@@ -311,4 +316,52 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 		}
 		return false
 	}
+}
+
+// GnmiPath2XPath converts a gnmi path with or without keys to a string pointer
+func GnmiPath2XPath(path *gnmi.Path, keys bool) string {
+	sb := strings.Builder{}
+	for i, pElem := range path.GetElem() {
+		pes := strings.Split(pElem.GetName(), ":")
+		var pe string
+		if len(pes) > 1 {
+			pe = pes[1]
+		} else {
+			pe = pes[0]
+		}
+		sb.WriteString(pe)
+		if keys {
+			if len(pElem.GetKey()) != 0 {
+				sb.WriteString("[")
+				i := 0
+
+				// we need to sort the keys in the same way for compaarisons
+				type kv struct {
+					Key   string
+					Value string
+				}
+				var ss []kv
+				for k, v := range pElem.GetKey() {
+					ss = append(ss, kv{k, v})
+				}
+				sort.Slice(ss, func(i, j int) bool {
+					return ss[i].Key > ss[j].Key
+				})
+				for _, kv := range ss {
+					sb.WriteString(kv.Key)
+					sb.WriteString("=")
+					sb.WriteString(kv.Value)
+					if i != len(ss)-1 {
+						sb.WriteString(",")
+					}
+					i++
+				}
+				sb.WriteString("]")
+			}
+		}
+		if i+1 != len(path.GetElem()) {
+			sb.WriteString("/")
+		}
+	}
+	return "/" + sb.String()
 }

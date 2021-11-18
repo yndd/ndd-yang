@@ -17,6 +17,8 @@ limitations under the License.
 package yparser
 
 import (
+	"fmt"
+
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/leafref"
 	"github.com/yndd/ndd-yang/pkg/yentry"
@@ -34,6 +36,7 @@ func ValidateParentDependency(x1 interface{}, parentDependencies []*leafref.Leaf
 	// for all defined parent dependencies check if the remote leafref exists
 	for _, leafRef := range parentDependencies {
 		if len(leafRef.RemotePath.GetElem()) > 0 {
+			fmt.Printf("ValidateParentDependency: %s\n", GnmiPath2XPath(leafRef.RemotePath, true))
 			found := rs.IsPathPresent(&gnmi.Path{Elem: []*gnmi.PathElem{{}}}, leafRef.RemotePath, "", x1)
 			if !found {
 				success = false
