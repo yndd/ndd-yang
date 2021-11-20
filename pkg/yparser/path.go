@@ -250,3 +250,28 @@ func GetRemotePathsFromResolvedLeafRef(resolvedLeafRef *leafref.ResolvedLeafRef)
 	}
 	return remotePaths
 }
+
+// GnmiPathToSubResourceName special case since we have to remove the - from the first elemen
+// used in nddbuilder
+func GnmiPathToSubResourceName(path *gnmi.Path) string {
+	sb := strings.Builder{}
+	for i, pElem := range path.GetElem() {
+		pathElemName := pElem.GetName()
+		if i == 0 {
+			pathElemName = strings.ReplaceAll(pathElemName, "-", "")
+		}
+		pes := strings.Split(pathElemName, ":")
+		var pe string
+		if len(pes) > 1 {
+			pe = pes[1]
+		} else {
+			pe = pes[0]
+		}
+		sb.WriteString(pe)
+
+		if i+1 != len(path.GetElem()) {
+			sb.WriteString("-")
+		}
+	}
+	return sb.String()
+}
