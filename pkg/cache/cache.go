@@ -81,49 +81,8 @@ func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*
 		return u, nil
 	case map[string]interface{}:
 		// add the keys as data in the last element
-		for k, v := range path.GetElem()[len(path.GetElem())-1].GetKey() {
-			val, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			update := &gnmi.Update{
-				Path: &gnmi.Path{Elem: append(path.GetElem(), &gnmi.PathElem{Name: k})},
-				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
-			}
-			u = append(u, update)
-		}
-
-		// add the values and add further processing
-		for k, v := range value {
-			switch value := v.(type) {
-			case []interface{}:
-				for _, v := range value {
-					switch value := v.(type) {
-					case map[string]interface{}:
-						newPath := c.p.DeepCopyGnmiPath(path)
-						// k = lastElem
-						newPath = c.p.AppendElemInGnmiPath(newPath, k, nil)
-						keys := rs.GetKeys(newPath)
-						//keys := c.p.GetKeyNamesFromGnmiPaths(newPath, k, refPaths)
-						pathKeys := make(map[string]string)
-						if len(keys) != 0 {
-							for _, key := range keys {
-								pathKeys[key] = fmt.Sprintf("%v", value[key])
-							}
-							newPath = c.p.AppendElemInGnmiPathWithFullKey(path, k, pathKeys)
-						} else {
-							newPath = c.p.AppendElemInGnmiPath(path, k, nil)
-						}
-
-						// TODO expand keys
-						u, err = c.getNotificationFromJSON2(newPath, v, u, rs)
-						if err != nil {
-							return nil, err
-						}
-					}
-				}
-			default:
-				// this would be map[string]interface{}
+		if len(path.GetElem()) != 0 {
+			for k, v := range path.GetElem()[len(path.GetElem())-1].GetKey() {
 				val, err := json.Marshal(v)
 				if err != nil {
 					return nil, err
@@ -133,6 +92,49 @@ func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*
 					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
 				}
 				u = append(u, update)
+			}
+	
+			// add the values and add further processing
+			for k, v := range value {
+				switch value := v.(type) {
+				case []interface{}:
+					for _, v := range value {
+						switch value := v.(type) {
+						case map[string]interface{}:
+							newPath := c.p.DeepCopyGnmiPath(path)
+							// k = lastElem
+							newPath = c.p.AppendElemInGnmiPath(newPath, k, nil)
+							keys := rs.GetKeys(newPath)
+							//keys := c.p.GetKeyNamesFromGnmiPaths(newPath, k, refPaths)
+							pathKeys := make(map[string]string)
+							if len(keys) != 0 {
+								for _, key := range keys {
+									pathKeys[key] = fmt.Sprintf("%v", value[key])
+								}
+								newPath = c.p.AppendElemInGnmiPathWithFullKey(path, k, pathKeys)
+							} else {
+								newPath = c.p.AppendElemInGnmiPath(path, k, nil)
+							}
+	
+							// TODO expand keys
+							u, err = c.getNotificationFromJSON2(newPath, v, u, rs)
+							if err != nil {
+								return nil, err
+							}
+						}
+					}
+				default:
+					// this would be map[string]interface{}
+					val, err := json.Marshal(v)
+					if err != nil {
+						return nil, err
+					}
+					update := &gnmi.Update{
+						Path: &gnmi.Path{Elem: append(path.GetElem(), &gnmi.PathElem{Name: k})},
+						Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: val}},
+					}
+					u = append(u, update)
+				}
 			}
 		}
 	}
