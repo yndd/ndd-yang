@@ -16,26 +16,31 @@ limitations under the License.
 
 package container
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/openconfig/goyang/pkg/yang"
+)
 
 // Entry structure keeps track of the elements in a struct/list
 type Entry struct {
-	Next          *Container `json:"prev,omitempty"`
-	Prev          *Container `json:"next,omitempty"`
-	Name          string     `json:"name,omitempty"`
-	Type          string     `json:"type,omitempty"`
-	Enum          []string   `json:"enum,omitempty"`
-	EnumString    string     `json:"enumString,omitempty"`
-	Range         []int      `json:"range,omitempty"`
-	Length        []int      `json:"length,omitempty"`
-	Pattern       []string   `json:"pattern,omitempty"`
-	PatternString string     `json:"patternString,omitempty"`
-	Union         bool       `json:"union,omitempty"`
-	Mandatory     bool       `json:"mandatory,omitempty"`
-	Default       string     `json:"default,omitempty"`
-	Key           string     `json:"key,omitempty"`
-	KeyBool       bool       `json:"keyBool,omitempty"`
-	NameSpace     string     `json:"namespace,omitempty"`
+	Next          *Container    `json:"prev,omitempty"`
+	Prev          *Container    `json:"next,omitempty"`
+	Name          string        `json:"name,omitempty"`
+	Type          string        `json:"type,omitempty"`
+	Enum          []string      `json:"enum,omitempty"`
+	EnumString    string        `json:"enumString,omitempty"`
+	Range         []int         `json:"range,omitempty"`
+	Length        []int         `json:"length,omitempty"`
+	Pattern       []string      `json:"pattern,omitempty"`
+	PatternString string        `json:"patternString,omitempty"`
+	Union         bool          `json:"union,omitempty"`
+	Mandatory     bool          `json:"mandatory,omitempty"`
+	Default       string        `json:"default,omitempty"`
+	Key           string        `json:"key,omitempty"`
+	KeyBool       bool          `json:"keyBool,omitempty"`
+	NameSpace     string        `json:"namespace,omitempty"`
+	ListAttr      *yang.ListAttr `json:"listAttr,omitempty"`
 }
 
 // Option can be used to manipulate Options.
@@ -189,4 +194,8 @@ func (e *Entry) GetKeyBool() bool {
 
 func (e *Entry) GetNamespace() string {
 	return e.NameSpace
+}
+
+func (e *Entry) GetListAttr() *yang.ListAttr {
+	return e.ListAttr
 }

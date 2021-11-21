@@ -168,6 +168,10 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName() + "-" + e.Name)
 	}
 
+	if e.ListAttr != nil {
+		entry.ListAttr = e.ListAttr
+	}
+
 	if e.Type != nil {
 		for _, ra := range e.Type.Range {
 			entry.Range = append(entry.Range, int(ra.Min.Value))
