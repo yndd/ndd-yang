@@ -23,41 +23,41 @@ type Handler interface {
 	WithRootSchema(rs *yentry.Entry)
 }
 
-type HandlerOption func(Handler)
+type Option func(Handler)
 
-func WithLogging(log logging.Logger) HandlerOption {
+func WithLogging(log logging.Logger) Option {
 	return func(o Handler) {
 		o.WithLogging(log)
 	}
 }
 
 // WithStateCache initializes the state cache.
-func WithStateCache(c *cache.Cache) HandlerOption {
+func WithStateCache(c *cache.Cache) Option {
 	return func(o Handler) {
 		o.WithStateCache(c)
 	}
 }
 
 // WithConfigCache initializes the config cache.
-func WithConfigCache(c *cache.Cache) HandlerOption {
+func WithConfigCache(c *cache.Cache) Option {
 	return func(o Handler) {
 		o.WithConfigCache(c)
 	}
 }
 
-func WithPrefix(p *gnmi.Path) HandlerOption {
+func WithPrefix(p *gnmi.Path) Option {
 	return func(o Handler) {
 		o.WithPrefix(p)
 	}
 }
 
-func WithPathElem(pe []*gnmi.PathElem) HandlerOption {
+func WithPathElem(pe []*gnmi.PathElem) Option {
 	return func(o Handler) {
 		o.WithPathElem(pe)
 	}
 }
 
-func WithRootSchema(rs *yentry.Entry) HandlerOption {
+func WithRootSchema(rs *yentry.Entry) Option {
 	return func(o Handler) {
 		o.WithRootSchema(rs)
 	}
@@ -71,4 +71,21 @@ type Resource struct {
 	Prefix      *gnmi.Path
 	RootSchema  *yentry.Entry
 	Key         string
+}
+
+// A Operation represents a crud operation
+type Operation string
+
+// Operations Kinds.
+const (
+	// create
+	//OperationCreate Operation = "Create"
+	// update
+	OperationUpdate Operation = "Update"
+	// delete
+	OperationDelete Operation = "Delete"
+)
+
+func (o *Operation) String() string {
+	return string(*o)
 }
