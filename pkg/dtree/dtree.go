@@ -32,9 +32,12 @@ func (t *Tree) addTerminalValue(path []string, value interface{}) error {
 	if len(t.branch) == 0 {
 		t.branch = make(map[string]*Branch)
 	}
-	t.branch[path[0]] = &Branch{
-		value: value,
-		t:     &Tree{},
+	// if the element already exists dont override it
+	if _, ok := t.branch[path[0]]; !ok {
+		t.branch[path[0]] = &Branch{
+			value: value,
+			t:     &Tree{},
+		}
 	}
 	return nil
 }

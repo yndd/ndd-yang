@@ -38,6 +38,11 @@ func TestAdd(t *testing.T) {
 		{
 			Elem: []*gnmi.PathElem{
 				{Name: "ipam"},
+			},
+		},
+		{
+			Elem: []*gnmi.PathElem{
+				{Name: "ipam"},
 				{Name: "tenant", Key: map[string]string{"name": "*"}},
 				{Name: "network-instance", Key: map[string]string{"name": "*"}},
 				{Name: "ip-prefix", Key: map[string]string{"prefix": "*"}},
@@ -51,11 +56,7 @@ func TestAdd(t *testing.T) {
 				{Name: "ip-range", Key: map[string]string{"end": "*", "start": "*"}},
 			},
 		},
-		{
-			Elem: []*gnmi.PathElem{
-				{Name: "ipam"},
-			},
-		},
+		
 	}
 	d.Init(resourcePaths)
 
