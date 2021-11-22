@@ -168,13 +168,13 @@ func (e *Entry) Register(p *gnmi.Path) {
 	if e.Parent != nil {
 		pe := []*gnmi.PathElem{}
 		if len(e.Key) != 0 {
-			pe = []*gnmi.PathElem{{Name: e.Name}}
-		} else {
 			keys := make(map[string]string)
 			for _, key := range e.Key {
 				keys[key] = "*"
 			}
 			pe = []*gnmi.PathElem{{Name: e.Name}, {Key: keys}}
+		} else {
+			pe = []*gnmi.PathElem{{Name: e.Name}}
 		}
 		e.Parent.Register(&gnmi.Path{Elem: append(pe, p.GetElem()...)})
 	} else {
