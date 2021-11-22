@@ -30,6 +30,7 @@ type Entry struct {
 	Children         map[string]*Entry
 	ResourceBoundary bool
 	LeafRefs         []*leafref.LeafRef
+	Resources        []*gnmi.Path
 }
 
 type EntryOption func(*Entry)
@@ -161,4 +162,22 @@ func (e *Entry) GetHierarchicalResourcesLocal(root bool, p *gnmi.Path, cp *gnmi.
 		}
 	}
 	return hierPaths
+}
+
+func (e *Entry) Register(p *gnmi.Path) {
+	if e.Parent != nil {
+		pe := []*gnmi.PathElem{}
+		if len(e.Key) != 0 {
+			pe = []*gnmi.PathElem{{Name: e.Name}}
+		} else {
+			keys := make(map[string]string)
+			for _, key := range e.Key {
+				keys[key] = "*"
+			}
+			pe = []*gnmi.PathElem{{Name: e.Name}, {Key: keys}}
+		}
+		e.Parent.Register(&gnmi.Path{Elem: append(p.GetElem(), pe...)})
+	} else {
+		e.Resources = append(e.Resources, p)
+	}
 }
