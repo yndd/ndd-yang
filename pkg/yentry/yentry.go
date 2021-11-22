@@ -172,7 +172,7 @@ func (e *Entry) Register(p *gnmi.Path) {
 			for _, key := range e.Key {
 				keys[key] = "*"
 			}
-			pe = []*gnmi.PathElem{{Name: e.Name}, {Key: keys}}
+			pe = []*gnmi.PathElem{{Name: e.Name, Key: keys}}
 		} else {
 			pe = []*gnmi.PathElem{{Name: e.Name}}
 		}
