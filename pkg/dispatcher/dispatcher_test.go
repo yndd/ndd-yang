@@ -35,12 +35,6 @@ func TestAdd(t *testing.T) {
 			Elem: []*gnmi.PathElem{
 				{Name: "ipam"},
 				{Name: "tenant", Key: map[string]string{"name": "*"}},
-			},
-		},
-		{
-			Elem: []*gnmi.PathElem{
-				{Name: "ipam"},
-				{Name: "tenant", Key: map[string]string{"name": "*"}},
 				{Name: "network-instance", Key: map[string]string{"name": "*"}},
 			},
 		},
@@ -53,7 +47,12 @@ func TestAdd(t *testing.T) {
 			},
 		},
 		
-		
+		{
+			Elem: []*gnmi.PathElem{
+				{Name: "ipam"},
+				{Name: "tenant", Key: map[string]string{"name": "*"}},
+			},
+		},
 		{
 			Elem: []*gnmi.PathElem{
 				{Name: "ipam"},
