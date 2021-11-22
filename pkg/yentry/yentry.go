@@ -176,7 +176,7 @@ func (e *Entry) Register(p *gnmi.Path) {
 			}
 			pe = []*gnmi.PathElem{{Name: e.Name}, {Key: keys}}
 		}
-		e.Parent.Register(&gnmi.Path{Elem: append(p.GetElem(), pe...)})
+		e.Parent.Register(&gnmi.Path{Elem: append(pe, p.GetElem()...)})
 	} else {
 		e.Resources = append(e.Resources, p)
 	}
