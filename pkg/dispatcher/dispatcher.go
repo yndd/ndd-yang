@@ -1,6 +1,8 @@
 package dispatcher
 
 import (
+	"fmt"
+
 	"github.com/openconfig/gnmi/path"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
@@ -41,7 +43,7 @@ func (o *EventHandlerKind) String() string {
 
 type HandleConfigEventFunc func(log logging.Logger, cc, sc *cache.Cache, prefix *gnmi.Path, p []*gnmi.PathElem, d interface{}) Handler
 
-type Dispatcher interface{
+type Dispatcher interface {
 	Init(resources []*gnmi.Path)
 	GetTree() *dtree.Tree
 	GetPathElem(p *gnmi.Path) []*gnmi.PathElem
@@ -87,7 +89,9 @@ func (r *dispatcher) register(pe []*gnmi.PathElem, d interface{}) error {
 
 func (r *dispatcher) GetPathElem(p *gnmi.Path) []*gnmi.PathElem {
 	pathString := path.ToStrings(p, false)
+	fmt.Printf("GetPathElem pathString: %v\n", pathString)
 	x := r.GetTree().GetLpm(pathString)
+	fmt.Printf("GetPathElem x: %v\n", x)
 	o, ok := x.(dispatcherConfig)
 	if !ok {
 		return nil
