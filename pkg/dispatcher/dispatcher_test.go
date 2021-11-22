@@ -12,8 +12,25 @@ import (
 func TestAdd(t *testing.T) {
 	fmt.Println("TestDispatcher")
 	
+	// /ipam/tenant/[name=*]/network-instance/[name=*]/ip-prefix/[prefix=*]
+	// /ipam/tenant/[name=*]/network-instance/[name=*]/ip-range/[start=*,end=*]"
 	resourcePaths := []*gnmi.Path{
-		
+		{
+			Elem: []*gnmi.PathElem{
+				{Name: "ipam"},
+				{Name: "tenant", Key: map[string]string{"name": "*"}},
+				{Name: "network-instance", Key: map[string]string{"name": "*"}},
+				{Name: "ip-prefix", Key: map[string]string{"prefix": "*"}},
+			},
+		},
+		{
+			Elem: []*gnmi.PathElem{
+				{Name: "ipam"},
+				{Name: "tenant", Key: map[string]string{"name": "*"}},
+				{Name: "network-instance", Key: map[string]string{"name": "*"}},
+				{Name: "ip-range", Key: map[string]string{"end": "*", "start": "*"}},
+			},
+		},
 		{
 			Elem: []*gnmi.PathElem{
 				{Name: "ipam"},
@@ -35,22 +52,8 @@ func TestAdd(t *testing.T) {
 				{Name: "ip-address", Key: map[string]string{"address": "*"}},
 			},
 		},
-		{
-			Elem: []*gnmi.PathElem{
-				{Name: "ipam"},
-				{Name: "tenant", Key: map[string]string{"name": "*"}},
-				{Name: "network-instance", Key: map[string]string{"name": "*"}},
-				{Name: "ip-prefix", Key: map[string]string{"prefix": "*"}},
-			},
-		},
-		{
-			Elem: []*gnmi.PathElem{
-				{Name: "ipam"},
-				{Name: "tenant", Key: map[string]string{"name": "*"}},
-				{Name: "network-instance", Key: map[string]string{"name": "*"}},
-				{Name: "ip-range", Key: map[string]string{"end": "*", "start": "*"}},
-			},
-		},
+		
+		
 		{
 			Elem: []*gnmi.PathElem{
 				{Name: "ipam"},

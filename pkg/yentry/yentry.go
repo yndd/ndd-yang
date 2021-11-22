@@ -166,7 +166,7 @@ func (e *Entry) GetHierarchicalResourcesLocal(root bool, p *gnmi.Path, cp *gnmi.
 
 func (e *Entry) Register(p *gnmi.Path) {
 	if e.Parent != nil {
-		pe := []*gnmi.PathElem{}
+		var pe []*gnmi.PathElem
 		if len(e.Key) != 0 {
 			keys := make(map[string]string)
 			for _, key := range e.Key {
