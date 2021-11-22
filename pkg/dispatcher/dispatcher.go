@@ -47,6 +47,7 @@ type Dispatcher interface {
 	Init(resources []*gnmi.Path)
 	GetTree() *dtree.Tree
 	GetPathElem(p *gnmi.Path) []*gnmi.PathElem
+	ShowTree()
 }
 
 type dispatcher struct {
@@ -80,6 +81,18 @@ func (r *dispatcher) Init(resources []*gnmi.Path) {
 
 func (r *dispatcher) GetTree() *dtree.Tree {
 	return r.t
+}
+
+func printTree(t *dtree.Tree, i int) {
+	i++
+	for b, br := range t.GetBranch() {
+		fmt.Printf("Level: %d, branch: %s value: %v\n", i, b, br.Value())
+		printTree(br.GetTree(), i)
+	}
+}
+
+func (r *dispatcher) ShowTree() {
+	printTree(r.GetTree(), 0)
 }
 
 func (r *dispatcher) register(pe []*gnmi.PathElem, d interface{}) error {

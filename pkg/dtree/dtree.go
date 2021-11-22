@@ -15,6 +15,14 @@ type Branch struct {
 	value interface{}
 }
 
+func (t *Branch) GetTree() *Tree {
+	return t.t
+}
+
+func (t *Tree) GetBranch() map[string]*Branch {
+	return t.branch
+}
+
 func (t *Tree) Add(path []string, value interface{}) error {
 	switch len(path) {
 	case 0:

@@ -98,6 +98,7 @@ func TestAdd(t *testing.T) {
 	}
 	d := New()
 	d.Init(resourcePaths)
+	d.ShowTree()
 	for _, p := range testPaths {
 		pe := d.GetPathElem(p)
 		fmt.Printf("PathElem: %v\n", pe)
