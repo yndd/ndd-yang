@@ -117,7 +117,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 			case []interface{}:
 				fmt.Printf("getUpdatesFromJSON []interface{}: path: %s, k:%s, v: %v\n", GnmiPath2XPath(p, true), k, v)
 				for _, v := range val {
-					switch value := v.(type) {
+					switch vv := v.(type) {
 					case map[string]interface{}:
 						// gets the keys from the yangschema based on the gnmi path
 						keys := rs.GetKeys(&gnmi.Path{
@@ -125,7 +125,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 						})
 						fmt.Printf("getUpdatesFromJSON []interface{} keys: %v\n", keys)
 						// get the gnmipath with the key data
-						newPath, err := getPathWithKeys(DeepCopyGnmiPath(p), keys, k, value)
+						newPath, err := getPathWithKeys(DeepCopyGnmiPath(p), keys, k, vv)
 						if err != nil {
 							return nil, err
 						}
@@ -133,6 +133,17 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 						if err != nil {
 							return nil, err
 						}
+					default: // leaf-list
+						v, err := json.Marshal(value)
+						if err != nil {
+							return nil, err
+						}
+						u = append(u, &gnmi.Update{
+							Path: &gnmi.Path{
+								Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
+							},
+							Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
+						})
 					}
 				}
 			case map[string]interface{}:
