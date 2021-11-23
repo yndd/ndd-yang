@@ -134,7 +134,9 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 							return nil, err
 						}
 					default: // leaf-list
-						v, err := json.Marshal(val)
+						vvv := make([]interface{}, 0)
+						vvv = append(vvv, vv) 
+						v, err := json.Marshal(vvv)
 						if err != nil {
 							return nil, err
 						}
