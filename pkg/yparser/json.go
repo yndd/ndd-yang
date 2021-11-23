@@ -116,6 +116,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 			switch val := v.(type) {
 			case []interface{}:
 				fmt.Printf("getUpdatesFromJSON []interface{}: path: %s, k:%s, v: %v\n", GnmiPath2XPath(p, true), k, v)
+				leaflist := false
 				for _, v := range val {
 					switch vv := v.(type) {
 					case map[string]interface{}:
@@ -134,19 +135,36 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 							return nil, err
 						}
 					default: // leaf-list
-						vvv := make([]interface{}, 0)
-						vvv = append(vvv, vv) 
-						v, err := json.Marshal(vvv)
-						if err != nil {
-							return nil, err
-						}
-						u = append(u, &gnmi.Update{
-							Path: &gnmi.Path{
-								Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
-							},
-							Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
-						})
+						leaflist = true
+						//vvv := make([]interface{}, 0)
+						//vvv = append(vvv, vv)
+						/*
+							v, err := json.Marshal(val)
+							if err != nil {
+								return nil, err
+							}
+							u = append(u, &gnmi.Update{
+								Path: &gnmi.Path{
+									Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
+								},
+								Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
+							})
+						*/
 					}
+
+				}
+				if leaflist {
+					// leaflists are added as a single value
+					v, err := json.Marshal(val)
+					if err != nil {
+						return nil, err
+					}
+					u = append(u, &gnmi.Update{
+						Path: &gnmi.Path{
+							Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
+						},
+						Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
+					})
 				}
 			case map[string]interface{}:
 				// yang new container -> we provide a dedicated update

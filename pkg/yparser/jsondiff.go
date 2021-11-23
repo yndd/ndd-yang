@@ -224,13 +224,21 @@ func CompareJSONData(t, s []byte) ([]Operation, error) {
 				operations = append(operations, Operation{Type: OperationTypeDelete, Path: k1, Value: v1})
 			}
 		}
-	case []interface{}:
+	case []interface{}: //leaf-lists
 		// we expect only 1 element presnt
 		switch xx2 := x2.(type) {
 		case []interface{}:
-			if xx1[0] != xx2[0] {
-				// the data differs
-				operations = append(operations, Operation{Type: OperationTypeCreate})
+			for _, v1 := range xx1 {
+				found := false
+				for _, v2 := range xx2 {
+					if v1 == v2 {
+						found = true
+						break
+					}
+				}
+				if !found {
+					operations = append(operations, Operation{Type: OperationTypeCreate})
+				}
 			}
 		default:
 			// data is not present
