@@ -224,6 +224,18 @@ func CompareJSONData(t, s []byte) ([]Operation, error) {
 				operations = append(operations, Operation{Type: OperationTypeDelete, Path: k1, Value: v1})
 			}
 		}
+	case []interface{}:
+		// we expect only 1 element presnt
+		switch xx2 := x2.(type) {
+		case []interface{}:
+			if xx1[0] != xx2[0] {
+				// the data differs
+				operations = append(operations, Operation{Type: OperationTypeCreate})
+			}
+		default:
+			// data is not present
+			operations = append(operations, Operation{Type: OperationTypeCreate})
+		}
 	default:
 		// this is not an object but a string or float or integer instead
 		//fmt.Printf("CompareJSONData Default, type x1: %v, type x2: %v", reflect.TypeOf(x1), reflect.TypeOf(x2))
