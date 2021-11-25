@@ -20,6 +20,7 @@ type Handler interface {
 	WithLogging(log logging.Logger)
 	WithStateCache(c *cache.Cache)
 	WithConfigCache(c *cache.Cache)
+	WithTargetCache(c *cache.Cache)
 	WithPrefix(p *gnmi.Path)
 	WithPathElem(pe []*gnmi.PathElem)
 	WithRootSchema(rs *yentry.Entry)
@@ -44,6 +45,13 @@ func WithStateCache(c *cache.Cache) Option {
 func WithConfigCache(c *cache.Cache) Option {
 	return func(o Handler) {
 		o.WithConfigCache(c)
+	}
+}
+
+// WithTargetCache initializes the target cache.
+func WithTargetCache(c *cache.Cache) Option {
+	return func(o Handler) {
+		o.WithTargetCache(c)
 	}
 }
 
