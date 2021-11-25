@@ -1,6 +1,7 @@
 package dispatcher
 
 import (
+	"github.com/karimra/gnmic/types"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/cache"
@@ -15,6 +16,7 @@ type Handler interface {
 	UpdateConfig(interface{}) error
 	UpdateStateCache() error
 	DeleteStateCache() error
+	GetTargets() []*types.TargetConfig
 	WithLogging(log logging.Logger)
 	WithStateCache(c *cache.Cache)
 	WithConfigCache(c *cache.Cache)
