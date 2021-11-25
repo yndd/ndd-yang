@@ -41,7 +41,7 @@ func (o *EventHandlerKind) String() string {
 }
 */
 
-type HandleConfigEventFunc func(log logging.Logger, cc, sc *cache.Cache, prefix *gnmi.Path, p []*gnmi.PathElem, d interface{}) Handler
+type HandleConfigEventFunc func(log logging.Logger, cc, sc, tc *cache.Cache, prefix *gnmi.Path, p []*gnmi.PathElem, d interface{}) Handler
 
 type Dispatcher interface {
 	Init(resources []*gnmi.Path)
