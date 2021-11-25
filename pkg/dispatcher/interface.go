@@ -77,6 +77,7 @@ type Resource struct {
 	Log         logging.Logger
 	ConfigCache *cache.Cache
 	StateCache  *cache.Cache
+	targetCache *cache.Cache
 	PathElem    *gnmi.PathElem
 	Prefix      *gnmi.Path
 	RootSchema  *yentry.Entry
