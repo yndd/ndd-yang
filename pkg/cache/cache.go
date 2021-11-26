@@ -306,6 +306,9 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				notification = n
+				for _, u := range n.GetUpdate() {
+					fmt.Printf("query update: %s, %v\n", yparser.GnmiPath2XPath(u.GetPath(), true), u.GetVal())
+				}
 			}
 			return nil
 		}); err != nil {
@@ -324,8 +327,8 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 	//pp := path.ToStrings(p, true)
 	if err := c.c.Query(t, fp,
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
-			if notification, ok := n.(*gnmi.Notification); ok {
-				for _, u := range notification.GetUpdate() {
+			if n, ok := n.(*gnmi.Notification); ok {
+				for _, u := range n.GetUpdate() {
 					//fmt.Printf("Notif: %v\n", u)
 					// fp[2:]
 					if data, err = c.addData(data, u.GetPath().GetElem(), fp[1:], u.GetVal()); err != nil {
