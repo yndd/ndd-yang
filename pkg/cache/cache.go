@@ -93,7 +93,7 @@ func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*
 				}
 				u = append(u, update)
 			}
-	
+
 			// add the values and add further processing
 			for k, v := range value {
 				switch value := v.(type) {
@@ -115,7 +115,7 @@ func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*
 							} else {
 								newPath = c.p.AppendElemInGnmiPath(path, k, nil)
 							}
-	
+
 							// TODO expand keys
 							u, err = c.getNotificationFromJSON2(newPath, v, u, rs)
 							if err != nil {
@@ -305,9 +305,15 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 	if err := c.c.Query(t, fp,
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
-				notification = n
-				for _, u := range n.GetUpdate() {
-					fmt.Printf("query update: %s, %v\n", yparser.GnmiPath2XPath(u.GetPath(), true), u.GetVal())
+				u := []*gnmi.Update{}
+				for _, upd := range n.GetUpdate() {
+					fmt.Printf("query update: %s, %v\n", yparser.GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
+					u = append(u, &gnmi.Update{Path: upd.GetPath(), Val: upd.GetVal()})
+				}
+				notification = &gnmi.Notification{
+					Timestamp: n.GetTimestamp(),
+					Prefix:    n.GetPrefix(),
+					Update:    u,
 				}
 			}
 			return nil
