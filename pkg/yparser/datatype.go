@@ -21,6 +21,7 @@ import "github.com/openconfig/gnmi/proto/gnmi"
 const (
 	CacheTypeState  = "STATE"
 	CacheTypeConfig = "CONFIG"
+	CacheTypeTarget = "TARGET"
 )
 
 func GetDataType(t gnmi.GetRequest_DataType) string {
@@ -29,10 +30,12 @@ func GetDataType(t gnmi.GetRequest_DataType) string {
 		return CacheTypeState
 	} else {
 		switch gnmi.GetRequest_DataType_name[int32(t)] {
-		case "ALL", "STATE", "OPERATIONAL":
+		case "ALL", "STATE":
 			return CacheTypeState
 		case "CONFIG":
 			return CacheTypeConfig
+		case "OPERATIONAL":
+			return CacheTypeTarget
 		default:
 			return CacheTypeState
 		}
