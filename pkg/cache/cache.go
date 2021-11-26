@@ -307,9 +307,10 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 			if n, ok := n.(*gnmi.Notification); ok {
 				u := []*gnmi.Update{}
 				for _, upd := range n.GetUpdate() {
-					fmt.Printf("query update: %s, %v\n", yparser.GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
 					u = append(u, &gnmi.Update{Path: upd.GetPath(), Val: upd.GetVal()})
+					fmt.Printf("query update: %s, %v\n", yparser.GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
 				}
+				fmt.Printf("New Query response update length: %d\n", len(u))
 				notification = &gnmi.Notification{
 					Timestamp: n.GetTimestamp(),
 					Prefix:    n.GetPrefix(),
@@ -320,7 +321,7 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 		}); err != nil {
 		return nil, err
 	}
-	fmt.Printf("Query response length: %d\n", len(notification.GetUpdate()))
+	fmt.Printf("New Query response length: %d\n", len(notification.GetUpdate()))
 	return notification, nil
 }
 
