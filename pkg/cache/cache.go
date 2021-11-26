@@ -295,6 +295,25 @@ func (c *Cache) GetGnmiUpdateAsJsonBlob(t, o string, u *gnmi.Update) error {
 	return nil
 }
 
+func (c *Cache) QueryAll(t string, prefix *gnmi.Path, p *gnmi.Path) ([]*gnmi.Notification, error) {
+	notifications := []*gnmi.Notification{}
+	fp, err := path.CompletePath(prefix, p)
+	if err != nil {
+		return nil, err
+	}
+	//pp := path.ToStrings(fp, true)
+	if err := c.c.Query(t, fp,
+		func(_ []string, _ *ctree.Leaf, n interface{}) error {
+			if n, ok := n.(*gnmi.Notification); ok {
+				notifications = append(notifications, n)
+			}
+			return nil
+		}); err != nil {
+		return nil, err
+	}
+	return notifications, nil
+}
+
 func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notification, error) {
 	var notification *gnmi.Notification
 	fp, err := path.CompletePath(prefix, p)
@@ -305,25 +324,12 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 	if err := c.c.Query(t, fp,
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
-				u := []*gnmi.Update{}
-				fmt.Printf("Query response update length: %d\n", len(n.GetUpdate() ))
-				for _, upd := range n.GetUpdate() {
-					u = append(u, &gnmi.Update{Path: upd.GetPath(), Val: upd.GetVal()})
-					fmt.Printf("query update: %s, %v\n", yparser.GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
-				}
-				fmt.Printf("New Query response update length: %d\n", len(u))
-				fmt.Printf("New Query response update: %v\n", u)
-				notification = &gnmi.Notification{
-					Timestamp: n.GetTimestamp(),
-					Prefix:    n.GetPrefix(),
-					Update:    u,
-				}
+				notification = n
 			}
 			return nil
 		}); err != nil {
 		return nil, err
 	}
-	fmt.Printf("New Query response length: %d\n", len(notification.GetUpdate()))
 	return notification, nil
 }
 
