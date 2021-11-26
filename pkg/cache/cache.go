@@ -314,6 +314,7 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 		}); err != nil {
 		return nil, err
 	}
+	fmt.Printf("Query response length: %d\n", len(notification.GetUpdate()))
 	return notification, nil
 }
 
