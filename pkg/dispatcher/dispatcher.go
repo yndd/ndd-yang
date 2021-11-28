@@ -8,9 +8,10 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/cache"
 	"github.com/yndd/ndd-yang/pkg/dtree"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type HandleConfigEventFunc func(log logging.Logger, cc, sc, tc *cache.Cache, prefix *gnmi.Path, p []*gnmi.PathElem, d interface{}) Handler
+type HandleConfigEventFunc func(log logging.Logger, cc, sc, tc *cache.Cache, c client.Client, prefix *gnmi.Path, p []*gnmi.PathElem, d interface{}) Handler
 
 type Dispatcher interface {
 	Init(resources []*gnmi.Path)
