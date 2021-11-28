@@ -10,37 +10,6 @@ import (
 	"github.com/yndd/ndd-yang/pkg/dtree"
 )
 
-/*
-var Resources = map[string][]*EventHandler{}
-
-func Register(name string, e []*EventHandler) {
-	Resources[name] = e
-}
-
-type EventHandler struct {
-	PathElem []*gnmi.PathElem
-	Kind     EventHandlerKind
-	Handler  HandleConfigEventFunc
-}
-*/
-
-/*
-// A EventHandlerKind represents a kind of event handler
-type EventHandlerKind string
-
-// Operations Kinds.
-const (
-	// create
-	EventHandlerCreate EventHandlerKind = "Create"
-	// update
-	//EventHandlerEvent EventHandlerKind = "Event"
-)
-
-func (o *EventHandlerKind) String() string {
-	return string(*o)
-}
-*/
-
 type HandleConfigEventFunc func(log logging.Logger, cc, sc, tc *cache.Cache, prefix *gnmi.Path, p []*gnmi.PathElem, d interface{}) Handler
 
 type Dispatcher interface {
@@ -53,13 +22,6 @@ type Dispatcher interface {
 type dispatcher struct {
 	t *dtree.Tree
 }
-
-/*
-type DispatcherData struct {
-	//Kind    EventHandlerKind
-	Handler HandleConfigEventFunc
-}
-*/
 
 type dispatcherConfig struct {
 	PathElem []*gnmi.PathElem

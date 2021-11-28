@@ -10,4 +10,5 @@ require (
 	github.com/stoewer/go-strcase v1.2.0
 	github.com/wI2L/jsondiff v0.1.0
 	github.com/yndd/ndd-runtime v0.1.1
+	sigs.k8s.io/controller-runtime v0.9.3
 )

@@ -6,6 +6,7 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/cache"
 	"github.com/yndd/ndd-yang/pkg/yentry"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Handler interface {
@@ -24,6 +25,7 @@ type Handler interface {
 	WithPrefix(p *gnmi.Path)
 	WithPathElem(pe []*gnmi.PathElem)
 	WithRootSchema(rs *yentry.Entry)
+	WithK8sClient(c client.Client)
 }
 
 type Option func(Handler)
@@ -73,6 +75,12 @@ func WithRootSchema(rs *yentry.Entry) Option {
 	}
 }
 
+func WithK8sClient(c client.Client) Option {
+	return func(o Handler) {
+		o.WithK8sClient(c)
+	}
+}
+
 type Resource struct {
 	Log         logging.Logger
 	ConfigCache *cache.Cache
@@ -81,6 +89,7 @@ type Resource struct {
 	PathElem    *gnmi.PathElem
 	Prefix      *gnmi.Path
 	RootSchema  *yentry.Entry
+	Client      client.Client
 	Key         string
 }
 
