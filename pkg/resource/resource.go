@@ -541,7 +541,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 		case i == len(r.Path.GetElem())-1: // root of the resource
 			//fmt.Printf("    Element at root of resource: %d, peName: %s, Key: %v \n",i, pe.GetName(), pe.Key)
 			//fmt.Printf("       RootContainerEntry: %#v\n", r.RootContainerEntry)
-			if r.RootContainerEntry.Key != "" {
+			if r.RootContainerEntry != nil && r.RootContainerEntry.Key != "" {
 				pe.Key = make(map[string]string)
 				// multiple keys in yang are supplied as a string and they delineation is a space
 				// we split them here so we have access to each key indivifually
