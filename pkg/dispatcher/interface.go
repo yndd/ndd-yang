@@ -17,6 +17,9 @@ type Handler interface {
 	UpdateConfig(interface{}) error
 	UpdateStateCache() error
 	DeleteStateCache() error
+	GetState(p *gnmi.Path) (interface{}, error)
+	SetState(p *gnmi.Path, d interface{}) error
+
 	GetTargets() []*types.TargetConfig
 	WithLogging(log logging.Logger)
 	WithStateCache(c *cache.Cache)
