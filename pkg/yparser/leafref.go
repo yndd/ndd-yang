@@ -168,6 +168,7 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 			{
 				LeafRef: &leafref.LeafRef{
 					LocalPath: &gnmi.Path{Elem: make([]*gnmi.PathElem, 0)},
+					RemotePath: leafRef.RemotePath,
 				},
 			},
 		}

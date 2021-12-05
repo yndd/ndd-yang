@@ -187,6 +187,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 			case map[string]interface{}:
 				if n > 1 {
 					rlrs = append(rlrs, rlrOrig)
+					lridx++
 				}
 				if len(lrp.GetElem()) == 2 {
 					// e.g. lrp will have endpoints[node-name=,interface-name=]/node-name
