@@ -127,6 +127,7 @@ func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{
 				if len(lrp.GetElem()[0].GetKey()) != 0 {
 					// when a key is present, we process a list which can have multiple entries that need to be resolved
 					e.resolveLeafRefsWithKey(p, lrp, x, rlrs, lridx)
+					fmt.Printf("ResolveLocalLeafRefs yentry: rlrs: %#v\n", rlrs)
 				} else {
 					// data element exists without keys
 					if len(lrp.GetElem()) == 1 {
@@ -225,6 +226,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 	default:
 		// resolution failed
 	}
+
 }
 
 func getStringValue(x interface{}) (string, bool) {
