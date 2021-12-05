@@ -226,6 +226,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 	default:
 		// resolution failed
 	}
+	fmt.Printf("resolveLeafRefsWithKey yentry rlrs: %#v", rlrs)
 
 }
 
