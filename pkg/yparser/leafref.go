@@ -174,6 +174,7 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 		// find the resolved local leafref objects that exists in the data
 		// that is supplied in the function
 		rs.ResolveLocalLeafRefs(rootPath, leafRef.LocalPath, x1, resolvedLeafRefs, 0)
+		fmt.Printf("resolvedLeafRefs: %v", resolvedLeafRefs)
 		// for all the resolved leafrefs validate if the remote leafref exists
 		for _, resolvedLeafRef := range resolvedLeafRefs {
 			// Validate if the leaf ref is resolved
