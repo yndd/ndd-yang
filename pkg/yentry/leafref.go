@@ -26,6 +26,7 @@ import (
 	"github.com/yndd/ndd-yang/pkg/leafref"
 )
 
+
 // Returns all leafRefs for a given resource
 // 1. p is the path of the root resource
 // 2. cp is the current path that extends to find the hierarchical resources once p is found
@@ -110,43 +111,42 @@ func (e *Entry) appendLeafRefs(cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*le
 // ResolveLeafRefs is a runtime function that resolves the leafrefs
 // it recursively walks to the data and validates if the local leafref and data match up
 // if the resolution is successfull the function returns the resolved leafrefs
-func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) []*leafref.ResolvedLeafRef{
+func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{}, resolution *leafref.Resolution, lridx int) {
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
-		e.Children[p.GetElem()[0].GetName()].ResolveLocalLeafRefs(&gnmi.Path{Elem: p.GetElem()[1:]}, lrp, x1, rlrs, lridx)
+		e.Children[p.GetElem()[0].GetName()].ResolveLocalLeafRefs(&gnmi.Path{Elem: p.GetElem()[1:]}, lrp, x1, resolution, lridx)
 	} else {
 		fmt.Printf("ResolveLocalLeafRefs yentry: lridx: %d, path: %s, leafrefpath: %s\n", lridx, GnmiPath2XPath(p, true), GnmiPath2XPath(lrp, true))
 		fmt.Printf("ResolveLocalLeafRefs yentry: data: %v\n", x1)
 		// check length is for protection
 		if len(lrp.GetElem()) >= 1 {
 			// append the leafref pathElem to the resolved leafref
-			rlrs[lridx].LocalPath = &gnmi.Path{Elem: append(rlrs[lridx].LocalPath.GetElem(), lrp.GetElem()[0])}
+			resolution.ResolvedLeafRefs[lridx].LocalPath = &gnmi.Path{Elem: append(resolution.ResolvedLeafRefs[lridx].LocalPath.GetElem(), lrp.GetElem()[0])}
 			// validate if the data matches the leafref pathElem
 			if x, ok := isDataPresent(lrp, x1, 0); ok {
 				// data element exists
 				if len(lrp.GetElem()[0].GetKey()) != 0 {
 					// when a key is present, we process a list which can have multiple entries that need to be resolved
-					rlrs = e.resolveLeafRefsWithKey(p, lrp, x, rlrs, lridx)
-					fmt.Printf("ResolveLocalLeafRefs yentry: rlrs: %#v\n", rlrs)
+					e.resolveLeafRefsWithKey(p, lrp, x, resolution, lridx)
+					fmt.Printf("ResolveLocalLeafRefs yentry: rlrs: %#v\n", resolution.ResolvedLeafRefs)
 				} else {
 					// data element exists without keys
 					if len(lrp.GetElem()) == 1 {
 						// we are at the end of the leafref
 						// use the value of the initial data validation for the resolved value
 						if value, ok := getStringValue(x); ok {
-							rlrs[lridx].Value = value
-							rlrs[lridx].Resolved = true
+							resolution.ResolvedLeafRefs[lridx].Value = value
+							resolution.ResolvedLeafRefs[lridx].Resolved = true
 						}
 					} else {
 						// continue; remove the pathElem from the leafref
-						e.Children[lrp.GetElem()[0].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x, rlrs, lridx)
+						e.Children[lrp.GetElem()[0].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x, resolution, lridx)
 					}
 				}
 			}
 			// resolution failed
 		}
 	}
-	return rlrs
 }
 
 func isDataPresent(p *gnmi.Path, x interface{}, idx int) (interface{}, bool) {
@@ -176,20 +176,20 @@ func resolveKey(p *gnmi.Path, x map[string]interface{}) (string, bool) {
 }
 */
 
-func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) []*leafref.ResolvedLeafRef {
+func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface{}, resolution *leafref.Resolution, lridx int) {
 	// data element exists with keys
 	fmt.Printf("resolveLeafRefsWithKey yentry: lridx: %d, path: %s, leafrefpath: %s\n", lridx, GnmiPath2XPath(p, true), GnmiPath2XPath(lrp, true))
 	fmt.Printf("resolveLeafRefsWithKey yentry: data: %v\n", x)
 	switch x1 := x.(type) {
 	case []interface{}:
 		// copy the remote leafref in case we see multiple elements in a container list
-		rlrOrig := rlrs[lridx].DeepCopy()
+		rlrOrig := resolution.ResolvedLeafRefs[lridx].DeepCopy()
 		for n, x2 := range x1 {
 			switch x3 := x2.(type) {
 			case map[string]interface{}:
 				fmt.Printf("resolveLeafRefsWithKey yentry n: %d\n", n)
 				if n > 0 {
-					rlrs = append(rlrs, rlrOrig)
+					resolution.ResolvedLeafRefs = append(resolution.ResolvedLeafRefs, rlrOrig)
 					lridx++
 				}
 				if len(lrp.GetElem()) == 2 {
@@ -197,26 +197,26 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 					// e.g. lrp will have endpoints[node-name=,interface-name=]/node-name
 					if value, found := x3[lrp.GetElem()[1].GetName()]; found {
 						if v, ok := getStringValue(value); ok {
-							rlrs[lridx].Value = v
-							rlrs[lridx].Resolved = true
+							resolution.ResolvedLeafRefs[lridx].Value = v
+							resolution.ResolvedLeafRefs[lridx].Resolved = true
 						}
 					}
 				} else {
 					if findKey(lrp, x3) {
 						if len(lrp.GetElem()) == 2 {
 							// end of the leafref with leaf
-							rlrs[lridx].LocalPath = &gnmi.Path{Elem: append(rlrs[lridx].LocalPath.GetElem(), lrp.GetElem()[1])}
+							resolution.ResolvedLeafRefs[lridx].LocalPath = &gnmi.Path{Elem: append(resolution.ResolvedLeafRefs[lridx].LocalPath.GetElem(), lrp.GetElem()[1])}
 							if x, ok := isDataPresent(lrp, x2, 1); ok {
 								if value, ok := getStringValue(x); ok {
-									rlrs[lridx].Value = value
-									rlrs[lridx].Resolved = true
+									resolution.ResolvedLeafRefs[lridx].Value = value
+									resolution.ResolvedLeafRefs[lridx].Resolved = true
 								}
 								// data type nok
 							}
 							// resolution failed
 						} else {
 							// continue; remove the pathElem from the leafref
-							e.Children[lrp.GetElem()[1].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x2, rlrs, lridx)
+							e.Children[lrp.GetElem()[1].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x2, resolution, lridx)
 						}
 					}
 				}
@@ -227,8 +227,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 	default:
 		// resolution failed
 	}
-	fmt.Printf("resolveLeafRefsWithKey yentry rlrs: %#v\n", rlrs)
-	return rlrs
+	fmt.Printf("resolveLeafRefsWithKey yentry rlrs: %#v\n", resolution.ResolvedLeafRefs)
 
 }
 

@@ -19,6 +19,9 @@ package leafref
 import "github.com/openconfig/gnmi/proto/gnmi"
 
 
+type Resolution struct {
+	ResolvedLeafRefs []*ResolvedLeafRef // holds all the resolved leafRefs if they get resolved
+}
 
 type ResolvedLeafRef struct {
  	*LeafRef

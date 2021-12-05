@@ -164,19 +164,22 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 	// if the local leafref is resolved, validate if the remote leafref is present
 	// if not the resource cannot be configured
 	for _, leafRef := range definedLeafRefs {
-		resolvedLeafRefs := []*leafref.ResolvedLeafRef{
-			{
-				LeafRef: &leafref.LeafRef{
-					LocalPath: &gnmi.Path{Elem: make([]*gnmi.PathElem, 0)},
+		
+		// find the resolved local leafref objects that exists in the data
+		// that is supplied in the function
+		resolution := &leafref.Resolution{
+			ResolvedLeafRefs: []*leafref.ResolvedLeafRef{
+				{
+					LeafRef: &leafref.LeafRef{
+						LocalPath: &gnmi.Path{Elem: make([]*gnmi.PathElem, 0)},
+					},
 				},
 			},
 		}
-		// find the resolved local leafref objects that exists in the data
-		// that is supplied in the function
-		resolvedLeafRefs = rs.ResolveLocalLeafRefs(rootPath, leafRef.LocalPath, x1, resolvedLeafRefs, 0)
+		rs.ResolveLocalLeafRefs(rootPath, leafRef.LocalPath, x1, resolution, 0)
 
 		// for all the resolved leafrefs validate if the remote leafref exists
-		for _, resolvedLeafRef := range resolvedLeafRefs {
+		for _, resolvedLeafRef := range resolution.ResolvedLeafRefs {
 			fmt.Printf("resolvedLeafRef localPath: %s, resolved: %t, value: %v\n", GnmiPath2XPath(resolvedLeafRef.LeafRef.LocalPath, true), resolvedLeafRef.Resolved, resolvedLeafRef.Value)
 			fmt.Printf("resolvedLeafRef remotePath: %s\n", GnmiPath2XPath(leafRef.RemotePath, true))
 			// Validate if the leaf ref is resolved
