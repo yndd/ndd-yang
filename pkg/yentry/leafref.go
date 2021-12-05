@@ -24,7 +24,6 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/leafref"
-	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 // Returns all leafRefs for a given resource
@@ -167,7 +166,7 @@ func resolveKey(p *gnmi.Path, x map[string]interface{}) (string, bool) {
 
 func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) {
 	// data element exists with keys
-	fmt.Printf("resolveLeafRefsWithKey: lridx: %d, path: %s, leafrefpath: %s\n", lridx, yparser.GnmiPath2XPath(p, true))
+	fmt.Printf("resolveLeafRefsWithKey: lridx: %d, path: %s, leafrefpath: %s\n", lridx, GnmiPath2XPath(p, true), GnmiPath2XPath(lrp, true))
 	fmt.Printf("resolveLeafRefsWithKey: data: %v\n", x)
 	switch x1 := x.(type) {
 	case []interface{}:
