@@ -72,6 +72,7 @@ func (e *Entry) getNewPathWithKeys(cp *gnmi.Path) *gnmi.Path {
 // appendLeafRefs extends the leafref path
 func (e *Entry) appendLeafRefs(cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*leafref.LeafRef {
 	for _, lr := range e.GetLeafRef() {
+		/*
 		// check if the localPath is one of the keys in the path. If not add it to the leafref
 		if len(cp.GetElem()) != 0 && len(cp.GetElem()[len(cp.GetElem())-1].GetKey()) != 0 {
 			if _, ok := cp.GetElem()[len(cp.GetElem())-1].GetKey()[lr.LocalPath.GetElem()[0].GetName()]; ok {
@@ -81,7 +82,7 @@ func (e *Entry) appendLeafRefs(cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*le
 					RemotePath: lr.RemotePath,
 				})
 			} else {
-				// the leaafref localPath Elem does not match any key
+				// the leafref localPath Elem does not match any key
 				// // -> add the localPath Elem to the leaf ref
 				leafRefs = append(leafRefs, &leafref.LeafRef{
 					LocalPath:  &gnmi.Path{Elem: append(cp.GetElem(), &gnmi.PathElem{Name: lr.LocalPath.GetElem()[0].GetName()})},
@@ -96,6 +97,11 @@ func (e *Entry) appendLeafRefs(cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*le
 				RemotePath: lr.RemotePath,
 			})
 		}
+		*/
+		leafRefs = append(leafRefs, &leafref.LeafRef{
+			LocalPath:  &gnmi.Path{Elem: append(cp.GetElem(), &gnmi.PathElem{Name: lr.LocalPath.GetElem()[0].GetName()})},
+			RemotePath: lr.RemotePath,
+		})
 
 	}
 	return leafRefs
