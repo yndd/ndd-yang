@@ -187,7 +187,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 			switch x3 := x2.(type) {
 			case map[string]interface{}:
 				fmt.Printf("resolveLeafRefsWithKey yentry n: %d", n)
-				if n > 1 {
+				if n >= 1 {
 					rlrs = append(rlrs, rlrOrig)
 					lridx++
 				}
