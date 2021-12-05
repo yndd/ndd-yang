@@ -27,7 +27,9 @@ type ResolvedLeafRef struct {
 }
 
 func (in *ResolvedLeafRef) DeepCopy() (out *ResolvedLeafRef) {
-	out = new(ResolvedLeafRef)
+	out = &ResolvedLeafRef{
+		LeafRef: &LeafRef{},
+	}
 	if in.LocalPath != nil {
 		out.LocalPath = new(gnmi.Path)
 		out.LocalPath.Elem = make([]*gnmi.PathElem, 0)
