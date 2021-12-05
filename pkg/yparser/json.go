@@ -67,7 +67,7 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 							Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 						})
 						// get the gnmi path with the key data
-						newPath, err := getPathWithKeys(p, keys, k, value)
+						newPath, err := getPathWithKeys(DeepCopyGnmiPath(p), keys, k, value)
 						if err != nil {
 							return nil, err
 						}
