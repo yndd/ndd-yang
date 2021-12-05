@@ -126,7 +126,7 @@ func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{
 				// data element exists
 				if len(lrp.GetElem()[0].GetKey()) != 0 {
 					// when a key is present, we process a list which can have multiple entries that need to be resolved
-					e.resolveLeafRefsWithKey(p, lrp, x, rlrs, lridx)
+					rlrs = e.resolveLeafRefsWithKey(p, lrp, x, rlrs, lridx)
 					fmt.Printf("ResolveLocalLeafRefs yentry: rlrs: %#v\n", rlrs)
 				} else {
 					// data element exists without keys
@@ -175,7 +175,7 @@ func resolveKey(p *gnmi.Path, x map[string]interface{}) (string, bool) {
 }
 */
 
-func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) {
+func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) []*leafref.ResolvedLeafRef {
 	// data element exists with keys
 	fmt.Printf("resolveLeafRefsWithKey yentry: lridx: %d, path: %s, leafrefpath: %s\n", lridx, GnmiPath2XPath(p, true), GnmiPath2XPath(lrp, true))
 	fmt.Printf("resolveLeafRefsWithKey yentry: data: %v\n", x)
@@ -227,6 +227,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 		// resolution failed
 	}
 	fmt.Printf("resolveLeafRefsWithKey yentry rlrs: %#v\n", rlrs)
+	return rlrs
 
 }
 
