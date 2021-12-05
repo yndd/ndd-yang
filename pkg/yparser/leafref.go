@@ -41,7 +41,7 @@ func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *gnmi.Path)
 			if !found {
 				fmt.Printf("ERROR LEAFREF NOT FOUND: %v \n", e.Node.Statement())
 			}
-			fmt.Printf("LeafRef pathReference: %v \n", pathReference)
+			//fmt.Printf("LeafRef pathReference: %v \n", pathReference)
 			splitData := strings.Split(pathReference, "\n")
 			var path string
 			var elem string
@@ -53,7 +53,7 @@ func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *gnmi.Path)
 				s = strings.ReplaceAll(s, "\"", "")
 				s = strings.ReplaceAll(s, " ", "")
 				s = strings.ReplaceAll(s, "\t", "")
-				fmt.Printf("LeafRef pathReference clean: %s\n", s)
+				//fmt.Printf("LeafRef pathReference clean: %s\n", s)
 
 				// split the leafref per "/" and split the element and key from the path
 				// last element is the key
@@ -98,7 +98,7 @@ func ProcessLeafRef(e *yang.Entry, resfullPath string, activeResPath *gnmi.Path)
 				//fmt.Printf("leafRef Absolute Path: %s, Element: %v, Key: %s, '/..' count %d\n", path, e, k, relativeIndex)
 
 			}
-			fmt.Printf("LeafRef Path: %s, Elem: %s, Key: %s\n", path, elem, k)
+			//fmt.Printf("LeafRef Path: %s, Elem: %s, Key: %s\n", path, elem, k)
 			remotePath := Xpath2GnmiPath(path, 0)
 			//remotePath = appendPathElem2GnmiPath(remotePath, elem, []string{k})
 			remotePath = &gnmi.Path{Elem: append(remotePath.GetElem(), &gnmi.PathElem{Name: elem, Key: map[string]string{k: ""}})}
@@ -164,7 +164,7 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 	// if the local leafref is resolved, validate if the remote leafref is present
 	// if not the resource cannot be configured
 	for _, leafRef := range definedLeafRefs {
-		
+
 		// find the resolved local leafref objects that exists in the data
 		// that is supplied in the function
 		resolution := &leafref.Resolution{
@@ -180,8 +180,8 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 
 		// for all the resolved leafrefs validate if the remote leafref exists
 		for _, resolvedLeafRef := range resolution.ResolvedLeafRefs {
-			fmt.Printf("resolvedLeafRef localPath: %s, resolved: %t, value: %v\n", GnmiPath2XPath(resolvedLeafRef.LeafRef.LocalPath, true), resolvedLeafRef.Resolved, resolvedLeafRef.Value)
-			fmt.Printf("resolvedLeafRef remotePath: %s\n", GnmiPath2XPath(leafRef.RemotePath, true))
+			//fmt.Printf("resolvedLeafRef localPath: %s, resolved: %t, value: %v\n", GnmiPath2XPath(resolvedLeafRef.LeafRef.LocalPath, true), resolvedLeafRef.Resolved, resolvedLeafRef.Value)
+			//fmt.Printf("resolvedLeafRef remotePath: %s\n", GnmiPath2XPath(leafRef.RemotePath, true))
 			// Validate if the leaf ref is resolved
 			if resolvedLeafRef.Resolved {
 				// validate if the leafref is local or external to the resource
@@ -194,10 +194,10 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 					// the rest comes from the leafref resolution
 					// e.g. /topolopgy[name=y]/node[name=x]
 					// the topology part will come from the rootpath, while the node part is coming from the rleafref resolution
-					fmt.Printf("resolvedLeafRef external rootPath: %s\n", GnmiPath2XPath(rootPath, true))
+					//fmt.Printf("resolvedLeafRef external rootPath: %s\n", GnmiPath2XPath(rootPath, true))
 					remotePath = buildExternalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
-					fmt.Printf("resolvedLeafRef external remotePath: %s\n", GnmiPath2XPath(remotePath, true))
-					fmt.Printf("resolvedLeafRef external data: %s\n", x2)
+					//fmt.Printf("resolvedLeafRef external remotePath: %s\n", GnmiPath2XPath(remotePath, true))
+					//fmt.Printf("resolvedLeafRef external data: %s\n", x2)
 					// find remote leafRef with rootpath: / and the global config data
 					found = rs.IsPathPresent(&gnmi.Path{}, remotePath, resolvedLeafRef.Value, x2)
 				} else {
