@@ -41,6 +41,9 @@ func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) (
 	if err != nil {
 		return nil, err
 	}
+	for _, u := range updates.upds {
+		fmt.Printf("GetGranularUpdatesFromJSON path: %s, value: %v\n", GnmiPath2XPath(u.Path, true), u.GetVal())
+	}
 	return updates.upds, nil
 }
 
