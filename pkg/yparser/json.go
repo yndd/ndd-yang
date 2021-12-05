@@ -40,6 +40,7 @@ func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) (
 
 // getGranularUpdatesFromJSON provides an update per leaf level
 func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentry.Entry) ([]*gnmi.Update, error) {
+	fmt.Printf("getGranularUpdatesFromJSON: path: %s, data: %v\n", GnmiPath2XPath(p, true), d)
 	switch x := d.(type) {
 	case map[string]interface{}:
 		// add the keys as data in the last element
@@ -89,7 +90,6 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 				})
 			}
 		}
-
 	}
 	return u, nil
 }
