@@ -110,7 +110,7 @@ func (e *Entry) appendLeafRefs(cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*le
 // ResolveLeafRefs is a runtime function that resolves the leafrefs
 // it recursively walks to the data and validates if the local leafref and data match up
 // if the resolution is successfull the function returns the resolved leafrefs
-func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) {
+func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) []*leafref.ResolvedLeafRef{
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
 		e.Children[p.GetElem()[0].GetName()].ResolveLocalLeafRefs(&gnmi.Path{Elem: p.GetElem()[1:]}, lrp, x1, rlrs, lridx)
@@ -146,6 +146,7 @@ func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{
 			// resolution failed
 		}
 	}
+	return rlrs
 }
 
 func isDataPresent(p *gnmi.Path, x interface{}, idx int) (interface{}, bool) {
