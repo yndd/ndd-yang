@@ -248,23 +248,25 @@ func buildExternalRemotePath(rootPath, remotePath *gnmi.Path, value string) *gnm
 	// 1. create a new path based on the keys from the rootpath + remove the common elements from the remotePath
 	// 2. populate the value in the remaining remotePath
 	// 3. append the newPath with the remotePath
+	rp := DeepCopyGnmiPath(remotePath)
 	newPath := &gnmi.Path{Elem: make([]*gnmi.PathElem, 0)}
+
 	for _, pathElem := range rootPath.GetElem() {
 		// for each overlapping pathElem, except for the last one copy the pathElem from rootpath
-		if pathElem.GetName() == remotePath.GetElem()[0].GetName() {
+		if pathElem.GetName() == rp.GetElem()[0].GetName() {
 			newPath.Elem = append(newPath.GetElem(), pathElem)
 			// cut the elemt from the remote path
-			remotePath.Elem = remotePath.GetElem()[1:]
+			rp.Elem = rp.GetElem()[1:]
 			// stop if the remote path is equal to 1
-			if len(remotePath.GetElem()) == 1 {
+			if len(rp.GetElem()) == 1 {
 				break
 			}
 		} else {
 			break
 		}
 	}
-	remotePath = addValue2Path(remotePath, value)
-	newPath.Elem = append(newPath.GetElem(), remotePath.GetElem()...)
+	rp = addValue2Path(rp, value)
+	newPath.Elem = append(newPath.GetElem(), rp.GetElem()...)
 	return newPath
 }
 
