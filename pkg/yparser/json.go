@@ -77,6 +77,7 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 						}
 					}
 				}
+			/*
 			case map[string]interface{}:
 				for k, v := range val {
 					value, err := json.Marshal(v)
@@ -88,6 +89,7 @@ func getGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, r
 						Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
 					})
 				}
+			*/
 			default:
 				// this would be map[string]interface{}
 				// or string, other types
