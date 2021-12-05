@@ -73,30 +73,30 @@ func (e *Entry) getNewPathWithKeys(cp *gnmi.Path) *gnmi.Path {
 func (e *Entry) appendLeafRefs(cp *gnmi.Path, leafRefs []*leafref.LeafRef) []*leafref.LeafRef {
 	for _, lr := range e.GetLeafRef() {
 		/*
-		// check if the localPath is one of the keys in the path. If not add it to the leafref
-		if len(cp.GetElem()) != 0 && len(cp.GetElem()[len(cp.GetElem())-1].GetKey()) != 0 {
-			if _, ok := cp.GetElem()[len(cp.GetElem())-1].GetKey()[lr.LocalPath.GetElem()[0].GetName()]; ok {
-				// don't add the localPath Elem to the leaf ref
-				leafRefs = append(leafRefs, &leafref.LeafRef{
-					LocalPath:  cp,
-					RemotePath: lr.RemotePath,
-				})
+			// check if the localPath is one of the keys in the path. If not add it to the leafref
+			if len(cp.GetElem()) != 0 && len(cp.GetElem()[len(cp.GetElem())-1].GetKey()) != 0 {
+				if _, ok := cp.GetElem()[len(cp.GetElem())-1].GetKey()[lr.LocalPath.GetElem()[0].GetName()]; ok {
+					// don't add the localPath Elem to the leaf ref
+					leafRefs = append(leafRefs, &leafref.LeafRef{
+						LocalPath:  cp,
+						RemotePath: lr.RemotePath,
+					})
+				} else {
+					// the leafref localPath Elem does not match any key
+					// // -> add the localPath Elem to the leaf ref
+					leafRefs = append(leafRefs, &leafref.LeafRef{
+						LocalPath:  &gnmi.Path{Elem: append(cp.GetElem(), &gnmi.PathElem{Name: lr.LocalPath.GetElem()[0].GetName()})},
+						RemotePath: lr.RemotePath,
+					})
+				}
 			} else {
-				// the leafref localPath Elem does not match any key
-				// // -> add the localPath Elem to the leaf ref
+				// current path Elem does not exist and there is also no key in the current path
+				// -> add the localPath Elem to the leaf ref
 				leafRefs = append(leafRefs, &leafref.LeafRef{
 					LocalPath:  &gnmi.Path{Elem: append(cp.GetElem(), &gnmi.PathElem{Name: lr.LocalPath.GetElem()[0].GetName()})},
 					RemotePath: lr.RemotePath,
 				})
 			}
-		} else {
-			// current path Elem does not exist and there is also no key in the current path
-			// -> add the localPath Elem to the leaf ref
-			leafRefs = append(leafRefs, &leafref.LeafRef{
-				LocalPath:  &gnmi.Path{Elem: append(cp.GetElem(), &gnmi.PathElem{Name: lr.LocalPath.GetElem()[0].GetName()})},
-				RemotePath: lr.RemotePath,
-			})
-		}
 		*/
 		leafRefs = append(leafRefs, &leafref.LeafRef{
 			LocalPath:  &gnmi.Path{Elem: append(cp.GetElem(), &gnmi.PathElem{Name: lr.LocalPath.GetElem()[0].GetName()})},
@@ -157,6 +157,7 @@ func isDataPresent(lrp *gnmi.Path, x interface{}, idx int) (interface{}, bool) {
 	return nil, false
 }
 
+/*
 func resolveKey(p *gnmi.Path, x map[string]interface{}) (string, bool) {
 	for keyName := range p.GetElem()[0].GetKey() {
 		if x1, ok := x[keyName]; !ok {
@@ -171,6 +172,7 @@ func resolveKey(p *gnmi.Path, x map[string]interface{}) (string, bool) {
 	}
 	return "", false
 }
+*/
 
 func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface{}, rlrs []*leafref.ResolvedLeafRef, lridx int) {
 	// data element exists with keys
@@ -183,16 +185,19 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 		for n, x2 := range x1 {
 			switch x3 := x2.(type) {
 			case map[string]interface{}:
-				if len(lrp.GetElem()) == 1 {
-					if value, found := resolveKey(lrp, x3); found {
-						rlrs[lridx].Value = value
-						rlrs[lridx].Resolved = true
+				if n > 1 {
+					rlrs = append(rlrs, rlrOrig)
+				}
+				if len(lrp.GetElem()) == 2 {
+					// e.g. lrp will have endpoints[node-name=,interface-name=]/node-name
+					if value, found := x3[lrp.GetElem()[1].GetName()]; found {
+						if v, ok := getStringValue(value); ok {
+							rlrs[lridx].Value = v
+							rlrs[lridx].Resolved = true
+						}
 					}
 				} else {
 					if findKey(lrp, x3) {
-						if n > 1 {
-							rlrs = append(rlrs, rlrOrig)
-						}
 						if len(lrp.GetElem()) == 2 {
 							// end of the leafref with leaf
 							rlrs[lridx].LocalPath = &gnmi.Path{Elem: append(rlrs[lridx].LocalPath.GetElem(), lrp.GetElem()[1])}
