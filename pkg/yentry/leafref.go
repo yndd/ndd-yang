@@ -147,10 +147,10 @@ func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{
 	}
 }
 
-func isDataPresent(lrp *gnmi.Path, x interface{}, idx int) (interface{}, bool) {
+func isDataPresent(p *gnmi.Path, x interface{}, idx int) (interface{}, bool) {
 	switch x1 := x.(type) {
 	case map[string]interface{}:
-		if x2, ok := x1[lrp.GetElem()[idx].GetName()]; ok {
+		if x2, ok := x1[p.GetElem()[idx].GetName()]; ok {
 			return x2, true
 		}
 	}
