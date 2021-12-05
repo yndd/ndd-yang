@@ -27,19 +27,25 @@ import (
 	"github.com/yndd/ndd-yang/pkg/yentry"
 )
 
+type updates struct {
+	upds []*gnmi.Update
+}
+
 // GetGranularUpdatesFromJSON provides an update per leaf level
 func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) ([]*gnmi.Update, error) {
-	u := make([]*gnmi.Update, 0)
 	var err error
-	u, err = getGranularUpdatesFromJSON(p, d, u, rs)
+	updates := &updates{
+		upds:  make([]*gnmi.Update, 0),
+	}
+	err = getGranularUpdatesFromJSON(p, d, updates, rs)
 	if err != nil {
 		return nil, err
 	}
-	return u, nil
+	return updates.upds, nil
 }
 
 // getGranularUpdatesFromJSON provides an update per leaf level
-func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentry.Entry) ([]*gnmi.Update, error) {
+func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *yentry.Entry) error {
 	fmt.Printf("getGranularUpdatesFromJSON: path: %s, data: %v\n", GnmiPath2XPath(path, true), d)
 	p := DeepCopyGnmiPath(path)
 
@@ -47,9 +53,9 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update
 	for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
 		value, err := json.Marshal(v)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		u = append(u, &gnmi.Update{
+		u.upds = append(u.upds, &gnmi.Update{
 			Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
 			Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
 		})
@@ -80,11 +86,11 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update
 							// get the gnmi path with the key data
 							newPath, err := getPathWithKeys(DeepCopyGnmiPath(p), keys, k, value)
 							if err != nil {
-								return nil, err
+								return err
 							}
-							u, err = getGranularUpdatesFromJSON(newPath, vval, u, rs)
+							err = getGranularUpdatesFromJSON(newPath, vval, u, rs)
 							if err != nil {
-								return nil, err
+								return err
 							}
 						}
 					}
@@ -106,9 +112,9 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update
 					// or string, other types
 					value, err := json.Marshal(v)
 					if err != nil {
-						return nil, err
+						return err
 					}
-					u = append(u, &gnmi.Update{
+					u.upds = append(u.upds, &gnmi.Update{
 						Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
 						Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
 					})
@@ -116,7 +122,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update
 			}
 		}
 	}
-	return u, nil
+	return nil
 }
 
 // GetUpdatesFromJSON provides an update per container, list and leaflist level
