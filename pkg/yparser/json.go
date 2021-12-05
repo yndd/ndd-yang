@@ -35,7 +35,7 @@ type updates struct {
 func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	var err error
 	updates := &updates{
-		upds:  make([]*gnmi.Update, 0),
+		upds: make([]*gnmi.Update, 0),
 	}
 	err = getGranularUpdatesFromJSON(p, d, updates, rs)
 	if err != nil {
@@ -95,19 +95,13 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 							}
 						}
 					}
-				/*
-					case map[string]interface{}:
-						for k, v := range val {
-							value, err := json.Marshal(v)
-							if err != nil {
-								return nil, err
-							}
-							u = append(u, &gnmi.Update{
-								Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
-								Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
-							})
-						}
-				*/
+				case map[string]interface{}:
+					newPath := DeepCopyGnmiPath(p)
+					newPath.Elem = append(newPath.GetElem(), &gnmi.PathElem{Name: k})
+					err := getGranularUpdatesFromJSON(newPath, v, u, rs)
+					if err != nil {
+						return err
+					}
 				default:
 					// this would be map[string]interface{}
 					// or string, other types
