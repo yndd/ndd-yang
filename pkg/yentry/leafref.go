@@ -180,16 +180,18 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 	fmt.Printf("resolveLeafRefsWithKey yentry: data: %v\n", x)
 	switch x1 := x.(type) {
 	case []interface{}:
-		// copy the remote learef in case we see multiple elements in a container list
+		// copy the remote leafref in case we see multiple elements in a container list
 		rlrOrig := rlrs[lridx].DeepCopy()
 		for n, x2 := range x1 {
 			switch x3 := x2.(type) {
 			case map[string]interface{}:
+				fmt.Printf("resolveLeafRefsWithKey yentry n: %d", n)
 				if n > 1 {
 					rlrs = append(rlrs, rlrOrig)
 					lridx++
 				}
 				if len(lrp.GetElem()) == 2 {
+					fmt.Printf("resolveLeafRefsWithKey yentry len=2, value: %v\n", x3[lrp.GetElem()[1].GetName()])
 					// e.g. lrp will have endpoints[node-name=,interface-name=]/node-name
 					if value, found := x3[lrp.GetElem()[1].GetName()]; found {
 						if v, ok := getStringValue(value); ok {
