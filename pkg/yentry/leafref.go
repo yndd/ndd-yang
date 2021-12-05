@@ -186,7 +186,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 		for n, x2 := range x1 {
 			switch x3 := x2.(type) {
 			case map[string]interface{}:
-				fmt.Printf("resolveLeafRefsWithKey yentry n: %d", n)
+				fmt.Printf("resolveLeafRefsWithKey yentry n: %d\n", n)
 				if n > 0 {
 					rlrs = append(rlrs, rlrOrig)
 					lridx++
@@ -226,7 +226,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 	default:
 		// resolution failed
 	}
-	fmt.Printf("resolveLeafRefsWithKey yentry rlrs: %#v", rlrs)
+	fmt.Printf("resolveLeafRefsWithKey yentry rlrs: %#v\n", rlrs)
 
 }
 
