@@ -168,7 +168,6 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 			{
 				LeafRef: &leafref.LeafRef{
 					LocalPath: &gnmi.Path{Elem: make([]*gnmi.PathElem, 0)},
-					RemotePath: leafRef.RemotePath,
 				},
 			},
 		}
@@ -178,7 +177,8 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 
 		// for all the resolved leafrefs validate if the remote leafref exists
 		for _, resolvedLeafRef := range resolvedLeafRefs {
-			fmt.Printf("resolvedLeafRef localPath: %s, remotePath: %s, resolved: %t, value: %v\n", GnmiPath2XPath(resolvedLeafRef.LeafRef.LocalPath, true), GnmiPath2XPath(resolvedLeafRef.LeafRef.RemotePath, true), resolvedLeafRef.Resolved, resolvedLeafRef.Value)
+			fmt.Printf("resolvedLeafRef localPath: %s, resolved: %t, value: %v\n", GnmiPath2XPath(resolvedLeafRef.LeafRef.LocalPath, true), resolvedLeafRef.Resolved, resolvedLeafRef.Value)
+			fmt.Printf("resolvedLeafRef remotePath: %s\n", GnmiPath2XPath(leafRef.RemotePath, true))
 			// Validate if the leaf ref is resolved
 			if resolvedLeafRef.Resolved {
 				// validate if the leafref is local or external to the resource
@@ -186,7 +186,7 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 				// return if the remoteLeafRef is local to the data or remote
 				if isRemoteLeafRefExternal(rootPath, leafRef.RemotePath) {
 					// external leafref
-					remotePath := buildExternalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
+					remotePath := buildExternalRemotePath(leafRef.RemotePath, resolvedLeafRef.Value)
 					// find remote leafRef with rootpath: / and the global config data
 					found = rs.IsPathPresent(&gnmi.Path{}, remotePath, resolvedLeafRef.Value, x2)
 				} else {
@@ -236,25 +236,12 @@ func buildLocalRemotePath(rootPath, remotePath *gnmi.Path, value string) *gnmi.P
 	return addValue2Path(newPath, value)
 }
 
-// buildRemotePath merges the overlapping elements of the rootpath with the remotePath
-func buildExternalRemotePath(rootPath, remotePath *gnmi.Path, value string) *gnmi.Path {
-	// 1. create a new path based on the keys from the rootpath + remove the common elements from the remotePath
-	// 2. populate the value in the remaining remotePath
-	// 3. append the newPath with the remotePath
-	newPath := &gnmi.Path{Elem: make([]*gnmi.PathElem, 0)}
-	for n, pathElem := range rootPath.GetElem() {
-		// for each overlapping pathElem, except for the last one copy the pathElem from rootpath
-		if pathElem.GetName() == remotePath.GetElem()[n].GetName() && n < (len(rootPath.GetElem())-1) {
-			newPath.Elem = append(newPath.GetElem(), pathElem)
-			// cut the elemt from the remote path
-			remotePath.Elem = remotePath.GetElem()[1:]
-		} else {
-			break
-		}
-	}
+// buildExternalRemotePath add the resolved value to the remote path
+func buildExternalRemotePath(remotePath *gnmi.Path, value string) *gnmi.Path {
+	// 1. populate the value in the remotePath
 	remotePath = addValue2Path(remotePath, value)
-	newPath.Elem = append(newPath.GetElem(), remotePath.GetElem()...)
-	return newPath
+	
+	return remotePath
 }
 
 func addValue2Path(p *gnmi.Path, value string) *gnmi.Path {
