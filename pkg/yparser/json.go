@@ -42,20 +42,22 @@ func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) (
 func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	fmt.Printf("getGranularUpdatesFromJSON: path: %s, data: %v\n", GnmiPath2XPath(path, true), d)
 	p := DeepCopyGnmiPath(path)
+
+	// add the keys as data in the last element
+	for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
+		value, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		u = append(u, &gnmi.Update{
+			Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+			Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+		})
+	}
+
+	// process the data
 	switch x := d.(type) {
 	case map[string]interface{}:
-		// add the keys as data in the last element
-		for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
-			value, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			u = append(u, &gnmi.Update{
-				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
-				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
-			})
-		}
-
 		// add the values and add further processing
 		for k, v := range x {
 			for key := range p.GetElem()[len(p.GetElem())-1].GetKey() {
@@ -63,8 +65,8 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update
 				if k != key {
 					switch val := v.(type) {
 					case []interface{}:
-						for _, v := range val {
-							switch value := v.(type) {
+						for _, vval := range val {
+							switch value := vval.(type) {
 							case map[string]interface{}:
 								// gets the keys from the yangschema based on the gnmi path
 								keys := rs.GetKeys(&gnmi.Path{
@@ -75,7 +77,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update
 								if err != nil {
 									return nil, err
 								}
-								u, err = getGranularUpdatesFromJSON(newPath, v, u, rs)
+								u, err = getGranularUpdatesFromJSON(newPath, vval, u, rs)
 								if err != nil {
 									return nil, err
 								}
@@ -108,7 +110,6 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u []*gnmi.Update
 					}
 				}
 			}
-			
 		}
 	}
 	return u, nil
