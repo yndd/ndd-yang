@@ -54,6 +54,8 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 
 	// add the keys as data in the last element
 	for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
+		p := DeepCopyGnmiPath(p)
+		
 		value, err := json.Marshal(v)
 		if err != nil {
 			return err
@@ -78,6 +80,8 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 			if _, ok := pathKeys[k]; !ok {
 				// the keys are already added before so we can ignore them
 				// we process only data that is not added before
+				p := DeepCopyGnmiPath(p)
+				
 				switch val := v.(type) {
 				case []interface{}:
 					for _, vval := range val {
