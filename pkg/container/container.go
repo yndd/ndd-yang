@@ -55,19 +55,24 @@ func (c *Container) GetEntries() []*Entry {
 }
 
 func (c *Container) GetKeyType(name string) string {
-	for _, e := range c.GetEntries() {
-		if e.Name == name {
-			return e.Type
+	if c.Entries != nil {
+		for _, e := range c.GetEntries() {
+			if e.Name == name {
+				return e.Type
+			}
 		}
 	}
+
 	return "string"
 }
 
 func (c *Container) GetKeyNames() []string {
 	n := make([]string, 0)
-	for _, e := range c.GetEntries() {
-		if e.GetKeyBool() {
-			n = append(n, e.Name)
+	if c.Entries != nil {
+		for _, e := range c.GetEntries() {
+			if e.GetKeyBool() {
+				n = append(n, e.Name)
+			}
 		}
 	}
 	return n
@@ -75,9 +80,11 @@ func (c *Container) GetKeyNames() []string {
 
 func (c *Container) GetChildren() []string {
 	n := make([]string, 0)
-	for _, e := range c.GetEntries() {
-		if e.Next != nil {
-			n = append(n, e.GetName())
+	if c.Entries != nil {
+		for _, e := range c.GetEntries() {
+			if e.Next != nil {
+				n = append(n, e.GetName())
+			}
 		}
 	}
 	return n
@@ -129,7 +136,6 @@ func (c *Container) AddLeafRef(ll, rl *gnmi.Path) {
 		RemotePath: rl,
 	})
 }
-
 
 func (c *Container) GetLeafRefs() []*leafref.LeafRef {
 	return c.LeafRefs
