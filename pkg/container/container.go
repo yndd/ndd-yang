@@ -17,6 +17,8 @@ limitations under the License.
 package container
 
 import (
+	"fmt"
+
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/leafref"
 )
@@ -55,6 +57,7 @@ func (c *Container) GetEntries() []*Entry {
 }
 
 func (c *Container) GetKeyType(name string) string {
+	fmt.Printf("Container: %#v", *c)
 	if c.Entries != nil {
 		for _, e := range c.GetEntries() {
 			if e.Name == name {
@@ -62,7 +65,6 @@ func (c *Container) GetKeyType(name string) string {
 			}
 		}
 	}
-
 	return "string"
 }
 
