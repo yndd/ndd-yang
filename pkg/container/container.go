@@ -17,8 +17,6 @@ limitations under the License.
 package container
 
 import (
-	"fmt"
-
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/leafref"
 )
