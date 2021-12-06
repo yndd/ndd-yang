@@ -534,7 +534,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if len(dp.GetElem()) == 0 {
 		pathElem = r.Path.GetElem()
 	}
-	//fmt.Printf("Path Elem: %v\n", pathElem)
+	fmt.Printf("Path Elem: %v\n", pathElem)
 	for i, pe := range pathElem {
 		fmt.Printf("Index: %d, root Path length: %d length Path: %d\n", i, len(r.Path.GetElem()), len(pathElem))
 		switch {
