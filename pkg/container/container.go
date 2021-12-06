@@ -57,7 +57,6 @@ func (c *Container) GetEntries() []*Entry {
 }
 
 func (c *Container) GetKeyType(name string) string {
-	fmt.Printf("Container: %#v", *c)
 	if c.Entries != nil {
 		for _, e := range c.GetEntries() {
 			if e.Name == name {
