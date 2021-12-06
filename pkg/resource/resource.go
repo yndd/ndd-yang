@@ -548,7 +548,9 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				// we initialaize the type as string as a dummy type
 				split := strings.Split(r.RootContainerEntry.Key, " ")
 				for _, key := range split {
-					pe.Key[key] = r.RootContainerEntry.Next.GetKeyType(key)
+					if r.RootContainerEntry.Next != nil {
+						pe.Key[key] = r.RootContainerEntry.Next.GetKeyType(key)
+					}
 				}
 				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
 			}
