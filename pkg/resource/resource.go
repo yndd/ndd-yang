@@ -285,8 +285,9 @@ func (r *Resource) GetAbsoluteName() string {
 	// we remove the "-" from the element names otherwise we get a name clash when we parse all the Yang information
 	newElem := make([]*gnmi.PathElem, 0)
 	for _, entry := range e {
-		name := strings.ReplaceAll(entry.Name, "-", "")
-		name = strings.ReplaceAll(name, "ethernetsegment", "esi")
+		//name := strings.ReplaceAll(entry.Name, "-", "")
+		//name = strings.ReplaceAll(name, "ethernetsegment", "esi")
+		name := strings.ReplaceAll(entry.Name, "ethernetsegment", "esi")
 		pathElem := &gnmi.PathElem{
 			Name: name,
 			Key:  entry.GetKey(),
