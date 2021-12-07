@@ -86,6 +86,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 
 				switch val := v.(type) {
 				case []interface{}:
+					leaflist := false
 					for _, vval := range val {
 						switch value := vval.(type) {
 						case map[string]interface{}:
@@ -102,7 +103,20 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 							if err != nil {
 								return err
 							}
+						default: // leaf-list
+							leaflist = true
 						}
+					}
+					if leaflist {
+						// leaflists are added as a single value
+						value, err := json.Marshal(val)
+						if err != nil {
+							return err
+						}
+						u.upds = append(u.upds, &gnmi.Update{
+							Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+							Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+						})
 					}
 				case map[string]interface{}:
 					newPath := DeepCopyGnmiPath(p)
