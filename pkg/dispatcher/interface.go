@@ -19,6 +19,9 @@ type Handler interface {
 	DeleteStateCache() error
 	GetData(string, map[string]string) (interface{}, error)
 	SetData(string, map[string]string, interface{}) error
+	Allocate(pe []*gnmi.PathElem, d interface{}) (interface{}, error)
+	DeAllocate(pe []*gnmi.PathElem, d interface{}) (interface{}, error)
+	Query(pe []*gnmi.PathElem, d interface{}) (interface{}, error)
 
 	GetTargets() []*types.TargetConfig
 	WithLogging(log logging.Logger)
