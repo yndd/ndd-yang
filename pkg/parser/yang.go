@@ -163,7 +163,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		}
 	}
 	// enum
-	if e.Type.Enum != nil {
+	if e.Type != nil && e.Type.Enum != nil {
 		entry.Enum = e.Type.Enum.Names()
 	}
 	// update the Type to reflect the reference to the proper struct
