@@ -124,7 +124,6 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	case "boolean":
 		entry.Type = "bool"
 	case "enumeration":
-		entry.Enum = e.Type.Enum.Names()
 		entry.Type = "string"
 	default:
 		switch p.GetTypeKind(e) {
@@ -162,6 +161,10 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		default:
 			entry.Type = "string"
 		}
+	}
+	// enum
+	if e.Type.Enum != nil {
+		entry.Enum = e.Type.Enum.Names()
 	}
 	// update the Type to reflect the reference to the proper struct
 	if entry.Prev != nil {
