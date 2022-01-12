@@ -139,6 +139,21 @@ func (r *Resource) GetChildren() []*Resource {
 	return r.Children
 }
 
+func (r *Resource) GetParentResource() string {
+	if r.GetParent() != nil {
+		return r.GetParent().GetAbsoluteName()
+	}
+	return ""
+}
+
+func (r *Resource) GetChildResources() []string {
+	children := make([]string, 0)
+	for _, child := range r.GetChildren() {
+		children = append(children, child.GetAbsoluteName())
+	}
+	return children
+}
+
 func (r *Resource) AddChild(res *Resource) {
 	r.Children = append(r.Children, res)
 }
