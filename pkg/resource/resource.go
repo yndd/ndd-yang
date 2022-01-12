@@ -90,7 +90,7 @@ func WithSubResources(s []*gnmi.Path) Option {
 	}
 }
 
-func NewResource(opts ...Option) *Resource {
+func NewResource(parent *Resource,opts ...Option) *Resource {
 	r := &Resource{
 		parser: parser.NewParser(),
 		Path:   new(gnmi.Path),
