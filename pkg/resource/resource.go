@@ -326,7 +326,7 @@ func (r *Resource) GetAbsoluteName() string {
 		Elem: newElem,
 	})
 	if absoluteName == "" {
-		return "root"
+		return "device"
 	}
 	return absoluteName
 }
