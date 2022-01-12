@@ -305,9 +305,13 @@ func (r *Resource) GetAbsoluteName() string {
 		newElem = append(newElem, pathElem)
 	}
 	//fmt.Printf("PathELem: %v\n", newElem)
-	return r.parser.GnmiPathToName(&gnmi.Path{
+	absoluteName := r.parser.GnmiPathToName(&gnmi.Path{
 		Elem: newElem,
 	})
+	if absoluteName == "" {
+		return "root"
+	} 
+	return absoluteName
 }
 
 // root resource have an additional entry in the path which is inconsistent with hierarchical resources
