@@ -31,10 +31,11 @@ import (
 type Resource struct {
 	Module               string                         // Yang Module name of the resource
 	parser               *parser.Parser                 // calls a library for parsing JSON/YANG elements
-	Path                 *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with dependsOn
-	ActualPath           *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with dependsOn
-	DependsOn            *Resource                      // resource dependency
-	DependsOnPath        *gnmi.Path                     // the full path the resource depends upon
+	Path                 *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with Parent
+	ActualPath           *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with Parent
+	Parent               *Resource                      // resource dependency
+	ParentPath           *gnmi.Path                     // the full path of the parent
+	Children             []*Resource                    // the children of the resource
 	Excludes             []*gnmi.Path                   // relative from the the resource
 	FileName             string                         // the filename the resource is using to render out the config
 	ResFile              *os.File                       // the file reference for writing the resource file
@@ -59,15 +60,15 @@ func WithXPath(p string) Option {
 	}
 }
 
-func WithDependsOn(d *Resource) Option {
+func WithParent(d *Resource) Option {
 	return func(r *Resource) {
-		r.DependsOn = d
+		r.Parent = d
 	}
 }
 
-func WithDependsOnPath(p *gnmi.Path) Option {
+func WithParentPath(p *gnmi.Path) Option {
 	return func(r *Resource) {
-		r.DependsOnPath = p
+		r.ParentPath = p
 	}
 }
 
@@ -93,7 +94,7 @@ func NewResource(opts ...Option) *Resource {
 	r := &Resource{
 		parser: parser.NewParser(),
 		Path:   new(gnmi.Path),
-		//DependsOn:          new(Resource),
+		//Parent:          new(Resource),
 		Excludes:             make([]*gnmi.Path, 0),
 		RootContainerEntry:   nil,
 		Container:            nil,
@@ -104,6 +105,7 @@ func NewResource(opts ...Option) *Resource {
 		LocalLeafRefs:        make([]*parser.LeafRefGnmi, 0),
 		ExternalLeafRefs:     make([]*parser.LeafRefGnmi, 0),
 		HierResourceElements: NewHierResourceElements(),
+		Children:             make([]*Resource, 0),
 	}
 
 	for _, o := range opts {
@@ -123,12 +125,20 @@ func (r *Resource) GetModule() string {
 	return r.Module
 }
 
-func (r *Resource) GetDependsOn() *Resource {
-	return r.DependsOn
+func (r *Resource) GetParent() *Resource {
+	return r.Parent
 }
 
-func (r *Resource) GetDependsOnPath() *gnmi.Path {
-	return r.DependsOnPath
+func (r *Resource) GetParentPath() *gnmi.Path {
+	return r.ParentPath
+}
+
+func (r *Resource) GetChildren() []*Resource {
+	return r.Children
+}
+
+func (r *Resource) AddChild(res *Resource)  {
+	r.Children = append(r.Children, res)
 }
 
 // GetHierResourceElement return the hierarchical resource element
@@ -146,7 +156,7 @@ func (r *Resource) GetActualSubResources() []*gnmi.Path {
 	paths := make([]*gnmi.Path, 0)
 	for _, subres := range r.SubResources {
 		paths = append(paths, &gnmi.Path{
-			Elem: findActualSubResourcePathElemHierarchyWithoutKeys(r, r.DependsOnPath, subres),
+			Elem: findActualSubResourcePathElemHierarchyWithoutKeys(r, r.ParentPath, subres),
 		})
 	}
 	return paths
@@ -252,7 +262,7 @@ func (r *Resource) GetRelativeGnmiPath() *gnmi.Path {
 // to provide consistencyw e introduced this method to provide a consistent result for paths
 // used mainly for leafrefs for now
 func (r *Resource) GetRelativeGnmiActualResourcePath() *gnmi.Path {
-	if r.DependsOn != nil {
+	if r.Parent != nil {
 		return r.Path
 	}
 	actPath := *r.Path
@@ -263,7 +273,7 @@ func (r *Resource) GetRelativeGnmiActualResourcePath() *gnmi.Path {
 // GetPath returns the relative Path of the resource
 // For the root resources we need to strip the first entry of the path since srl uses some prefix entry
 func (r *Resource) GetPath() *gnmi.Path {
-	if r.DependsOn != nil {
+	if r.Parent != nil {
 		return r.Path
 	}
 	// we need to remove the first entry of the PathElem of the root resource
@@ -305,7 +315,7 @@ func (r *Resource) GetAbsoluteName() string {
 // used mainly for leafrefs for now
 func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
 	}
 
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
@@ -314,7 +324,7 @@ func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 
 func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
 	}
 
 	return actPath
@@ -322,7 +332,7 @@ func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
 
 func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
 	}
 
 	return r.parser.GnmiPathToXPath(actPath, false)
@@ -330,7 +340,7 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 
 func (r *Resource) GetAbsoluteXPath() *string {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithoutKeys(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
 	}
 
 	return r.parser.GnmiPathToXPath(actPath, true)
@@ -338,7 +348,7 @@ func (r *Resource) GetAbsoluteXPath() *string {
 
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithKeys(r, r.DependsOnPath),
+		Elem: findActualPathElemHierarchyWithKeys(r, r.ParentPath),
 	}
 	// the first element is a dummy container we can skip
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
@@ -354,8 +364,8 @@ func (r *Resource) GetExcludeRelativeXPath() []string {
 }
 
 func findPathElemHierarchy(r *Resource) []*gnmi.PathElem {
-	if r.DependsOn != nil {
-		fp := findPathElemHierarchy(r.DependsOn)
+	if r.Parent != nil {
+		fp := findPathElemHierarchy(r.Parent)
 		fp = append(fp, r.Path.Elem...)
 		return fp
 	}
@@ -376,8 +386,8 @@ func (r *Resource) GetAbsoluteLevel() int {
 
 func (r *Resource) GetHierarchicalElements() []*HeInfo {
 	he := make([]*HeInfo, 0)
-	if r.DependsOn != nil {
-		he = findHierarchicalElements(r.DependsOn, he)
+	if r.Parent != nil {
+		he = findHierarchicalElements(r.Parent, he)
 	}
 	return he
 }
@@ -463,8 +473,8 @@ func findHierarchicalElements(r *Resource, he []*HeInfo) []*HeInfo {
 		Type: r.RootContainerEntry.Type,
 	}
 	he = append(he, h)
-	if r.DependsOn != nil {
-		he = findHierarchicalElements(r.DependsOn, he)
+	if r.Parent != nil {
+		he = findHierarchicalElements(r.Parent, he)
 	}
 	return he
 }
@@ -479,9 +489,9 @@ type HeInfo struct {
 // to find the full resourcePath with all Path Elements but does not try to find the keys
 // used before the generator is run or during the generator
 func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path, subp *gnmi.Path) []*gnmi.PathElem {
-	if r.DependsOn != nil {
+	if r.Parent != nil {
 		// we first go to the root of the resource to find the path
-		fp := findActualSubResourcePathElemHierarchyWithoutKeys(r.DependsOn, r.DependsOnPath, r.DependsOnPath)
+		fp := findActualSubResourcePathElemHierarchyWithoutKeys(r.Parent, r.ParentPath, r.ParentPath)
 		pathElem := subp.GetElem()
 		fp = append(fp, pathElem...)
 		return fp
@@ -497,9 +507,9 @@ func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Pat
 // to find the full resourcePath with all Path Elements but does not try to find the keys
 // used before the generator is run or during the generator
 func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
-	if r.DependsOn != nil {
+	if r.Parent != nil {
 		// we first go to the root of the resource to find the path
-		fp := findActualPathElemHierarchyWithoutKeys(r.DependsOn, r.DependsOnPath)
+		fp := findActualPathElemHierarchyWithoutKeys(r.Parent, r.ParentPath)
 		pathElem := r.Path.GetElem()
 		fp = append(fp, pathElem...)
 		return fp
@@ -515,9 +525,9 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 // to find the full resourcePath with all Path Elements (Names, Keys)
 // used after the generator is run, to get the full path including the keys of the pathElements
 func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
-	if r.DependsOn != nil {
+	if r.Parent != nil {
 		// we first go to the root of the resource to find the path
-		fp := findActualPathElemHierarchyWithKeys(r.DependsOn, r.DependsOnPath)
+		fp := findActualPathElemHierarchyWithKeys(r.Parent, r.ParentPath)
 		pathElem := getResourcePathElemWithKeys(r, r.Path)
 		fp = append(fp, pathElem...)
 		return fp
