@@ -89,6 +89,24 @@ func (c *Container) GetChildren() []string {
 	return n
 }
 
+func (c *Container) GetSlicedFullName() []string {
+	if c.Prev != nil {
+		s := getRecursiveSlicedName(c.Prev)
+		s = append(s, c.Name)
+		return s
+	}
+	return []string{c.Name}
+}
+
+func getRecursiveSlicedName(c *Container) []string {
+	if c.Prev != nil {
+		s := getRecursiveSlicedName(c.Prev)
+		s = append(s, c.Name)
+		return s
+	}
+	return []string{c.Name}
+}
+
 func (c *Container) GetFullName() string {
 	if c.Prev != nil {
 		return getRecursiveName(c.Prev) + "-" + c.Name
