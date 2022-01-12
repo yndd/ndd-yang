@@ -60,11 +60,13 @@ func WithXPath(p string) Option {
 	}
 }
 
+/*
 func WithParent(d *Resource) Option {
 	return func(r *Resource) {
 		r.Parent = d
 	}
 }
+*/
 
 func WithParentPath(p *gnmi.Path) Option {
 	return func(r *Resource) {
@@ -90,11 +92,11 @@ func WithSubResources(s []*gnmi.Path) Option {
 	}
 }
 
-func NewResource(parent *Resource,opts ...Option) *Resource {
+func NewResource(parent *Resource, opts ...Option) *Resource {
 	r := &Resource{
-		parser: parser.NewParser(),
-		Path:   new(gnmi.Path),
-		//Parent:          new(Resource),
+		parser:               parser.NewParser(),
+		Path:                 new(gnmi.Path),
+		Parent:               parent,
 		Excludes:             make([]*gnmi.Path, 0),
 		RootContainerEntry:   nil,
 		Container:            nil,
@@ -137,7 +139,7 @@ func (r *Resource) GetChildren() []*Resource {
 	return r.Children
 }
 
-func (r *Resource) AddChild(res *Resource)  {
+func (r *Resource) AddChild(res *Resource) {
 	r.Children = append(r.Children, res)
 }
 
@@ -310,7 +312,7 @@ func (r *Resource) GetAbsoluteName() string {
 	})
 	if absoluteName == "" {
 		return "root"
-	} 
+	}
 	return absoluteName
 }
 
