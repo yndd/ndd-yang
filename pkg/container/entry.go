@@ -182,7 +182,7 @@ func (e *Entry) GetDefault() string {
 }
 
 func (e *Entry) GetKey() []string {
-	if e.Key == "" {
+	if e.Key == nil || e.Key == "" {
 		return nil
 	}
 	return strings.Split(e.Key, " ")

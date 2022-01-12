@@ -268,7 +268,11 @@ func (r *Resource) CloseFile() error {
 }
 
 func (r *Resource) ResourceLastElement() string {
-	return r.Path.GetElem()[len(r.Path.GetElem())-1].GetName()
+	if len(r.Path.GetElem()) > 0 {
+		return r.Path.GetElem()[len(r.Path.GetElem())-1].GetName()
+	}
+	return ""
+	
 }
 
 func (r *Resource) GetRelativeGnmiPath() *gnmi.Path {
