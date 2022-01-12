@@ -272,7 +272,7 @@ func (r *Resource) ResourceLastElement() string {
 		return r.Path.GetElem()[len(r.Path.GetElem())-1].GetName()
 	}
 	return ""
-	
+
 }
 
 func (r *Resource) GetRelativeGnmiPath() *gnmi.Path {
@@ -379,8 +379,12 @@ func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 		Elem: findActualPathElemHierarchyWithKeys(r, r.ParentPath),
 	}
 	// the first element is a dummy container we can skip
-	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
-	return actPath
+	if len(actPath.GetElem()) > 0 {
+		actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
+		return actPath
+	}
+	return &gnmi.Path{}
+
 }
 
 func (r *Resource) GetExcludeRelativeXPath() []string {
