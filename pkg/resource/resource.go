@@ -338,9 +338,12 @@ func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 	actPath := &gnmi.Path{
 		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
 	}
+	if len(actPath.GetElem()) != 0 {
+		actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
+		return actPath
+	}
+	return &gnmi.Path{}
 
-	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
-	return actPath
 }
 
 func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
