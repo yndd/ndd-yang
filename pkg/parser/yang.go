@@ -173,6 +173,9 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	if e.ListAttr != nil {
 		entry.ListAttr = e.ListAttr
+		if entry.ListAttr.MaxElements == 18446744073709551615 {
+			entry.ListAttr.MaxElements = 1024
+		}
 	}
 
 	if e.Type != nil {
