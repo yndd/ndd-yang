@@ -170,7 +170,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	}
 	// update the Type to reflect the reference to the proper struct
 	if entry.Prev != nil {
-		entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName() + "-" + e.Name)
+		entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName() + "-" + strings.ReplaceAll(e.Name, "-", ""))
 	}
 
 	if e.ListAttr != nil {
