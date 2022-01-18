@@ -123,6 +123,10 @@ func NewResource(parent *Resource, opts ...Option) *Resource {
 	return r
 }
 
+func (r *Resource) SetRootContainerEntry(e *container.Entry) {
+	r.RootContainerEntry = e
+}
+
 func (r *Resource) GetResourcePath() *gnmi.Path {
 	return r.Path
 }
@@ -141,10 +145,6 @@ func (r *Resource) GetChildren() []*Resource {
 
 func (r *Resource) GetRootContainerEntry() *container.Entry {
 	return r.RootContainerEntry
-}
-
-func (r *Resource) SetRootContainerEntry(e *container.Entry) {
-	r.RootContainerEntry = e
 }
 
 func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
@@ -273,15 +273,30 @@ func (r *Resource) GetRelativeXPath() *string {
 }
 */
 
+/*
+func findPathElemHierarchy(r *Resource) []*gnmi.PathElem {
+	if r.Parent != nil {
+		fp := findPathElemHierarchy(r.Parent)
+		fp = append(fp, r.Path.Elem...)
+		return fp
+	}
+	return r.Path.GetElem()
+}
+*/
+
 func (r *Resource) GetAbsoluteName() string {
+	/*
 	e := findPathElemHierarchy(r)
 	// trim the first element since nokia yang comes with a aprefix
 	if len(e) > 1 {
 		e = e[1:]
 	}
+	*/
+	// excludes the first element from the path
+	pathElem := r.GetAbsoluteGnmiPathFromSource().GetElem()
 	// we remove the "-" from the element names otherwise we get a name clash when we parse all the Yang information
 	newElem := make([]*gnmi.PathElem, 0)
-	for _, entry := range e {
+	for _, entry := range pathElem {
 		// used to avoid a clash with protocol bgp evpn and protocol bgp-evpn
 		// by removing the dash we get a difference when mapping to uppercamelcase
 		name := strings.ReplaceAll(entry.Name, "-", "")
@@ -414,14 +429,7 @@ func (r *Resource) GetExcludeRelativeXPath() []string {
 	return e
 }
 
-func findPathElemHierarchy(r *Resource) []*gnmi.PathElem {
-	if r.Parent != nil {
-		fp := findPathElemHierarchy(r.Parent)
-		fp = append(fp, r.Path.Elem...)
-		return fp
-	}
-	return r.Path.GetElem()
-}
+
 
 /*
 func (r *Resource) GetAbsoluteLevel() int {
