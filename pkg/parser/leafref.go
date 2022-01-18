@@ -88,8 +88,8 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 	default:
 		switch p.GetTypeKind(e) {
 		case "leafref":
-			fmt.Printf("LeafRef Entry: %#v \n", e)
-			fmt.Printf("LeafRef: %v \n", e.Node.Statement().NName())
+			//fmt.Printf("LeafRef Entry: %#v \n", e)
+			//fmt.Printf("LeafRef: %v \n", e.Node.Statement().NName())
 			splitData := strings.Split(e.Node.Statement().NName(), "\n")
 			var path string
 			var elem string
@@ -103,7 +103,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 					s = strings.ReplaceAll(s, "\"", "")
 					s = strings.ReplaceAll(s, " ", "")
 					s = strings.ReplaceAll(s, "\t", "")
-					fmt.Printf("LeafRef Path: %s\n", s)
+					//fmt.Printf("LeafRef Path: %s\n", s)
 
 					// split the leafref per "/" and split the element and key from the path
 					// last element is the key
@@ -149,7 +149,7 @@ func (p *Parser) ProcessLeafRefGnmi(e *yang.Entry, resfullPath string, activeRes
 
 				}
 			}
-			fmt.Printf("LeafRef Path: %s, Elem: %s, Key: %s\n", path, elem, k)
+			//fmt.Printf("LeafRef Path: %s, Elem: %s, Key: %s\n", path, elem, k)
 			remotePath := p.XpathToGnmiPath(path, 0)
 			p.AppendElemInGnmiPath(remotePath, elem, []string{k})
 

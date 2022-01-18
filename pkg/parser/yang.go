@@ -84,6 +84,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	entry.NameSpace = e.Namespace().Name
 
+	/*
 	if e.Name == "port-binding" {
 		fmt.Printf("port-binding: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
 
@@ -94,6 +95,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 		fmt.Printf("instance key: %#v\n", e.Key)
 
 	}
+	*/
 
 	// process mandatory attribute
 	switch e.Mandatory {
@@ -111,7 +113,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	// keys come from the previous container so we need to check the elements against these key(s)
 	for _, containerKey := range containerKeys {
 		if e.Name == containerKey {
-			fmt.Printf("container key match: %#v\n", e.Name)
+			//fmt.Printf("container key match: %#v\n", e.Name)
 			entry.Mandatory = true
 			entry.KeyBool = true
 		}
@@ -228,7 +230,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 			default:
 				entry.Default = e.Default
 			}
-			fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
+			//fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
 		}
 
 	}
@@ -269,10 +271,12 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	// key handling
 	entry.Key = e.Key
 
+	/*
 	if e.Name == "instance" {
 		fmt.Printf("instance key: %#v\n", entry)
 
 	}
+	*/
 
 	/*
 		if entry.Mandatory {

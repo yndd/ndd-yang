@@ -107,7 +107,7 @@ func (p *Parser) FindResourceDeltaGnmi(updatesx1, updatesx2 []*gnmi.Update, log 
 				}
 				if len(patch) != 0 {
 					// resource is not up to date
-					fmt.Printf("Patch: %v\n", patch)
+					//fmt.Printf("Patch: %v\n", patch)
 					for _, operation := range patch {
 
 						v, err := json.Marshal(operation.Value)
