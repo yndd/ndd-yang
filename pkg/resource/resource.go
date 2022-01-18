@@ -577,7 +577,7 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 */
 
 // GetActualGnmiFullPathWithKeys goes to the root and trickless back to get the full path with the 
-// keys
+// keys; uses the containers to figure out the path
 // used in ndd-builder
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 	actPath := &gnmi.Path{
