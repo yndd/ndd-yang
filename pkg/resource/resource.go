@@ -258,6 +258,7 @@ func (r *Resource) GetExternalLeafRef() []*parser.LeafRefGnmi {
 	return r.ExternalLeafRefs
 }
 
+// GetResourceNameWithPrefix -> nddbuilder
 func (r *Resource) GetResourceNameWithPrefix(prefix string) string {
 	return strcase.UpperCamelCase(prefix + "-" + r.GetAbsoluteName())
 }
@@ -324,9 +325,11 @@ func (r *Resource) GetAbsoluteName() string {
 	// we remove the "-" from the element names otherwise we get a name clash when we parse all the Yang information
 	newElem := make([]*gnmi.PathElem, 0)
 	for _, entry := range e {
-		//name := strings.ReplaceAll(entry.Name, "-", "")
+		// used to avoid a clash with protocol bgp evpn and protocol bgp-evpn
+		// by removing the dash we get a difference when mapping to uppercamelcase
+		name := strings.ReplaceAll(entry.Name, "-", "")
 		//name = strings.ReplaceAll(name, "ethernetsegment", "esi")
-		name := strings.ReplaceAll(entry.Name, "ethernetsegment", "esi")
+		name = strings.ReplaceAll(name, "ethernetsegment", "esi")
 		pathElem := &gnmi.PathElem{
 			Name: name,
 			Key:  entry.GetKey(),
