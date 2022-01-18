@@ -143,6 +143,10 @@ func (r *Resource) GetRootContainerEntry() *container.Entry {
 	return r.RootContainerEntry
 }
 
+func (r *Resource) SetRootContainerEntry(e *container.Entry) {
+	r.RootContainerEntry = e
+}
+
 func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
 	return r.LocalLeafRefs
 }
@@ -195,15 +199,11 @@ func (r *Resource) GetActualSubResources() []*gnmi.Path {
 }
 */
 
-
-
 /*
 func (r *Resource) GetHierResourceElements() *HierResourceElements {
 	return r.HierResourceElements
 }
 */
-
-
 
 // GetResourceNameWithPrefix -> nddbuilder
 func (r *Resource) GetResourceNameWithPrefix(prefix string) string {
