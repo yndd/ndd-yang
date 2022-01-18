@@ -58,7 +58,7 @@ type Option func(g *Resource)
 
 func WithXPath(p string) Option {
 	return func(r *Resource) {
-		r.Path = r.parser.XpathToGnmiPath(p, 0)
+		r.Path = yparser.Xpath2GnmiPath(p, 0)
 	}
 }
 
@@ -375,19 +375,25 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 	return r.parser.GnmiPathToXPath(actPath, false)
 }
 
-func (r *Resource) GetAbsoluteXPath() *string {
-	fmt.Printf("GetAbsoluteXPath: parentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
-	if len(r.ParentPath.GetElem()) > 0 {
-		return r.parser.GnmiPathToXPath(r.ParentPath, true)
-	} else {
-		return r.parser.GnmiPathToXPath(r.Path, true)
+func getActualPath(r *Resource, sp *gnmi.Path) []*gnmi.PathElem {
+	if r.Parent != nil {
+		pathElem := getActualPath(r, r.Path)
+		fmt.Printf("fp1: %v\n", pathElem)
+		pe := r.Path.GetElem()
+		pathElem = append(pathElem, pe...)
+		return pathElem
 	}
-	/*
-		actPath := &gnmi.Path{
-			Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
-		}
-		return r.parser.GnmiPathToXPath(actPath, true)
-	*/
+	pathElem := r.Path.GetElem()
+	fmt.Printf("getActualPath, pathElem: %v\n", pathElem)
+	return pathElem
+}
+
+func (r *Resource) GetAbsoluteXPath() *string {
+	actPath := &gnmi.Path{
+		Elem: getActualPath(r, r.Path),
+	}
+	return r.parser.GnmiPathToXPath(actPath, true)
+
 }
 
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
