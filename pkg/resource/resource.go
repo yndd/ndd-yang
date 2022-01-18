@@ -407,10 +407,10 @@ func (r *Resource) GetAbsoluteGnmiPathFromSource() *gnmi.Path {
 	return &gnmi.Path{}
 }
 
-/*
+
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithKeys(r, r.ParentPath),
+		Elem: findActualPathElemHierarchyWithKeys(r, r.GetParentPath()),
 	}
 	// the first element is a dummy container we can skip
 	if len(actPath.GetElem()) > 0 {
@@ -419,7 +419,7 @@ func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 	}
 	return &gnmi.Path{}
 }
-*/
+
 
 func (r *Resource) GetExcludeRelativeXPath() []string {
 	e := make([]string, 0)
@@ -575,7 +575,7 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 	if r.Parent != nil {
 		//fmt.Printf("findActualPathElemHierarchyWithoutKeys: parentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
 		// we first go to the root of the resource to find the path
-		fp := findActualPathElemHierarchyWithoutKeys(r.Parent, r.ParentPath)
+		fp := findActualPathElemHierarchyWithoutKeys(r.Parent, r.GetParentPath())
 		pathElem := r.Path.GetElem()
 		fp = append(fp, pathElem...)
 		return fp
@@ -589,14 +589,15 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 }
 */
 
-/*
+
+
 // findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements (Names, Keys)
 // used after the generator is run, to get the full path including the keys of the pathElements
 func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if r.Parent != nil {
 		// we first go to the root of the resource to find the path
-		fp := findActualPathElemHierarchyWithKeys(r.Parent, r.ParentPath)
+		fp := findActualPathElemHierarchyWithKeys(r.Parent, r.GetParentPath())
 		pathElem := getResourcePathElemWithKeys(r, r.Path)
 		fp = append(fp, pathElem...)
 		return fp
@@ -604,9 +605,9 @@ func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.Pat
 	pathElem := getResourcePathElemWithKeys(r, dp)
 	return pathElem
 }
-*/
 
-/*
+
+
 func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	// align the path Element with the dependency Path
 	nextContainer := &container.Container{}
@@ -636,7 +637,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 				}
 				pe.Key[r.RootContainerEntry.Key] = r.RootContainerEntry.Type
 			}
-			nextContainer = r.Container
+			nextContainer = r.RootContainer
 		case i > len(r.Path.GetElem())-1:
 			if nextContainer != nil {
 				//fmt.Printf("       Container Entries: %#v\n", nextContainer.Entries)
@@ -663,7 +664,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	}
 	return pathElem
 }
-*/
+
 
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
