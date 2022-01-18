@@ -407,7 +407,9 @@ func (r *Resource) GetAbsoluteGnmiPathFromSource() *gnmi.Path {
 	return &gnmi.Path{}
 }
 
-
+// GetActualGnmiFullPathWithKeys goes to the root and trickless back to get the full path with the 
+// keys
+// used in ndd-builder
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 	actPath := &gnmi.Path{
 		Elem: findActualPathElemHierarchyWithKeys(r, r.GetParentPath()),
@@ -594,6 +596,7 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 // findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements (Names, Keys)
 // used after the generator is run, to get the full path including the keys of the pathElements
+// used in ndd-builder
 func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if r.Parent != nil {
 		// we first go to the root of the resource to find the path
@@ -607,7 +610,7 @@ func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.Pat
 }
 
 
-
+// used in ndd-builder
 func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	// align the path Element with the dependency Path
 	nextContainer := &container.Container{}
