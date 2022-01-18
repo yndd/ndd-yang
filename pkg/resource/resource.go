@@ -26,6 +26,7 @@ import (
 	"github.com/stoewer/go-strcase"
 	"github.com/yndd/ndd-yang/pkg/container"
 	"github.com/yndd/ndd-yang/pkg/parser"
+	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Resource struct {
@@ -35,6 +36,7 @@ type Resource struct {
 	ActualPath           *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with Parent
 	Parent               *Resource                      // resource dependency
 	ParentPath           *gnmi.Path                     // the full path of the parent
+	SubDepPath           []string                       // the subpath the resource is dependent on w/o the last element
 	Children             []*Resource                    // the children of the resource
 	Excludes             []*gnmi.Path                   // relative from the the resource
 	FileName             string                         // the filename the resource is using to render out the config
@@ -92,11 +94,18 @@ func WithSubResources(s []*gnmi.Path) Option {
 	}
 }
 
+func WithSubDepPath(s []string) Option {
+	return func(r *Resource) {
+		r.SubDepPath = s
+	}
+}
+
 func NewResource(parent *Resource, opts ...Option) *Resource {
 	r := &Resource{
 		parser:               parser.NewParser(),
 		Path:                 new(gnmi.Path),
 		Parent:               parent,
+		SubDepPath:           make([]string, 0),
 		Excludes:             make([]*gnmi.Path, 0),
 		RootContainerEntry:   nil,
 		Container:            nil,
@@ -367,6 +376,7 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 }
 
 func (r *Resource) GetAbsoluteXPath() *string {
+	fmt.Printf("GetAbsoluteXPath: paentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
 	actPath := &gnmi.Path{
 		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
 	}
@@ -540,6 +550,7 @@ func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Pat
 // used before the generator is run or during the generator
 func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if r.Parent != nil {
+		fmt.Printf("findActualPathElemHierarchyWithoutKeys: parentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
 		// we first go to the root of the resource to find the path
 		fp := findActualPathElemHierarchyWithoutKeys(r.Parent, r.ParentPath)
 		pathElem := r.Path.GetElem()
@@ -550,6 +561,7 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 	if len(dp.GetElem()) == 0 {
 		pathElem = r.Path.GetElem()
 	}
+	fmt.Printf("findActualPathElemHierarchyWithoutKeys, pathElem: %v\n", pathElem)
 	return pathElem
 }
 
