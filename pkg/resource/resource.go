@@ -17,37 +17,37 @@ limitations under the License.
 package resource
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/stoewer/go-strcase"
+	"github.com/yndd/ndd-runtime/pkg/utils"
 	"github.com/yndd/ndd-yang/pkg/container"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Resource struct {
-	Module               string                         // Yang Module name of the resource
-	parser               *parser.Parser                 // calls a library for parsing JSON/YANG elements
-	Path                 *gnmi.Path                     // relative path from the resource; the absolute path is assembled using the resurce hierarchy with Parent
-	ActualPath           *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resurce hierarchy with Parent
-	Parent               *Resource                      // resource dependency
-	ParentPath           *gnmi.Path                     // the full path of the parent
-	SubDepPath           []string                       // the subpath the resource is dependent on w/o the last element
-	Children             []*Resource                    // the children of the resource
-	Excludes             []*gnmi.Path                   // relative from the the resource
-	FileName             string                         // the filename the resource is using to render out the config
-	ResFile              *os.File                       // the file reference for writing the resource file
-	RootContainerEntry   *container.Entry               // this is the root element which is used to reference the hierarchical resource information
-	Container            *container.Container           // root container of the resource
-	LastContainerPtr     *container.Container           // pointer to the last container we process
-	ContainerList        []*container.Container         // List of all containers within the resource
-	ContainerLevel       int                            // the current container Level when processing the yang entries
-	ContainerLevelKeys   map[int][]*container.Container // the current container Level key list
-	LocalLeafRefs        []*parser.LeafRefGnmi
-	ExternalLeafRefs     []*parser.LeafRefGnmi
+	Parent   *Resource   // resource parent
+	Children []*Resource // the children of the resource
+	Module   string      // Yang Module name of the resource
+	//parser               *parser.Parser                 // calls a library for parsing JSON/YANG elements
+	Path *gnmi.Path // relative path from the resource; the absolute path is assembled using the resurce hierarchy with Parent
+	//ActualPath         *gnmi.Path                     // ActualPath is a relative path from the resource with the actual key information; the absolute path is assembled using the resource hierarchy with Parent
+
+	//ParentPath         *gnmi.Path                     // the full path of the parent
+
+	Excludes []*gnmi.Path // relative from the the resource
+	//FileName           string                         // the filename the resource is using to render out the config
+	//ResFile            *os.File                       // the file reference for writing the resource file
+	RootContainerEntry *container.Entry       // this is the root element which is used to reference the hierarchical resource information
+	RootContainer      *container.Container   // root container of the resource
+	//LastContainerPtr   *container.Container   // pointer to the last container we process
+	ContainerList      []*container.Container // List of all containers within the resource
+	ContainerLevel     int                            // the current container Level when processing the yang entries using ygen
+	ContainerLevelKeys map[int][]*container.Container // the current container Level key list
+	LocalLeafRefs    []*parser.LeafRefGnmi
+	ExternalLeafRefs []*parser.LeafRefGnmi
 	//HierResourceElements *HierResourceElements // this defines the hierarchical elements the resource is dependent upon (map[string]interface -> map[string]map[string]map[string]interface{})
 	//SubResources         []*gnmi.Path          // for the fine grain reosurce allocation we sometimes see we need subresources: e.g. ipam has rir and instance within the parent
 }
@@ -69,15 +69,17 @@ func WithParent(d *Resource) Option {
 }
 */
 
+/*
 func WithParentPath(p *gnmi.Path) Option {
 	return func(r *Resource) {
 		r.ParentPath = p
 	}
 }
+*/
 
 func WithExclude(p string) Option {
 	return func(r *Resource) {
-		r.Excludes = append(r.Excludes, r.parser.XpathToGnmiPath(p, 0))
+		r.Excludes = append(r.Excludes, yparser.Xpath2GnmiPath(p, 0))
 	}
 }
 
@@ -95,36 +97,29 @@ func WithSubResources(s []*gnmi.Path) Option {
 }
 */
 
-func WithSubDepPath(s []string) Option {
-	return func(r *Resource) {
-		r.SubDepPath = s
-	}
-}
-
 func NewResource(parent *Resource, opts ...Option) *Resource {
 	r := &Resource{
-		parser:               parser.NewParser(),
-		Path:                 new(gnmi.Path),
-		Parent:               parent,
-		SubDepPath:           make([]string, 0),
-		Excludes:             make([]*gnmi.Path, 0),
-		RootContainerEntry:   nil,
-		Container:            nil,
-		LastContainerPtr:     nil,
-		ContainerList:        make([]*container.Container, 0),
-		ContainerLevel:       0,
-		ContainerLevelKeys:   make(map[int][]*container.Container),
-		LocalLeafRefs:        make([]*parser.LeafRefGnmi, 0),
-		ExternalLeafRefs:     make([]*parser.LeafRefGnmi, 0),
+		//parser:               parser.NewParser(),
+		Path:               new(gnmi.Path),
+		Parent:             parent,
+		Excludes:           make([]*gnmi.Path, 0),
+		RootContainerEntry: nil,
+		RootContainer:      nil,
+		//LastContainerPtr:   nil,
+		ContainerList:      make([]*container.Container, 0),
+		ContainerLevel:     0,
+		ContainerLevelKeys: make(map[int][]*container.Container),
+		LocalLeafRefs:    make([]*parser.LeafRefGnmi, 0),
+		ExternalLeafRefs: make([]*parser.LeafRefGnmi, 0),
 		//HierResourceElements: NewHierResourceElements(),
-		Children:             make([]*Resource, 0),
+		Children: make([]*Resource, 0),
 	}
 
 	for _, o := range opts {
 		o(r)
 	}
 
-	r.ContainerLevelKeys[0] = make([]*container.Container, 0)
+	//r.ContainerLevelKeys[0] = make([]*container.Container, 0)
 
 	return r
 }
@@ -141,9 +136,11 @@ func (r *Resource) GetParent() *Resource {
 	return r.Parent
 }
 
+/*
 func (r *Resource) GetParentPath() *gnmi.Path {
 	return r.ParentPath
 }
+*/
 
 func (r *Resource) GetChildren() []*Resource {
 	return r.Children
@@ -271,6 +268,7 @@ func (r *Resource) GetResourceNameWithPrefix(prefix string) string {
 	return strcase.UpperCamelCase(prefix + "-" + r.GetAbsoluteName())
 }
 
+/*
 func (r *Resource) AssignFileName(prefix, suffix string) {
 	r.FileName = prefix + "-" + strcase.KebabCase(r.GetAbsoluteName()) + suffix
 }
@@ -283,6 +281,7 @@ func (r *Resource) CreateFile(dir, subdir1, subdir2 string) (err error) {
 func (r *Resource) CloseFile() error {
 	return r.ResFile.Close()
 }
+*/
 
 func (r *Resource) ResourceLastElement() string {
 	if len(r.Path.GetElem()) > 0 {
@@ -321,7 +320,7 @@ func (r *Resource) GetPath() *gnmi.Path {
 }
 
 func (r *Resource) GetRelativeXPath() *string {
-	return r.parser.GnmiPathToXPath(r.Path, true)
+	return utils.StringPtr(yparser.GnmiPath2XPath(r.Path, true))
 }
 
 func (r *Resource) GetAbsoluteName() string {
@@ -345,7 +344,7 @@ func (r *Resource) GetAbsoluteName() string {
 		newElem = append(newElem, pathElem)
 	}
 	//fmt.Printf("PathELem: %v\n", newElem)
-	absoluteName := r.parser.GnmiPathToName(&gnmi.Path{
+	absoluteName := yparser.GnmiPathToName(&gnmi.Path{
 		Elem: newElem,
 	})
 	if absoluteName == "" {
@@ -354,6 +353,7 @@ func (r *Resource) GetAbsoluteName() string {
 	return absoluteName
 }
 
+/*
 // root resource have an additional entry in the path which is inconsistent with hierarchical resources
 // to provide consistency we introduced this method to provide a consistent result for paths
 // used mainly for leafrefs for now
@@ -368,6 +368,7 @@ func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 	return &gnmi.Path{}
 
 }
+*/
 
 func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
 	actPath := &gnmi.Path{
@@ -382,13 +383,15 @@ func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
 	return actPath
 }
 
+/*
 func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 	actPath := &gnmi.Path{
 		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
 	}
 
-	return r.parser.GnmiPathToXPath(actPath, false)
+	return utils.StringPtr(yparser.GnmiPath2XPath(actPath, false))
 }
+*/
 
 func (r *Resource) getActualPath() []*gnmi.PathElem {
 	if r.Parent != nil {
@@ -405,10 +408,11 @@ func (r *Resource) GetAbsoluteXPath() *string {
 	actPath := &gnmi.Path{
 		Elem: r.getActualPath(),
 	}
-	return r.parser.GnmiPathToXPath(actPath, true)
+	return utils.StringPtr(yparser.GnmiPath2XPath(actPath, true))
 
 }
 
+/*
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 	actPath := &gnmi.Path{
 		Elem: findActualPathElemHierarchyWithKeys(r, r.ParentPath),
@@ -419,13 +423,13 @@ func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
 		return actPath
 	}
 	return &gnmi.Path{}
-
 }
+*/
 
 func (r *Resource) GetExcludeRelativeXPath() []string {
 	e := make([]string, 0)
 	for _, p := range r.Excludes {
-		e = append(e, *r.parser.GnmiPathToXPath(p, true))
+		e = append(e, yparser.GnmiPath2XPath(p, true))
 	}
 	return e
 }
@@ -447,9 +451,11 @@ func (r *Resource) SetRootContainerEntry(e *container.Entry) {
 	r.RootContainerEntry = e
 }
 
+/*
 func (r *Resource) GetAbsoluteLevel() int {
 	return len(r.GetAbsoluteGnmiActualResourcePath().GetElem())
 }
+*/
 
 func (r *Resource) GetHierarchicalElements() []*HeInfo {
 	he := make([]*HeInfo, 0)
@@ -572,6 +578,7 @@ func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Pat
 }
 */
 
+/*
 // findActualPathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements but does not try to find the keys
 // used before the generator is run or during the generator
@@ -591,7 +598,9 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 	//fmt.Printf("findActualPathElemHierarchyWithoutKeys, pathElem: %v\n", pathElem)
 	return pathElem
 }
+*/
 
+/*
 // findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements (Names, Keys)
 // used after the generator is run, to get the full path including the keys of the pathElements
@@ -606,7 +615,9 @@ func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.Pat
 	pathElem := getResourcePathElemWithKeys(r, dp)
 	return pathElem
 }
+*/
 
+/*
 func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	// align the path Element with the dependency Path
 	nextContainer := &container.Container{}
@@ -663,3 +674,4 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	}
 	return pathElem
 }
+*/

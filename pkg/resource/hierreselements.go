@@ -16,6 +16,7 @@ limitations under the License.
 
 package resource
 
+/*
 import (
 	"strings"
 )
@@ -57,3 +58,4 @@ func addHierResourceElement(h map[string]interface{}, e []string) map[string]int
 	}
 	return h
 }
+*/
