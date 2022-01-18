@@ -375,9 +375,9 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 	return r.parser.GnmiPathToXPath(actPath, false)
 }
 
-func getActualPath(r *Resource, sp *gnmi.Path) []*gnmi.PathElem {
+func getActualPath(r *Resource) []*gnmi.PathElem {
 	if r.Parent != nil {
-		pathElem := getActualPath(r, r.Path)
+		pathElem := getActualPath(r)
 		fmt.Printf("fp1: %v\n", pathElem)
 		pe := r.Path.GetElem()
 		pathElem = append(pathElem, pe...)
@@ -390,7 +390,7 @@ func getActualPath(r *Resource, sp *gnmi.Path) []*gnmi.PathElem {
 
 func (r *Resource) GetAbsoluteXPath() *string {
 	actPath := &gnmi.Path{
-		Elem: getActualPath(r, r.Path),
+		Elem: getActualPath(r),
 	}
 	return r.parser.GnmiPathToXPath(actPath, true)
 
