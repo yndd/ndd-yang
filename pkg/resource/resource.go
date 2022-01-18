@@ -21,7 +21,6 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/stoewer/go-strcase"
-	"github.com/yndd/ndd-runtime/pkg/utils"
 	"github.com/yndd/ndd-yang/pkg/container"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yparser"
@@ -40,14 +39,14 @@ type Resource struct {
 	Excludes []*gnmi.Path // relative from the the resource
 	//FileName           string                         // the filename the resource is using to render out the config
 	//ResFile            *os.File                       // the file reference for writing the resource file
-	RootContainerEntry *container.Entry       // this is the root element which is used to reference the hierarchical resource information
-	RootContainer      *container.Container   // root container of the resource
+	RootContainerEntry *container.Entry     // this is the root element which is used to reference the hierarchical resource information
+	RootContainer      *container.Container // root container of the resource
 	//LastContainerPtr   *container.Container   // pointer to the last container we process
-	ContainerList      []*container.Container // List of all containers within the resource
+	ContainerList      []*container.Container         // List of all containers within the resource
 	ContainerLevel     int                            // the current container Level when processing the yang entries using ygen
 	ContainerLevelKeys map[int][]*container.Container // the current container Level key list
-	LocalLeafRefs    []*parser.LeafRefGnmi
-	ExternalLeafRefs []*parser.LeafRefGnmi
+	LocalLeafRefs      []*parser.LeafRefGnmi
+	ExternalLeafRefs   []*parser.LeafRefGnmi
 	//HierResourceElements *HierResourceElements // this defines the hierarchical elements the resource is dependent upon (map[string]interface -> map[string]map[string]map[string]interface{})
 	//SubResources         []*gnmi.Path          // for the fine grain reosurce allocation we sometimes see we need subresources: e.g. ipam has rir and instance within the parent
 }
@@ -109,8 +108,8 @@ func NewResource(parent *Resource, opts ...Option) *Resource {
 		ContainerList:      make([]*container.Container, 0),
 		ContainerLevel:     0,
 		ContainerLevelKeys: make(map[int][]*container.Container),
-		LocalLeafRefs:    make([]*parser.LeafRefGnmi, 0),
-		ExternalLeafRefs: make([]*parser.LeafRefGnmi, 0),
+		LocalLeafRefs:      make([]*parser.LeafRefGnmi, 0),
+		ExternalLeafRefs:   make([]*parser.LeafRefGnmi, 0),
 		//HierResourceElements: NewHierResourceElements(),
 		Children: make([]*Resource, 0),
 	}
@@ -136,11 +135,20 @@ func (r *Resource) GetParent() *Resource {
 	return r.Parent
 }
 
-
-
-
 func (r *Resource) GetChildren() []*Resource {
 	return r.Children
+}
+
+func (r *Resource) GetRootContainerEntry() *container.Entry {
+	return r.RootContainerEntry
+}
+
+func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
+	return r.LocalLeafRefs
+}
+
+func (r *Resource) GetExternalLeafRef() []*parser.LeafRefGnmi {
+	return r.ExternalLeafRefs
 }
 
 func (r *Resource) GetParentResource() string {
@@ -187,64 +195,7 @@ func (r *Resource) GetActualSubResources() []*gnmi.Path {
 }
 */
 
-func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
-	// add key entries to local leafrefs
-	for _, llpElem := range ll.GetElem() {
-		for _, c := range r.ContainerList {
-			//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s\n", c.Name, llpElem.GetName())
-			if c.Name == llpElem.GetName() {
-				for _, e := range c.Entries {
-					//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s, ContainerEntryName: %s\n", c.Name, llpElem.GetName(), e.GetName())
-					if e.GetName() == llpElem.GetName() {
-						if len(e.GetKey()) != 0 {
-							for _, key := range e.GetKey() {
-								llpElem.Key = make(map[string]string)
-								llpElem.Key[key] = ""
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	r.LocalLeafRefs = append(r.LocalLeafRefs, &parser.LeafRefGnmi{
-		LocalPath:  ll,
-		RemotePath: rl,
-	})
-}
 
-func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
-	// add key entries to local leafrefs
-	entries := make([]*container.Entry, 0)
-	for i, llpElem := range ll.GetElem() {
-		if i == 0 {
-			for _, c := range r.ContainerList {
-				//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, ContainerName: %s\n", i, llpElem.GetName(), c.Name)
-				if c.Name == llpElem.GetName() {
-					entries = c.Entries
-				}
-			}
-		}
-		for _, e := range entries {
-			//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, EntryName: %s\n", i, llpElem.GetName(), e.GetName())
-			if e.GetName() == llpElem.GetName() {
-				if len(e.GetKey()) != 0 {
-					for _, key := range e.GetKey() {
-						llpElem.Key = make(map[string]string)
-						llpElem.Key[key] = ""
-					}
-				}
-				if e.Next != nil {
-					entries = e.Next.Entries
-				}
-			}
-		}
-	}
-	r.ExternalLeafRefs = append(r.ExternalLeafRefs, &parser.LeafRefGnmi{
-		LocalPath:  ll,
-		RemotePath: rl,
-	})
-}
 
 /*
 func (r *Resource) GetHierResourceElements() *HierResourceElements {
@@ -252,13 +203,7 @@ func (r *Resource) GetHierResourceElements() *HierResourceElements {
 }
 */
 
-func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
-	return r.LocalLeafRefs
-}
 
-func (r *Resource) GetExternalLeafRef() []*parser.LeafRefGnmi {
-	return r.ExternalLeafRefs
-}
 
 // GetResourceNameWithPrefix -> nddbuilder
 func (r *Resource) GetResourceNameWithPrefix(prefix string) string {
@@ -288,10 +233,13 @@ func (r *Resource) ResourceLastElement() string {
 
 }
 
+/*
 func (r *Resource) GetRelativeGnmiPath() *gnmi.Path {
 	return r.Path
 }
+*/
 
+/*
 // root resource have a additional entry in the path which is inconsistent with hierarchical resources
 // to provide consistencyw e introduced this method to provide a consistent result for paths
 // used mainly for leafrefs for now
@@ -303,7 +251,9 @@ func (r *Resource) GetRelativeGnmiActualResourcePath() *gnmi.Path {
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
 	return &actPath
 }
+*/
 
+/*
 // GetPath returns the relative Path of the resource
 // For the root resources we need to strip the first entry of the path since srl uses some prefix entry
 func (r *Resource) GetPath() *gnmi.Path {
@@ -315,10 +265,13 @@ func (r *Resource) GetPath() *gnmi.Path {
 	actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
 	return actPath
 }
+*/
 
+/*
 func (r *Resource) GetRelativeXPath() *string {
 	return utils.StringPtr(yparser.GnmiPath2XPath(r.Path, true))
 }
+*/
 
 func (r *Resource) GetAbsoluteName() string {
 	e := findPathElemHierarchy(r)
@@ -375,16 +328,16 @@ func (r *Resource) GetParentPath() *gnmi.Path {
 
 func (r *Resource) getParentPath() []*gnmi.PathElem {
 	if r.Parent != nil {
-		pathElem := r.Parent.getActualPath()
+		pathElem := r.Parent.getParentPath()
 		return pathElem
 	}
 	pathElem := r.Path.GetElem()
 	return pathElem
 }
 
-func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
+func (r *Resource) GetAbsolutePath() *gnmi.Path {
 	return &gnmi.Path{
-		Elem: r.getActualPath(),
+		Elem: r.getAbsolutePath(),
 	}
 	/*
 		actPath := &gnmi.Path{
@@ -405,9 +358,9 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 }
 */
 
-func (r *Resource) getActualPath() []*gnmi.PathElem {
+func (r *Resource) getAbsolutePath() []*gnmi.PathElem {
 	if r.Parent != nil {
-		pathElem := r.Parent.getActualPath()
+		pathElem := r.Parent.getAbsolutePath()
 		// add the local pathElem to the path
 		pe := r.Path.GetElem()
 		pathElem = append(pathElem, pe...)
@@ -417,12 +370,26 @@ func (r *Resource) getActualPath() []*gnmi.PathElem {
 	return pathElem
 }
 
-func (r *Resource) GetAbsoluteXPath() *string {
+/*
+func (r *Resource) GetAbsoluteXPath() string {
 	actPath := &gnmi.Path{
 		Elem: r.getActualPath(),
 	}
-	return utils.StringPtr(yparser.GnmiPath2XPath(actPath, true))
+	return yparser.GnmiPath2XPath(actPath, true)
+}
+*/
 
+// GetAbsoluteGnmiPathFromSource used for leafref validation in ygen
+func (r *Resource) GetAbsoluteGnmiPathFromSource() *gnmi.Path {
+	actPath := &gnmi.Path{
+		Elem: r.getAbsolutePath(),
+	}
+	// the first element is a dummy container we can skip
+	if len(actPath.GetElem()) > 0 {
+		actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
+		return actPath
+	}
+	return &gnmi.Path{}
 }
 
 /*
@@ -456,20 +423,13 @@ func findPathElemHierarchy(r *Resource) []*gnmi.PathElem {
 	return r.Path.GetElem()
 }
 
-func (r *Resource) GetRootContainerEntry() *container.Entry {
-	return r.RootContainerEntry
-}
-
-func (r *Resource) SetRootContainerEntry(e *container.Entry) {
-	r.RootContainerEntry = e
-}
-
 /*
 func (r *Resource) GetAbsoluteLevel() int {
 	return len(r.GetAbsoluteGnmiActualResourcePath().GetElem())
 }
 */
 
+/*
 func (r *Resource) GetHierarchicalElements() []*HeInfo {
 	he := make([]*HeInfo, 0)
 	if r.Parent != nil {
@@ -477,7 +437,9 @@ func (r *Resource) GetHierarchicalElements() []*HeInfo {
 	}
 	return he
 }
+*/
 
+/*
 func DeepCopyConfigPath(in *gnmi.Path) *gnmi.Path {
 	out := &gnmi.Path{
 		Elem: make([]*gnmi.PathElem, 0),
@@ -496,7 +458,9 @@ func DeepCopyConfigPath(in *gnmi.Path) *gnmi.Path {
 	}
 	return out
 }
+*/
 
+/*
 func AddPathElem(p *gnmi.Path, e *container.Entry) *gnmi.Path {
 	elem := &gnmi.PathElem{}
 	if e.Key == "" {
@@ -513,7 +477,9 @@ func AddPathElem(p *gnmi.Path, e *container.Entry) *gnmi.Path {
 	p.Elem = append(p.Elem, elem)
 	return p
 }
+*/
 
+/*
 func (r *Resource) GetInternalHierarchicalPaths() []*gnmi.Path {
 	// paths collects all paths
 	paths := make([]*gnmi.Path, 0)
@@ -537,7 +503,7 @@ func (r *Resource) GetInternalHierarchicalPaths() []*gnmi.Path {
 
 func addInternalHierarchicalPath(paths []*gnmi.Path, origPath *gnmi.Path, e *container.Entry) []*gnmi.Path {
 	// copy the old path to a new path
-	path := DeepCopyConfigPath(origPath)
+	path := yparser.DeepCopyGnmiPath(origPath)
 	// add container entry to path elem
 	AddPathElem(path, e)
 	// append the path to the paths list
@@ -551,7 +517,8 @@ func addInternalHierarchicalPath(paths []*gnmi.Path, origPath *gnmi.Path, e *con
 	return paths
 
 }
-
+*/
+/*
 func findHierarchicalElements(r *Resource, he []*HeInfo) []*HeInfo {
 	h := &HeInfo{
 		Name: r.RootContainerEntry.Name,
@@ -570,6 +537,7 @@ type HeInfo struct {
 	Key  string `json:"key,omitempty"`
 	Type string `json:"type,omitempty"`
 }
+*/
 
 /*
 // findActualSubResourcePathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
@@ -688,3 +656,62 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	return pathElem
 }
 */
+
+func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
+	// add key entries to local leafrefs
+	for _, llpElem := range ll.GetElem() {
+		for _, c := range r.ContainerList {
+			//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s\n", c.Name, llpElem.GetName())
+			if c.Name == llpElem.GetName() {
+				for _, e := range c.Entries {
+					//fmt.Printf(" Resource AddLocalLeafRef llpElem.GetName(): %s, ContainerName: %s, ContainerEntryName: %s\n", c.Name, llpElem.GetName(), e.GetName())
+					if e.GetName() == llpElem.GetName() {
+						if len(e.GetKey()) != 0 {
+							for _, key := range e.GetKey() {
+								llpElem.Key = make(map[string]string)
+								llpElem.Key[key] = ""
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	r.LocalLeafRefs = append(r.LocalLeafRefs, &parser.LeafRefGnmi{
+		LocalPath:  ll,
+		RemotePath: rl,
+	})
+}
+
+func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
+	// add key entries to local leafrefs
+	entries := make([]*container.Entry, 0)
+	for i, llpElem := range ll.GetElem() {
+		if i == 0 {
+			for _, c := range r.ContainerList {
+				//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, ContainerName: %s\n", i, llpElem.GetName(), c.Name)
+				if c.Name == llpElem.GetName() {
+					entries = c.Entries
+				}
+			}
+		}
+		for _, e := range entries {
+			//fmt.Printf(" Resource AddExternalLeafRef i: %d llpElem.GetName(): %s, EntryName: %s\n", i, llpElem.GetName(), e.GetName())
+			if e.GetName() == llpElem.GetName() {
+				if len(e.GetKey()) != 0 {
+					for _, key := range e.GetKey() {
+						llpElem.Key = make(map[string]string)
+						llpElem.Key[key] = ""
+					}
+				}
+				if e.Next != nil {
+					entries = e.Next.Entries
+				}
+			}
+		}
+	}
+	r.ExternalLeafRefs = append(r.ExternalLeafRefs, &parser.LeafRefGnmi{
+		LocalPath:  ll,
+		RemotePath: rl,
+	})
+}
