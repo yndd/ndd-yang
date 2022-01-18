@@ -50,6 +50,7 @@ func GetTypeKind(e *yang.Entry) string {
 }
 
 // CreatePathElem returns a config path element from a yang Entry
+// used by ygen
 func CreatePathElem(e *yang.Entry) *gnmi.PathElem {
 	pathElem := &gnmi.PathElem{
 		Name: e.Name,
@@ -74,6 +75,7 @@ func CreatePathElem(e *yang.Entry) *gnmi.PathElem {
 	return pathElem
 }
 
+// CreateContainerEntry used by ygen
 func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, containerKey string) *container.Entry {
 	// Allocate a new Entry
 	entry := container.NewEntry(e.Name)
