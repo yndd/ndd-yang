@@ -378,13 +378,11 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 func (r *Resource) getActualPath() []*gnmi.PathElem {
 	if r.Parent != nil {
 		pathElem := r.Parent.getActualPath()
-		fmt.Printf("fp1: %v\n", pathElem)
 		pe := r.Path.GetElem()
 		pathElem = append(pathElem, pe...)
 		return pathElem
 	}
 	pathElem := r.Path.GetElem()
-	fmt.Printf("getActualPath, pathElem: %v\n", pathElem)
 	return pathElem
 }
 
@@ -565,10 +563,8 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 		fmt.Printf("findActualPathElemHierarchyWithoutKeys: parentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
 		// we first go to the root of the resource to find the path
 		fp := findActualPathElemHierarchyWithoutKeys(r.Parent, r.ParentPath)
-		fmt.Printf("fp1: %v\n", fp)
 		pathElem := r.Path.GetElem()
 		fp = append(fp, pathElem...)
-		fmt.Printf("fp2: %v\n", fp)
 		return fp
 	}
 	pathElem := dp.GetElem()
