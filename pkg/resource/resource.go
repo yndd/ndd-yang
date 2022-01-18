@@ -17,7 +17,6 @@ limitations under the License.
 package resource
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -479,7 +478,7 @@ func AddPathElem(p *gnmi.Path, e *container.Entry) *gnmi.Path {
 		for _, key := range e.GetKey() {
 			elem.Key[key] = ""
 		}
-		fmt.Printf("AddPathElem Key: %v \n", elem.Key)
+		//fmt.Printf("AddPathElem Key: %v \n", elem.Key)
 	}
 	p.Elem = append(p.Elem, elem)
 	return p
@@ -565,7 +564,7 @@ func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Pat
 // used before the generator is run or during the generator
 func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if r.Parent != nil {
-		fmt.Printf("findActualPathElemHierarchyWithoutKeys: parentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
+		//fmt.Printf("findActualPathElemHierarchyWithoutKeys: parentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
 		// we first go to the root of the resource to find the path
 		fp := findActualPathElemHierarchyWithoutKeys(r.Parent, r.ParentPath)
 		pathElem := r.Path.GetElem()
@@ -576,7 +575,7 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 	if len(dp.GetElem()) == 0 {
 		pathElem = r.Path.GetElem()
 	}
-	fmt.Printf("findActualPathElemHierarchyWithoutKeys, pathElem: %v\n", pathElem)
+	//fmt.Printf("findActualPathElemHierarchyWithoutKeys, pathElem: %v\n", pathElem)
 	return pathElem
 }
 
@@ -604,9 +603,9 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	if len(dp.GetElem()) == 0 {
 		pathElem = r.Path.GetElem()
 	}
-	fmt.Printf("Path Elem: %v\n", pathElem)
+	//fmt.Printf("Path Elem: %v\n", pathElem)
 	for i, pe := range pathElem {
-		fmt.Printf("Index: %d, root Path length: %d length Path: %d\n", i, len(r.Path.GetElem()), len(pathElem))
+		//fmt.Printf("Index: %d, root Path length: %d length Path: %d\n", i, len(r.Path.GetElem()), len(pathElem))
 		switch {
 		case i == len(r.Path.GetElem())-1: // root of the resource
 			//fmt.Printf("    Element at root of resource: %d, peName: %s, Key: %v \n",i, pe.GetName(), pe.Key)
@@ -629,7 +628,7 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 			if nextContainer != nil {
 				//fmt.Printf("       Container Entries: %#v\n", nextContainer.Entries)
 				for _, ce := range nextContainer.Entries {
-					fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n", i, ce.GetName(), pe.GetName(), ce.Key)
+					//fmt.Printf("    Element within resource: %d ceName: %s, peName: %s, Key: %v \n", i, ce.GetName(), pe.GetName(), ce.Key)
 					if ce.Name == pe.GetName() {
 						if ce.Key != "" {
 							pe.Key = make(map[string]string)
