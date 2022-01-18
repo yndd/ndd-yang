@@ -136,11 +136,8 @@ func (r *Resource) GetParent() *Resource {
 	return r.Parent
 }
 
-/*
-func (r *Resource) GetParentPath() *gnmi.Path {
-	return r.ParentPath
-}
-*/
+
+
 
 func (r *Resource) GetChildren() []*Resource {
 	return r.Children
@@ -370,8 +367,23 @@ func (r *Resource) GetAbsoluteGnmiActualResourcePath() *gnmi.Path {
 }
 */
 
+func (r *Resource) GetParentPath() *gnmi.Path {
+	return &gnmi.Path{
+		Elem: r.getParentPath(),
+	}
+}
+
+func (r *Resource) getParentPath() []*gnmi.PathElem {
+	if r.Parent != nil {
+		pathElem := r.Parent.getActualPath()
+		return pathElem
+	}
+	pathElem := r.Path.GetElem()
+	return pathElem
+}
+
 func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
-	actPath := &gnmi.Path{
+	return &gnmi.Path{
 		Elem: r.getActualPath(),
 	}
 	/*
@@ -380,7 +392,7 @@ func (r *Resource) GetAbsoluteGnmiPath() *gnmi.Path {
 		}
 	*/
 
-	return actPath
+	//return actPath
 }
 
 /*
@@ -396,6 +408,7 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 func (r *Resource) getActualPath() []*gnmi.PathElem {
 	if r.Parent != nil {
 		pathElem := r.Parent.getActualPath()
+		// add the local pathElem to the path
 		pe := r.Path.GetElem()
 		pathElem = append(pathElem, pe...)
 		return pathElem
