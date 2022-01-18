@@ -17,7 +17,6 @@ limitations under the License.
 package parser
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
