@@ -48,8 +48,8 @@ type Resource struct {
 	ContainerLevelKeys   map[int][]*container.Container // the current container Level key list
 	LocalLeafRefs        []*parser.LeafRefGnmi
 	ExternalLeafRefs     []*parser.LeafRefGnmi
-	HierResourceElements *HierResourceElements // this defines the hierarchical elements the resource is dependent upon (map[string]interface -> map[string]map[string]map[string]interface{})
-	SubResources         []*gnmi.Path          // for the fine grain reosurce allocation we sometimes see we need subresources: e.g. ipam has rir and instance within the parent
+	//HierResourceElements *HierResourceElements // this defines the hierarchical elements the resource is dependent upon (map[string]interface -> map[string]map[string]map[string]interface{})
+	//SubResources         []*gnmi.Path          // for the fine grain reosurce allocation we sometimes see we need subresources: e.g. ipam has rir and instance within the parent
 }
 
 // Option can be used to manipulate Options.
@@ -87,11 +87,13 @@ func WithModule(m string) Option {
 	}
 }
 
+/*
 func WithSubResources(s []*gnmi.Path) Option {
 	return func(r *Resource) {
 		r.SubResources = s
 	}
 }
+*/
 
 func WithSubDepPath(s []string) Option {
 	return func(r *Resource) {
@@ -114,7 +116,7 @@ func NewResource(parent *Resource, opts ...Option) *Resource {
 		ContainerLevelKeys:   make(map[int][]*container.Container),
 		LocalLeafRefs:        make([]*parser.LeafRefGnmi, 0),
 		ExternalLeafRefs:     make([]*parser.LeafRefGnmi, 0),
-		HierResourceElements: NewHierResourceElements(),
+		//HierResourceElements: NewHierResourceElements(),
 		Children:             make([]*Resource, 0),
 	}
 
@@ -166,6 +168,7 @@ func (r *Resource) AddChild(res *Resource) {
 	r.Children = append(r.Children, res)
 }
 
+/*
 // GetHierResourceElement return the hierarchical resource element
 func (r *Resource) GetHierResourceElement() *HierResourceElements {
 	return r.HierResourceElements
@@ -174,7 +177,9 @@ func (r *Resource) GetHierResourceElement() *HierResourceElements {
 func (r *Resource) GetSubResources() []*gnmi.Path {
 	return r.SubResources
 }
+*/
 
+/*
 // GetActualSubResources contaians the full path of all subresources
 // the first pathElement is a Dummy but is used in the structs so we retain it inn the response
 func (r *Resource) GetActualSubResources() []*gnmi.Path {
@@ -186,6 +191,7 @@ func (r *Resource) GetActualSubResources() []*gnmi.Path {
 	}
 	return paths
 }
+*/
 
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
@@ -246,9 +252,11 @@ func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 	})
 }
 
+/*
 func (r *Resource) GetHierResourceElements() *HierResourceElements {
 	return r.HierResourceElements
 }
+*/
 
 func (r *Resource) GetLocalLeafRef() []*parser.LeafRefGnmi {
 	return r.LocalLeafRefs
@@ -544,6 +552,7 @@ type HeInfo struct {
 	Type string `json:"type,omitempty"`
 }
 
+/*
 // findActualSubResourcePathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements but does not try to find the keys
 // used before the generator is run or during the generator
@@ -561,6 +570,7 @@ func findActualSubResourcePathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Pat
 	}
 	return pathElem
 }
+*/
 
 // findActualPathElemHierarchyWithoutKeys, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements but does not try to find the keys
