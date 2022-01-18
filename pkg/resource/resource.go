@@ -108,8 +108,8 @@ func NewResource(parent *Resource, opts ...Option) *Resource {
 		ContainerList:      make([]*container.Container, 0),
 		ContainerLevel:     0,
 		ContainerLevelKeys: make(map[int][]*container.Container),
-		LocalLeafRefs:      make([]*parser.LeafRefGnmi, 0),
-		ExternalLeafRefs:   make([]*parser.LeafRefGnmi, 0),
+		//LocalLeafRefs:      make([]*parser.LeafRefGnmi, 0),
+		//ExternalLeafRefs:   make([]*parser.LeafRefGnmi, 0),
 		//HierResourceElements: NewHierResourceElements(),
 		Children: make([]*Resource, 0),
 	}
@@ -407,21 +407,6 @@ func (r *Resource) GetAbsoluteGnmiPathFromSource() *gnmi.Path {
 	return &gnmi.Path{}
 }
 
-// GetActualGnmiFullPathWithKeys goes to the root and trickless back to get the full path with the 
-// keys
-// used in ndd-builder
-func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
-	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithKeys(r, r.GetParentPath()),
-	}
-	// the first element is a dummy container we can skip
-	if len(actPath.GetElem()) > 0 {
-		actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
-		return actPath
-	}
-	return &gnmi.Path{}
-}
-
 
 func (r *Resource) GetExcludeRelativeXPath() []string {
 	e := make([]string, 0)
@@ -591,7 +576,20 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 }
 */
 
-
+// GetActualGnmiFullPathWithKeys goes to the root and trickless back to get the full path with the 
+// keys
+// used in ndd-builder
+func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
+	actPath := &gnmi.Path{
+		Elem: findActualPathElemHierarchyWithKeys(r, r.GetParentPath()),
+	}
+	// the first element is a dummy container we can skip
+	if len(actPath.GetElem()) > 0 {
+		actPath.Elem = actPath.Elem[1:(len(actPath.GetElem()))]
+		return actPath
+	}
+	return &gnmi.Path{}
+}
 
 // findActualPathElemHierarchy, first gooes to the root of the resource and trickles back
 // to find the full resourcePath with all Path Elements (Names, Keys)
@@ -694,6 +692,7 @@ func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 		RemotePath: rl,
 	})
 }
+
 
 func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
