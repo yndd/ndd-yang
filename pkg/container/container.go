@@ -17,6 +17,8 @@ limitations under the License.
 package container
 
 import (
+	"strings"
+
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/leafref"
 )
@@ -109,16 +111,16 @@ func getRecursiveSlicedName(c *Container) []string {
 
 func (c *Container) GetFullName() string {
 	if c.Prev != nil {
-		return getRecursiveName(c.Prev) + "-" + c.Name
+		return getRecursiveName(c.Prev) + "-" + strings.ReplaceAll(c.Name, "-", "")
 	}
-	return c.Name
+	return strings.ReplaceAll(c.Name, "-", "")
 }
 
 func getRecursiveName(c *Container) string {
 	if c.Prev != nil {
-		return getRecursiveName(c.Prev) + "-" + c.Name
+		return getRecursiveName(c.Prev) + "-" + strings.ReplaceAll(c.Name, "-", "")
 	}
-	return c.Name
+	return strings.ReplaceAll(c.Name, "-", "")
 }
 
 func (c *Container) GetFullNameWithRoot() string {
