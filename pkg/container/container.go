@@ -109,13 +109,16 @@ func getRecursiveSlicedName(c *Container) []string {
 	return []string{c.Name}
 }
 
+// GetFullName replaces the dashes from the individual names to avoid clashes in names
+// e.g, protocol bgp-evpn clashes with protocol bgp evpn
 func (c *Container) GetFullName() string {
 	if c.Prev != nil {
 		return getRecursiveName(c.Prev) + "-" + strings.ReplaceAll(c.Name, "-", "")
 	}
 	return strings.ReplaceAll(c.Name, "-", "")
 }
-
+//replaces the dashes from the individual names to avoid clashes in names
+// e.g, protocol bgp-evpn clashes with protocol bgp evpn
 func getRecursiveName(c *Container) string {
 	if c.Prev != nil {
 		return getRecursiveName(c.Prev) + "-" + strings.ReplaceAll(c.Name, "-", "")
