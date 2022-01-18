@@ -376,12 +376,18 @@ func (r *Resource) GetAbsoluteXPathWithoutKey() *string {
 }
 
 func (r *Resource) GetAbsoluteXPath() *string {
-	fmt.Printf("GetAbsoluteXPath: paentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
-	actPath := &gnmi.Path{
-		Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
+	fmt.Printf("GetAbsoluteXPath: parentpath %s\n", yparser.GnmiPath2XPath(r.ParentPath, false))
+	if len(r.ParentPath.GetElem()) > 0 {
+		return r.parser.GnmiPathToXPath(r.ParentPath, true)
+	} else {
+		return r.parser.GnmiPathToXPath(r.Path, true)
 	}
-
-	return r.parser.GnmiPathToXPath(actPath, true)
+	/*
+		actPath := &gnmi.Path{
+			Elem: findActualPathElemHierarchyWithoutKeys(r, r.ParentPath),
+		}
+		return r.parser.GnmiPathToXPath(actPath, true)
+	*/
 }
 
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
