@@ -123,6 +123,8 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 
 	// process type attribute
 	switch GetTypeName(e) {
+	case "decimal64":
+		entry.Type = "uint64"
 	case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 		entry.Type = GetTypeName(e)
 	case "boolean":
@@ -158,6 +160,8 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 	// process elementType for a Key
 	if e.Key != "" {
 		switch GetTypeName(e.Dir[e.Key]) {
+		case "decimal64":
+			entry.Type = "uint64"
 		case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 			entry.Type = GetTypeName(e.Dir[e.Key])
 		case "boolean":
