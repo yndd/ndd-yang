@@ -28,6 +28,7 @@ type Entry struct {
 	Prev          *Container     `json:"next,omitempty"`
 	Name          string         `json:"name,omitempty"`
 	Type          string         `json:"type,omitempty"`
+	ReadOnly      bool           `json:"read-only,omitempty"`
 	Enum          []string       `json:"enum,omitempty"`
 	EnumString    string         `json:"enumString,omitempty"`
 	Range         []int          `json:"range,omitempty"`

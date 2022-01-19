@@ -24,21 +24,21 @@ import (
 )
 
 type Container struct {
-	Name            string             `json:"name,omitempty"`
-	Entries         []*Entry           `json:"entries,omitempty"`
-	Prev            *Container         `json:"prev,omitempty"`
-	ResourceBoundry bool               `json:"resourceBoundry,omitempty"`
-	LeafRefs        []*leafref.LeafRef `json:"leafRefs,omitempty"`
+	Name             string             `json:"name,omitempty"`
+	Entries          []*Entry           `json:"entries,omitempty"`
+	Prev             *Container         `json:"prev,omitempty"`
+	ResourceBoundary bool               `json:"resourceBoundry,omitempty"`
+	LeafRefs         []*leafref.LeafRef `json:"leafRefs,omitempty"`
 }
 
 type ContainerOption func(c *Container)
 
-func NewContainer(n string, resourceBoundry bool, prev *Container, opts ...ContainerOption) *Container {
+func NewContainer(n string, resourceBoundary bool, prev *Container, opts ...ContainerOption) *Container {
 	e := &Container{
-		Name:            n,
-		Entries:         make([]*Entry, 0),
-		Prev:            prev,
-		ResourceBoundry: resourceBoundry,
+		Name:             n,
+		Entries:          make([]*Entry, 0),
+		Prev:             prev,
+		ResourceBoundary: resourceBoundary,
 	}
 
 	for _, o := range opts {
@@ -117,6 +117,7 @@ func (c *Container) GetFullName() string {
 	}
 	return strings.ReplaceAll(c.Name, "-", "")
 }
+
 //replaces the dashes from the individual names to avoid clashes in names
 // e.g, protocol bgp-evpn clashes with protocol bgp evpn
 func getRecursiveName(c *Container) string {
@@ -149,7 +150,7 @@ func getRecursiveNameWithRoot(c *Container) string {
 }
 
 func (c *Container) GetResourceBoundary() bool {
-	return c.ResourceBoundry
+	return c.ResourceBoundary
 }
 
 func (c *Container) AddLeafRef(ll, rl *gnmi.Path) {

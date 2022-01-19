@@ -96,6 +96,7 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 
 	}
 	*/
+	entry.ReadOnly = e.ReadOnly()
 
 	// process mandatory attribute
 	switch e.Mandatory {
