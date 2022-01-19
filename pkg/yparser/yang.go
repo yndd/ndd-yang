@@ -285,6 +285,10 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 	// key handling
 	entry.Key = e.Key
 
+	if entry.Type == "decimal64" {
+		fmt.Printf("decimal64")
+	}
+
 	/*
 		if e.Name == "instance" {
 			fmt.Printf("instance key: %#v\n", entry)
