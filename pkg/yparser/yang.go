@@ -294,7 +294,7 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 
 		}
 	*/
-	if e.Name == "interval" {
+	if strings.Contains(entry.Type, "decimal64") {
 		fmt.Printf("e.Name: %s, entry.Type: %s\n", e.Name, entry.Type)
 	}
 
