@@ -127,6 +127,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		entry.Type = "uint64"
 	case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 		entry.Type = GetTypeName(e)
+		if entry.Type == "decimal64" {
+			entry.Type = "uint64"
+		}
 	case "boolean":
 		entry.Type = "bool"
 	case "enumeration":
@@ -137,6 +140,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 			entry.Type = "uint64"
 		case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 			entry.Type = GetTypeKind(e)
+			if entry.Type == "decimal64" {
+				entry.Type = "uint64"
+			}
 		case "boolean":
 			entry.Type = "bool"
 		case "union":
