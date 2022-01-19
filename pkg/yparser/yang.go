@@ -294,12 +294,14 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 
 		}
 	*/
+	/*
 	if strings.Contains(entry.Type, "decimal64") {
 		fmt.Printf("e.Name: %s, entry.Type: %s\n", e.Name, entry.Type)
 	}
+	*/
 
 	entry.ReadOnly = e.ReadOnly()
-	fmt.Printf("ReadOnly: %t, Name: %s\n", entry.ReadOnly, entry.Name)
+	//fmt.Printf("ReadOnly: %t, Name: %s\n", entry.ReadOnly, entry.Name)
 
 	/*
 		if entry.Mandatory {
