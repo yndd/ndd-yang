@@ -298,6 +298,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		fmt.Printf("e.Name: %s, entry.Type: %s\n", e.Name, entry.Type)
 	}
 
+	entry.ReadOnly = e.ReadOnly()
+	fmt.Printf("ReadOnly: %t, Name: %s\n", entry.ReadOnly, entry.Name)
+
 	/*
 		if entry.Mandatory {
 			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
