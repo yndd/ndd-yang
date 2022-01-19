@@ -18,7 +18,6 @@ package yparser
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -166,6 +165,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 			entry.Type = "string"
 		}
 	}
+	if strings.Contains(entry.Type, "decimal64") {
+		entry.Type = "uint64"
+	}
 	// process elementType for a Key
 	if e.Key != "" {
 		switch GetTypeName(e.Dir[e.Key]) {
@@ -285,12 +287,6 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 
 	// key handling
 	entry.Key = e.Key
-
-	if strings.Contains(entry.Type, "decimal64") {
-		fmt.Printf("entry.Type: %s\n", entry.Type)
-		os.Exit(1)
-	}
-	
 
 	/*
 		if e.Name == "instance" {
