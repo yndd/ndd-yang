@@ -53,6 +53,12 @@ func WithType(s string) EntryOption {
 	}
 }
 
+func WithReadOnly(s bool) EntryOption {
+	return func(c *Entry) {
+		c.ReadOnly = s
+	}
+}
+
 func WithEnum(s []string) EntryOption {
 	return func(c *Entry) {
 		c.Enum = s
@@ -144,6 +150,10 @@ func (e *Entry) GetName() string {
 
 func (e *Entry) GetType() string {
 	return e.Type
+}
+
+func (e *Entry) GetReadOnly() bool {
+	return e.ReadOnly
 }
 
 func (e *Entry) GetEnum() []string {
