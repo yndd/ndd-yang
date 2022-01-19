@@ -25,6 +25,7 @@ import (
 
 type Container struct {
 	Name             string             `json:"name,omitempty"`
+	ReadOnly         bool               `json:"read-only,omitempty"`
 	Entries          []*Entry           `json:"entries,omitempty"`
 	Prev             *Container         `json:"prev,omitempty"`
 	ResourceBoundary bool               `json:"resourceBoundry,omitempty"`
@@ -33,9 +34,10 @@ type Container struct {
 
 type ContainerOption func(c *Container)
 
-func NewContainer(n string, resourceBoundary bool, prev *Container, opts ...ContainerOption) *Container {
+func NewContainer(n string, readOnly, resourceBoundary bool, prev *Container, opts ...ContainerOption) *Container {
 	e := &Container{
 		Name:             n,
+		ReadOnly:         readOnly,
 		Entries:          make([]*Entry, 0),
 		Prev:             prev,
 		ResourceBoundary: resourceBoundary,
@@ -50,6 +52,10 @@ func NewContainer(n string, resourceBoundary bool, prev *Container, opts ...Cont
 
 func (c *Container) GetName() string {
 	return c.Name
+}
+
+func (c *Container) GetReadOnly() bool {
+	return c.ReadOnly
 }
 
 func (c *Container) GetEntries() []*Entry {
