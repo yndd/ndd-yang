@@ -17,14 +17,8 @@ limitations under the License.
 package parser
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/goyang/pkg/yang"
-	"github.com/stoewer/go-strcase"
-	"github.com/yndd/ndd-yang/pkg/container"
 )
 
 // GetypeName return a string of the type of the  yang entry
@@ -74,6 +68,7 @@ func (p *Parser) CreatePathElem(e *yang.Entry) *gnmi.PathElem {
 	return pathElem
 }
 
+/*
 func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Container, containerKey string) *container.Entry {
 	// Allocate a new Entry
 	entry := container.NewEntry(e.Name)
@@ -83,19 +78,6 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	entry.Prev = prev
 
 	entry.NameSpace = e.Namespace().Name
-
-	/*
-		if e.Name == "port-binding" {
-			fmt.Printf("port-binding: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
-
-		}
-
-		fmt.Printf("Element Name %s, ContainerKey %s\n", e.Name, containerKey)
-		if e.Name == "instance" {
-			fmt.Printf("instance key: %#v\n", e.Key)
-
-		}
-	*/
 
 	// process mandatory attribute
 	switch e.Mandatory {
@@ -271,26 +253,10 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	// key handling
 	entry.Key = e.Key
 
-	/*
-		if e.Name == "instance" {
-			fmt.Printf("instance key: %#v\n", entry)
-
-		}
-	*/
-
 	entry.ReadOnly = e.ReadOnly()
 	fmt.Printf("ReadOnly: %t, Name: %s\n", entry.ReadOnly, entry.Name)
 
-	/*
-		if entry.Mandatory {
-			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-		}
-		if entry.Key != "" {
-			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-		}
-		if entry.Name == "router-name" {
-			fmt.Printf("entry.Name: %s, entry.Key: %s, e.Mandatory: %t\n", entry.Name, entry.Key, entry.Mandatory)
-		}
-	*/
+
 	return entry
 }
+*/
