@@ -294,6 +294,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 
 		}
 	*/
+	if e.Name == "interval" {
+		fmt.Printf("e.Name: %s, entry.Type: %s\n", e.Name, entry.Type)
+	}
 
 	/*
 		if entry.Mandatory {
