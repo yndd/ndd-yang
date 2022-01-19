@@ -85,18 +85,17 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	entry.NameSpace = e.Namespace().Name
 
 	/*
-	if e.Name == "port-binding" {
-		fmt.Printf("port-binding: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
+		if e.Name == "port-binding" {
+			fmt.Printf("port-binding: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
 
-	}
+		}
 
-	fmt.Printf("Element Name %s, ContainerKey %s\n", e.Name, containerKey)
-	if e.Name == "instance" {
-		fmt.Printf("instance key: %#v\n", e.Key)
+		fmt.Printf("Element Name %s, ContainerKey %s\n", e.Name, containerKey)
+		if e.Name == "instance" {
+			fmt.Printf("instance key: %#v\n", e.Key)
 
-	}
+		}
 	*/
-	entry.ReadOnly = e.ReadOnly()
 
 	// process mandatory attribute
 	switch e.Mandatory {
@@ -273,11 +272,14 @@ func (p *Parser) CreateContainerEntry(e *yang.Entry, next, prev *container.Conta
 	entry.Key = e.Key
 
 	/*
-	if e.Name == "instance" {
-		fmt.Printf("instance key: %#v\n", entry)
+		if e.Name == "instance" {
+			fmt.Printf("instance key: %#v\n", entry)
 
-	}
+		}
 	*/
+
+	entry.ReadOnly = e.ReadOnly()
+	fmt.Printf("ReadOnly: %t, Name: %s\n", entry.ReadOnly, entry.Name)
 
 	/*
 		if entry.Mandatory {
