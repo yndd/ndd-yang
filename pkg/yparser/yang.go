@@ -133,6 +133,8 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		entry.Type = "string"
 	default:
 		switch GetTypeKind(e) {
+		case "decimal64":
+			entry.Type = "uint64"
 		case "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64":
 			entry.Type = GetTypeKind(e)
 		case "boolean":
