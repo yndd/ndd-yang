@@ -28,6 +28,7 @@ type Container struct {
 	ReadOnly         bool               `json:"read-only,omitempty"`
 	StateChild       bool               `json:"state-child,omitempty"`
 	Entries          []*Entry           `json:"entries,omitempty"`
+	Children         []*Container       `json:"children,omitempty"`
 	Prev             *Container         `json:"prev,omitempty"`
 	ResourceBoundary bool               `json:"resourceBoundry,omitempty"`
 	LeafRefs         []*leafref.LeafRef `json:"leafRefs,omitempty"`
@@ -41,6 +42,7 @@ func NewContainer(n string, readOnly, resourceBoundary bool, prev *Container, op
 		ReadOnly:         readOnly,
 		Entries:          make([]*Entry, 0),
 		Prev:             prev,
+		Children:         make([]*Container, 0),
 		ResourceBoundary: resourceBoundary,
 	}
 
@@ -177,4 +179,8 @@ func (c *Container) SetStateChild() {
 
 func (c *Container) GetStateChild() bool {
 	return c.StateChild
+}
+
+func (c *Container) AddContainerChild(cc *Container) {
+	c.Children = append(c.Children, cc)
 }
