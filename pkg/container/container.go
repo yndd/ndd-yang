@@ -180,3 +180,10 @@ func (c *Container) SetHasState() {
 func (c *Container) AddContainerChild(cc *Container) {
 	c.Children = append(c.Children, cc)
 }
+
+func (c *Container) UpdateHasState2ParentContainers() {
+	if c.Prev != nil {
+		c.Prev.SetHasState()
+		c.Prev.UpdateHasState2ParentContainers()
+	}
+}
