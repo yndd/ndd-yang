@@ -26,7 +26,7 @@ import (
 type Container struct {
 	Name             string             `json:"name,omitempty"`
 	ReadOnly         bool               `json:"read-only,omitempty"`
-	StateChild       bool               `json:"state-child,omitempty"`
+	HasState         bool               `json:"state-child,omitempty"`
 	Entries          []*Entry           `json:"entries,omitempty"`
 	Children         []*Container       `json:"children,omitempty"`
 	Prev             *Container         `json:"prev,omitempty"`
@@ -173,12 +173,8 @@ func (c *Container) GetLeafRefs() []*leafref.LeafRef {
 	return c.LeafRefs
 }
 
-func (c *Container) SetStateChild() {
-	c.StateChild = true
-}
-
-func (c *Container) GetStateChild() bool {
-	return c.StateChild
+func (c *Container) SetHasState() {
+	c.HasState = true
 }
 
 func (c *Container) AddContainerChild(cc *Container) {
