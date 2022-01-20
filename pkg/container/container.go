@@ -26,6 +26,7 @@ import (
 type Container struct {
 	Name             string             `json:"name,omitempty"`
 	ReadOnly         bool               `json:"read-only,omitempty"`
+	StateChild       bool               `json:"state-child,omitempty"`
 	Entries          []*Entry           `json:"entries,omitempty"`
 	Prev             *Container         `json:"prev,omitempty"`
 	ResourceBoundary bool               `json:"resourceBoundry,omitempty"`
@@ -168,4 +169,12 @@ func (c *Container) AddLeafRef(ll, rl *gnmi.Path) {
 
 func (c *Container) GetLeafRefs() []*leafref.LeafRef {
 	return c.LeafRefs
+}
+
+func (c *Container) SetStateChild() {
+	c.StateChild = true
+}
+
+func (c *Container) GetStateChild() bool {
+	return c.StateChild
 }
