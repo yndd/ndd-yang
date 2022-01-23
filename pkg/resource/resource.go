@@ -113,6 +113,10 @@ func NewResource(parent *Resource, opts ...Option) *Resource {
 		//HierResourceElements: NewHierResourceElements(),
 		Children: make([]*Resource, 0),
 	}
+	// rootResource
+	if parent == nil {
+		r.RootContainer = container.NewContainer("root", false, false, nil)
+	}
 
 	for _, o := range opts {
 		o(r)
@@ -286,11 +290,11 @@ func findPathElemHierarchy(r *Resource) []*gnmi.PathElem {
 
 func (r *Resource) GetAbsoluteName() string {
 	/*
-	e := findPathElemHierarchy(r)
-	// trim the first element since nokia yang comes with a aprefix
-	if len(e) > 1 {
-		e = e[1:]
-	}
+		e := findPathElemHierarchy(r)
+		// trim the first element since nokia yang comes with a aprefix
+		if len(e) > 1 {
+			e = e[1:]
+		}
 	*/
 	// excludes the first element from the path
 	pathElem := r.GetAbsoluteGnmiPathFromSource().GetElem()
@@ -407,7 +411,6 @@ func (r *Resource) GetAbsoluteGnmiPathFromSource() *gnmi.Path {
 	return &gnmi.Path{}
 }
 
-
 func (r *Resource) GetExcludeRelativeXPath() []string {
 	e := make([]string, 0)
 	for _, p := range r.Excludes {
@@ -415,8 +418,6 @@ func (r *Resource) GetExcludeRelativeXPath() []string {
 	}
 	return e
 }
-
-
 
 /*
 func (r *Resource) GetAbsoluteLevel() int {
@@ -576,7 +577,7 @@ func findActualPathElemHierarchyWithoutKeys(r *Resource, dp *gnmi.Path) []*gnmi.
 }
 */
 
-// GetActualGnmiFullPathWithKeys goes to the root and trickless back to get the full path with the 
+// GetActualGnmiFullPathWithKeys goes to the root and trickless back to get the full path with the
 // keys; uses the containers to figure out the path
 // used in ndd-builder
 func (r *Resource) GetActualGnmiFullPathWithKeys() *gnmi.Path {
@@ -606,7 +607,6 @@ func findActualPathElemHierarchyWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.Pat
 	pathElem := getResourcePathElemWithKeys(r, dp)
 	return pathElem
 }
-
 
 // used in ndd-builder
 func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
@@ -666,7 +666,6 @@ func getResourcePathElemWithKeys(r *Resource, dp *gnmi.Path) []*gnmi.PathElem {
 	return pathElem
 }
 
-
 func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
 	for _, llpElem := range ll.GetElem() {
@@ -692,7 +691,6 @@ func (r *Resource) AddLocalLeafRef(ll, rl *gnmi.Path) {
 		RemotePath: rl,
 	})
 }
-
 
 func (r *Resource) AddExternalLeafRef(ll, rl *gnmi.Path) {
 	// add key entries to local leafrefs
