@@ -139,7 +139,7 @@ func getRecursiveName(c *Container) string {
 func (c *Container) GetFullNameWithRoot() string {
 	if c.Prev != nil {
 		if getRecursiveNameWithRoot(c.Prev) == "" {
-			return c.Name
+			return strings.ReplaceAll(c.Name, "-", "")
 		} else {
 			return getRecursiveNameWithRoot(c.Prev) + "-" + strings.ReplaceAll(c.Name, "-", "")
 		}
