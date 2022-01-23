@@ -88,14 +88,14 @@ func (c *Container) GetKeyNames() []string {
 	return n
 }
 
-func (c *Container) GetChildren() []string {
+func (c *Container) GetChildren() []*Container {
+	return c.Children
+}
+
+func (c *Container) GetChildrenNames() []string {
 	n := make([]string, 0)
-	if c.Entries != nil {
-		for _, e := range c.GetEntries() {
-			if e.Next != nil {
-				n = append(n, e.GetName())
-			}
-		}
+	for _, c := range c.GetChildren() {
+		n = append(n, c.GetName())
 	}
 	return n
 }
