@@ -348,6 +348,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 					fmt.Printf("Notif: %v\n", u)
 					// fp[2:]
 					fmt.Printf("fp: %v\n", fp)
+					/*
 					if len(fp) < 2 {
 						if data, err = c.addData(data, u.GetPath().GetElem(), fp, u.GetVal()); err != nil {
 							return err
@@ -357,6 +358,16 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 							return err
 						}
 					}
+					*/
+					// remove the original pathElements from the notification path
+					pathElem := []*gnmi.PathElem{}
+					if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
+						pathElem = u.GetPath().GetElem()[len(p.GetElem()):]
+					}
+					
+					if data, err = c.addData(data, pathElem, []string{}, u.GetVal()); err != nil {
+						return err
+					}
 
 				}
 			}
@@ -365,6 +376,36 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 		return nil, err
 	}
 	return data, nil
+}
+
+func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
+	var err error
+	e := elems[0].GetName()
+	k := elems[0].GetKey()
+	//fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, QElems: %v, Data: %v\n", len(elems), e, k, qelems, d)
+	if len(elems)-1 == 0 {
+		// last element
+		if len(k) == 0 {
+			// last element with container
+			d, err = c.addContainerValue(d, e, val)
+			return d, err
+		} else {
+			// last element with list
+			// not sure if this will ever exist
+			d, err = c.addListValue(d, e, k, val)
+			return d, err
+		}
+	} else {
+		if len(k) == 0 {
+			// not last element -> container
+			d, err = c.addContainer(d, e, elems, qelems, val)
+			return d, err
+		} else {
+			// not last element -> list + keys
+			d, err = c.addList(d, e, k, elems, qelems, val)
+			return d, err
+		}
+	}
 }
 
 func (c *Cache) addContainerValue(d interface{}, e string, val *gnmi.TypedValue) (interface{}, error) {
@@ -528,32 +569,4 @@ func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*g
 	}
 }
 
-func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
-	var err error
-	e := elems[0].GetName()
-	k := elems[0].GetKey()
-	//fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, QElems: %v, Data: %v\n", len(elems), e, k, qelems, d)
-	if len(elems)-1 == 0 {
-		// last element
-		if len(k) == 0 {
-			// last element with container
-			d, err = c.addContainerValue(d, e, val)
-			return d, err
-		} else {
-			// last element with list
-			// not sure if this will ever exist
-			d, err = c.addListValue(d, e, k, val)
-			return d, err
-		}
-	} else {
-		if len(k) == 0 {
-			// not last element -> container
-			d, err = c.addContainer(d, e, elems, qelems, val)
-			return d, err
-		} else {
-			// not last element -> list + keys
-			d, err = c.addList(d, e, k, elems, qelems, val)
-			return d, err
-		}
-	}
-}
+
