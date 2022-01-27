@@ -172,7 +172,8 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 					case map[string]interface{}:
 						// gets the keys from the yangschema based on the gnmi path
 						keys := rs.GetKeys(&gnmi.Path{
-							Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
+							Elem: p.GetElem(),
+							//Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 						})
 						fmt.Printf("getUpdatesFromJSON []interface{} keys: %v\n", keys)
 						// get the gnmipath with the key data

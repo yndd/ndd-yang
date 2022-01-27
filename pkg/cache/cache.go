@@ -446,7 +446,7 @@ func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*g
 	var err error
 	fmt.Printf("addList QueryPathElems: %v pathElem: %s, key: %v d: %v\n", qelems, e, k, d)
 	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
-	if len(qelems) > 0 {
+	if len(qelems) > 1 {
 		d, err = c.addData(d, elems[1:], qelems[1+len(k):], val)
 		return d, err
 	}
