@@ -345,7 +345,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				for _, u := range n.GetUpdate() {
-					//fmt.Printf("Notif: %v\n", u)
+					fmt.Printf("Notif: %v\n", u)
 					// fp[2:]
 					fmt.Printf("fp: %v\n", fp)
 					if len(fp) < 2 {
