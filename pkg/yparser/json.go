@@ -19,11 +19,14 @@ package yparser
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/ndd-runtime/pkg/utils"
 	"github.com/yndd/ndd-yang/pkg/yentry"
 )
 
@@ -115,7 +118,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 						}
 						u.upds = append(u.upds, &gnmi.Update{
 							Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
-							Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+							Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
 						})
 					}
 				case map[string]interface{}:
@@ -343,4 +346,73 @@ func AddDataToList(x interface{}) (interface{}, error) {
 	// wrong data input
 	return x1, errors.New(fmt.Sprintf("data transformation, wrong data input %v", x))
 
+}
+
+// CleanConfig2String returns a clean config and a string
+// clean means removing the prefixes in the json elements
+func CleanConfig2String(cfg map[string]interface{}) (map[string]interface{}, *string, error) {
+	// trim the first map
+	for _, v := range cfg {
+		cfg = CleanConfig(v.(map[string]interface{}))
+	}
+	//fmt.Printf("cleanConfig Config %v\n", cfg)
+
+	jsonConfigStr, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+	return cfg, utils.StringPtr(string(jsonConfigStr)), nil
+}
+
+func CleanConfig(x1 map[string]interface{}) map[string]interface{} {
+	x2 := make(map[string]interface{})
+	for k1, v1 := range x1 {
+		//fmt.Printf("cleanConfig Key: %s, Value: %v\n", k1, v1)
+		switch x3 := v1.(type) {
+		case []interface{}:
+			x := make([]interface{}, 0)
+			for _, v3 := range x3 {
+				switch x3 := v3.(type) {
+				case map[string]interface{}:
+					x4 := CleanConfig(x3)
+					x = append(x, x4)
+				default:
+					// clean the data
+					switch v4 := v3.(type) {
+					case string:
+						x = append(x, strings.Split(v4, ":")[len(strings.Split(v4, ":"))-1])
+					default:
+						//fmt.Printf("type in []interface{}: %v\n", reflect.TypeOf(v4))
+						x = append(x, v4)
+					}
+				}
+			}
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x
+		case map[string]interface{}:
+			x4 := CleanConfig(x3)
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x4
+		case string:
+			// for string values there can be also a header in the values e.g. type, Value: srl_nokia-network-instance:ip-vrf
+			if strings.Contains(x3, "::") {
+				// avoids splitting ipv6 addresses
+				x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
+			} else {
+				x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = strings.Split(x3, ":")[len(strings.Split(x3, ":"))-1]
+			}
+		case float64:
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
+		case bool:
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
+
+		default:
+			// for other values like bool, float64, uint32 we dont do anything
+			if x3 != nil {
+				fmt.Printf("type in main: %v\n", reflect.TypeOf(x3))
+			} else {
+				fmt.Printf("type in main: nil\n")
+			}
+			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
+		}
+	}
+	return x2
 }
