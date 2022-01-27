@@ -444,7 +444,7 @@ func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, qe
 
 func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
-	//fmt.Printf("addList QueryPathElems: %v pathElem: %s, d: %v\n", qelems, e, d)
+	fmt.Printf("addList QueryPathElems: %v pathElem: %s, key: %v d: %v\n", qelems, e, k, d)
 	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
 	if len(qelems) > 0 {
 		d, err = c.addData(d, elems[1:], qelems[1+len(k):], val)
