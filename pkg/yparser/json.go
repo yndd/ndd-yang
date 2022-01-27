@@ -57,24 +57,27 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 	//fmt.Printf("getGranularUpdatesFromJSON entry: path: %s, data: %v\n", GnmiPath2XPath(path, true), d)
 	p := DeepCopyGnmiPath(path)
 
-	// add the keys as data in the last element
-	for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
-		p := DeepCopyGnmiPath(p)
+	pathKeys := make(map[string]string)
+	if len(p.GetElem()) != 0 {
+		// add the keys as data in the last element
+		for k, v := range p.GetElem()[len(p.GetElem())-1].GetKey() {
+			p := DeepCopyGnmiPath(p)
 
-		value, err := json.Marshal(v)
-		if err != nil {
-			return err
+			value, err := json.Marshal(v)
+			if err != nil {
+				return err
+			}
+			u.upds = append(u.upds, &gnmi.Update{
+				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
+				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+			})
+			//fmt.Printf("getGranularUpdatesFromJSON key: path: %s, data:%v\n", GnmiPath2XPath(u.upds[len(u.upds)-1].Path, true), u.upds[len(u.upds)-1].Val)
 		}
-		u.upds = append(u.upds, &gnmi.Update{
-			Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
-			Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
-		})
-		//fmt.Printf("getGranularUpdatesFromJSON key: path: %s, data:%v\n", GnmiPath2XPath(u.upds[len(u.upds)-1].Path, true), u.upds[len(u.upds)-1].Val)
-	}
 
-	pathKeys := p.GetElem()[len(p.GetElem())-1].GetKey()
-	if len(pathKeys) == 0 {
-		pathKeys = make(map[string]string)
+		pathKeys = p.GetElem()[len(p.GetElem())-1].GetKey()
+		if len(pathKeys) == 0 {
+			pathKeys = make(map[string]string)
+		}
 	}
 
 	// process the data
