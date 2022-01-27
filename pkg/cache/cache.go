@@ -347,7 +347,8 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 				for _, u := range n.GetUpdate() {
 					//fmt.Printf("Notif: %v\n", u)
 					// fp[2:]
-					if len(fp) == 1 {
+					fmt.Printf("fp: %v\n", fp)
+					if len(fp) < 2 {
 						if data, err = c.addData(data, u.GetPath().GetElem(), fp, u.GetVal()); err != nil {
 							return err
 						}
