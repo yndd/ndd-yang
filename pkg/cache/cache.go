@@ -349,25 +349,26 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 					// fp[2:]
 					//fmt.Printf("fp: %v\n", fp)
 					/*
-					if len(fp) < 2 {
-						if data, err = c.addData(data, u.GetPath().GetElem(), fp, u.GetVal()); err != nil {
-							return err
+						if len(fp) < 2 {
+							if data, err = c.addData(data, u.GetPath().GetElem(), fp, u.GetVal()); err != nil {
+								return err
+							}
+						} else {
+							if data, err = c.addData(data, u.GetPath().GetElem(), fp[1:], u.GetVal()); err != nil {
+								return err
+							}
 						}
-					} else {
-						if data, err = c.addData(data, u.GetPath().GetElem(), fp[1:], u.GetVal()); err != nil {
-							return err
-						}
-					}
 					*/
 					// remove the original pathElements from the notification path
 					pathElem := []*gnmi.PathElem{}
 					if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
 						pathElem = u.GetPath().GetElem()[len(p.GetElem()):]
 					}
-					
-					if data, err = c.addData(data, pathElem, []string{}, u.GetVal()); err != nil {
+
+					if data, err = c.addData(data, pathElem, u.GetVal()); err != nil {
 						return err
 					}
+					fmt.Printf("data: %v\n", data)
 
 				}
 			}
@@ -378,11 +379,11 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 	return data, nil
 }
 
-func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
+func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
 	e := elems[0].GetName()
 	k := elems[0].GetKey()
-	fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, QElems: %v, Data: %v\n", len(elems), e, k, qelems, d)
+	fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(elems), e, k, d)
 	if len(elems)-1 == 0 {
 		// last element
 		if len(k) == 0 {
@@ -398,13 +399,127 @@ func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, qelems []string, 
 	} else {
 		if len(k) == 0 {
 			// not last element -> container
-			d, err = c.addContainer(d, e, elems, qelems, val)
+			d, err = c.addContainer(d, e, elems, val)
 			return d, err
 		} else {
 			// not last element -> list + keys
-			d, err = c.addList(d, e, k, elems, qelems, val)
+			d, err = c.addList(d, e, k, elems, val)
 			return d, err
 		}
+	}
+}
+
+func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, val *gnmi.TypedValue) (interface{}, error) {
+	var err error
+	// initialize the data
+	//fmt.Printf("addContainer QueryPathElems: %v pathElem: %s\n", qelems, e)
+	/*
+		if len(qelems) > 0 && qelems[0] == e {
+			// ignore the data
+			d, err = c.addData(d, elems[1:], qelems[1:], val)
+			return d, err
+		} else {
+	*/
+	if reflect.TypeOf((d)) == nil {
+		d = make(map[string]interface{})
+	}
+	switch dd := d.(type) {
+	case map[string]interface{}:
+		// add the container
+		dd[e], err = c.addData(dd[e], elems[1:], val)
+		return d, err
+	default:
+		return nil, errors.New("addListLastValue JSON unexpected data structure")
+	}
+	//}
+
+}
+
+func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*gnmi.PathElem, val *gnmi.TypedValue) (interface{}, error) {
+	var err error
+	fmt.Printf("addList pathElem: %s, key: %v d: %v\n", e, k, d)
+	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
+	/*
+	if len(qelems) > 1 {
+		d, err = c.addData(d, elems[1:], qelems[1+len(k):], val)
+		return d, err
+	}
+	*/
+	// conservative approach
+	/*
+		if len(qelems) > 0 && qelems[0] == e {
+			keys := make([]string, 0, len(k))
+			for key := range k {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+			found := true
+			for i, key := range keys {
+				if k[key] != qelems[1+i] {
+					found = false
+				}
+			}
+			if found {
+				d, err = c.addData(d, elems[1:], qelems[1:])
+				return d, err
+			}
+		}
+	*/
+	// initialize the data
+	if reflect.TypeOf((d)) == nil {
+		d = make(map[string]interface{})
+	}
+	switch dd := d.(type) {
+	case map[string]interface{}:
+		// initialize the data
+		if _, ok := dd[e]; !ok {
+			dd[e] = make([]interface{}, 0)
+		}
+		switch l := dd[e].(type) {
+		case []interface{}:
+			// check if the list entry exists
+			for i, le := range l {
+				// initialize the data
+				if reflect.TypeOf((le)) == nil {
+					le = make(map[string]interface{})
+				}
+				found := true
+				switch dd := le.(type) {
+				case map[string]interface{}:
+					for keyName, keyValue := range k {
+						if dd[keyName] != keyValue {
+							found = false
+						}
+					}
+					if found {
+						// augment the list
+						l[i], err = c.addData(dd, elems[1:], val)
+						if err != nil {
+							return nil, err
+						}
+						return d, err
+					}
+				}
+			}
+			// list entry not found, add a list entry
+			de := make(map[string]interface{})
+			for keyName, keyValue := range k {
+				de[keyName] = keyValue
+			}
+			// augment the list
+			x, err := c.addData(de, elems[1:], val)
+			if err != nil {
+				return nil, err
+			}
+			// add the list entry to the list
+			dd[e] = append(l, x)
+			return d, nil
+		default:
+			return nil, errors.New("list last value JSON unexpected data structure")
+		}
+
+	default:
+		return nil, errors.New("list last value JSON unexpected data structure")
 	}
 }
 
@@ -458,115 +573,3 @@ func (c *Cache) addListValue(d interface{}, e string, k map[string]string, val *
 	}
 	return d, nil
 }
-
-func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
-	var err error
-	// initialize the data
-	//fmt.Printf("addContainer QueryPathElems: %v pathElem: %s\n", qelems, e)
-	if len(qelems) > 0 && qelems[0] == e {
-		// ignore the data
-		d, err = c.addData(d, elems[1:], qelems[1:], val)
-		return d, err
-	} else {
-		if reflect.TypeOf((d)) == nil {
-			d = make(map[string]interface{})
-		}
-		switch dd := d.(type) {
-		case map[string]interface{}:
-			// add the container
-			dd[e], err = c.addData(dd[e], elems[1:], qelems, val)
-			return d, err
-		default:
-			return nil, errors.New("addListLastValue JSON unexpected data structure")
-		}
-	}
-
-}
-
-func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*gnmi.PathElem, qelems []string, val *gnmi.TypedValue) (interface{}, error) {
-	var err error
-	fmt.Printf("addList QueryPathElems: %v pathElem: %s, key: %v d: %v\n", qelems, e, k, d)
-	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
-	if len(qelems) > 1 {
-		d, err = c.addData(d, elems[1:], qelems[1+len(k):], val)
-		return d, err
-	}
-	// conservative approach
-	/*
-		if len(qelems) > 0 && qelems[0] == e {
-			keys := make([]string, 0, len(k))
-			for key := range k {
-				keys = append(keys, key)
-			}
-			sort.Strings(keys)
-			found := true
-			for i, key := range keys {
-				if k[key] != qelems[1+i] {
-					found = false
-				}
-			}
-			if found {
-				d, err = c.addData(d, elems[1:], qelems[1:])
-				return d, err
-			}
-		}
-	*/
-	// initialize the data
-	if reflect.TypeOf((d)) == nil {
-		d = make(map[string]interface{})
-	}
-	switch dd := d.(type) {
-	case map[string]interface{}:
-		// initialize the data
-		if _, ok := dd[e]; !ok {
-			dd[e] = make([]interface{}, 0)
-		}
-		switch l := dd[e].(type) {
-		case []interface{}:
-			// check if the list entry exists
-			for i, le := range l {
-				// initialize the data
-				if reflect.TypeOf((le)) == nil {
-					le = make(map[string]interface{})
-				}
-				found := true
-				switch dd := le.(type) {
-				case map[string]interface{}:
-					for keyName, keyValue := range k {
-						if dd[keyName] != keyValue {
-							found = false
-						}
-					}
-					if found {
-						// augment the list
-						l[i], err = c.addData(dd, elems[1:], qelems, val)
-						if err != nil {
-							return nil, err
-						}
-						return d, err
-					}
-				}
-			}
-			// list entry not found, add a list entry
-			de := make(map[string]interface{})
-			for keyName, keyValue := range k {
-				de[keyName] = keyValue
-			}
-			// augment the list
-			x, err := c.addData(de, elems[1:], qelems, val)
-			if err != nil {
-				return nil, err
-			}
-			// add the list entry to the list
-			dd[e] = append(l, x)
-			return d, nil
-		default:
-			return nil, errors.New("list last value JSON unexpected data structure")
-		}
-
-	default:
-		return nil, errors.New("list last value JSON unexpected data structure")
-	}
-}
-
-
