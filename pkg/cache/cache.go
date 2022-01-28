@@ -387,6 +387,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 								// remove the original pathElements from the notification path except the last one
 								if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
 									pathElem = u.GetPath().GetElem()[len(p.GetElem())-1:]
+									pathElem[len(p.GetElem())-1] = &gnmi.PathElem{Name: "", Key: map[string]string{}}
 								}
 							} else {
 								// pathEleme has key and key hasno wildcard,
@@ -400,6 +401,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 							// remove the original pathElements from the notification path except the last one
 							if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
 								pathElem = u.GetPath().GetElem()[len(p.GetElem())-1:]
+								pathElem[len(p.GetElem())-1] = &gnmi.PathElem{Name: "", Key: map[string]string{}}
 							}
 						}
 					} else {
