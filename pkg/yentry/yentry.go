@@ -113,9 +113,12 @@ func (e *Entry) GetLeafRef() []*leafref.LeafRef {
 // GetKeys return the list of keys
 func (e *Entry) GetKeys(p *gnmi.Path) []string {
 	if len(p.GetElem()) != 0 {
-		fmt.Printf("yentry name: %s chldren: %v\n",e.Name, e.Children)
-		fmt.Printf("yentry pelem name: %v\n", p.GetElem()[0].GetName())
-		return e.Children[p.GetElem()[0].GetName()].GetKeys(&gnmi.Path{Elem: p.GetElem()[1:]})
+		// TODO DO we need to put protection in here?
+		if _, ok := e.Children[p.GetElem()[0].GetName()]; ok {
+			return e.Children[p.GetElem()[0].GetName()].GetKeys(&gnmi.Path{Elem: p.GetElem()[1:]})
+		}
+		fmt.Printf("invalid entry request in yentry: name: %s, pathElem: %v\n", e.Name, p.GetElem())
+		return []string{}
 	} else {
 		return e.GetKey()
 	}

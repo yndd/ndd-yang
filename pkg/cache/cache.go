@@ -260,7 +260,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 
 	default:
 		updates = append(updates, u)
-		fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
+		//fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
 		for k, v := range u.Path.GetElem()[len(u.Path.GetElem())-1].GetKey() {
 			val, err := json.Marshal(v)
 			if err != nil {
@@ -345,7 +345,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				for _, u := range n.GetUpdate() {
-					fmt.Printf("Notif: %v\n", u)
+					//fmt.Printf("Notif: %v\n", u)
 					// fp[2:]
 					//fmt.Printf("fp: %v\n", fp)
 					/*
@@ -415,7 +415,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 					if data, err = c.addData(data, pathElem, u.GetVal()); err != nil {
 						return err
 					}
-					fmt.Printf("data: %v\n", data)
+					//fmt.Printf("data: %v\n", data)
 
 				}
 			}
@@ -430,7 +430,7 @@ func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, val *gnmi.TypedVa
 	var err error
 	e := elems[0].GetName()
 	k := elems[0].GetKey()
-	fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(elems), e, k, d)
+	//fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(elems), e, k, d)
 	if len(elems)-1 == 0 {
 		// last element
 		if len(k) == 0 {
@@ -484,7 +484,7 @@ func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, va
 
 func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*gnmi.PathElem, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
-	fmt.Printf("addList pathElem: %s, key: %v d: %v\n", e, k, d)
+	//fmt.Printf("addList pathElem: %s, key: %v d: %v\n", e, k, d)
 	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
 	/*
 		if len(qelems) > 1 {
