@@ -370,7 +370,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 					}
 					// check if the requested path has a key
 					pathElemReqHasKey := false
-					if len(p.GetElem()[len(p.GetElem())-1].Key) > 0 {
+					if len(p.GetElem()) > 0 && len(p.GetElem()[len(p.GetElem())-1].Key) > 0 {
 						pathElemReqHasKey = true
 					}
 					pathElem := []*gnmi.PathElem{}
