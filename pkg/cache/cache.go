@@ -333,7 +333,7 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 	return notification, nil
 }
 
-func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{}, error) {
+func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.Entry) (interface{}, error) {
 	var err error
 	fp, err := path.CompletePath(prefix, p)
 	if err != nil {
@@ -359,10 +359,55 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path) (interface{},
 							}
 						}
 					*/
-					// remove the original pathElements from the notification path
+					// if the last element of the path has a key and the key is a wildcard or is not present
+					// we leave the last element present
+					// if the key is present we delete
+
+					// check in the schema if a last element has a key
+					pathElemHasKey := false
+					if len(rs.GetKeys(p)) > 0 {
+						pathElemHasKey = true
+					}
+					// check if the requested path has a key
+					pathElemReqHasKey := false
+					if len(p.GetElem()[len(p.GetElem())-1].Key) > 0 {
+						pathElemReqHasKey = true
+					}
 					pathElem := []*gnmi.PathElem{}
-					if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
-						pathElem = u.GetPath().GetElem()[len(p.GetElem()):]
+					if pathElemHasKey {
+						if pathElemReqHasKey {
+							wildcard := false
+							for _, v := range p.GetElem()[len(p.GetElem())-1].Key {
+								if v == "*" {
+									wildcard = true
+								}
+							}
+							if wildcard {
+								// pathEleme has key and key has wildcard, we dont strip the last Elem
+								// remove the original pathElements from the notification path except the last one
+								if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
+									pathElem = u.GetPath().GetElem()[len(p.GetElem())-1:]
+								}
+							} else {
+								// pathEleme has key and key hasno wildcard,
+								// remove the original pathElements from the notification path
+								if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
+									pathElem = u.GetPath().GetElem()[len(p.GetElem()):]
+								}
+							}
+						} else {
+							// pathEleme has key and key is not present, we dont strip the last Eleem
+							// remove the original pathElements from the notification path except the last one
+							if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
+								pathElem = u.GetPath().GetElem()[len(p.GetElem())-1:]
+							}
+						}
+					} else {
+						// pathElem has no key
+						// remove the original pathElements from the notification path
+						if len(p.GetElem()) <= len(u.GetPath().GetElem()) {
+							pathElem = u.GetPath().GetElem()[len(p.GetElem()):]
+						}
 					}
 
 					if data, err = c.addData(data, pathElem, u.GetVal()); err != nil {
@@ -440,10 +485,10 @@ func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*g
 	fmt.Printf("addList pathElem: %s, key: %v d: %v\n", e, k, d)
 	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
 	/*
-	if len(qelems) > 1 {
-		d, err = c.addData(d, elems[1:], qelems[1+len(k):], val)
-		return d, err
-	}
+		if len(qelems) > 1 {
+			d, err = c.addData(d, elems[1:], qelems[1+len(k):], val)
+			return d, err
+		}
 	*/
 	// conservative approach
 	/*

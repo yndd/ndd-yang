@@ -18,7 +18,7 @@ import (
 func Callback(n *ctree.Leaf) {
 	switch v := n.Value().(type) {
 	case *gnmi.Notification:
-		fmt.Printf("Cache change notification, Alias: %v, Prefix: %v, Path: %v, Value: %v\n", v.GetAlias() , path.ToStrings(v.GetPrefix(), true), path.ToStrings(v.GetUpdate()[0].GetPath(), true), v.GetUpdate()[0].GetVal())
+		fmt.Printf("Cache change notification, Alias: %v, Prefix: %v, Path: %v, Value: %v\n", v.GetAlias(), path.ToStrings(v.GetPrefix(), true), path.ToStrings(v.GetUpdate()[0].GetPath(), true), v.GetUpdate()[0].GetVal())
 	default:
 		fmt.Printf("State CacheUpdates unexpected type: %v\n", reflect.TypeOf(n.Value()))
 	}
@@ -38,7 +38,7 @@ func TestDynamicUpdates(t *testing.T) {
 		{
 			inp: &gnmi.Notification{
 				Prefix: prefix,
-				Alias: "config",
+				Alias:  "config",
 				Update: []*gnmi.Update{
 					{
 						Path: &gnmi.Path{
@@ -55,7 +55,7 @@ func TestDynamicUpdates(t *testing.T) {
 		{
 			inp: &gnmi.Notification{
 				Prefix: prefix,
-				Alias: "Config",
+				Alias:  "Config",
 				Update: []*gnmi.Update{
 					{
 						Path: &gnmi.Path{
@@ -72,7 +72,7 @@ func TestDynamicUpdates(t *testing.T) {
 		{
 			inp: &gnmi.Notification{
 				Prefix: prefix,
-				Alias: "Config",
+				Alias:  "Config",
 				Update: []*gnmi.Update{
 					{
 						Path: &gnmi.Path{
@@ -89,7 +89,7 @@ func TestDynamicUpdates(t *testing.T) {
 		{
 			inp: &gnmi.Notification{
 				Prefix: prefix,
-				Alias: "Config",
+				Alias:  "Config",
 				Update: []*gnmi.Update{
 					{
 						Path: &gnmi.Path{
@@ -408,7 +408,7 @@ func TestGetJson(t *testing.T) {
 			})
 		*/
 
-		d, err := c.GetJson(target, prefix, tt.inp)
+		d, err := c.GetJson(target, prefix, tt.inp, nil)
 		if err != nil {
 			t.Errorf("GetConfig: %v\n", err)
 		}
