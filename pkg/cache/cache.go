@@ -428,6 +428,9 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 
 func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
+	if len(elems) == 0 {
+		return nil, nil
+	}
 	e := elems[0].GetName()
 	k := elems[0].GetKey()
 	//fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(elems), e, k, d)
