@@ -54,7 +54,7 @@ func GetGranularUpdatesFromJSON(p *gnmi.Path, d interface{}, rs *yentry.Entry) (
 
 // getGranularUpdatesFromJSON provides an update per leaf level
 func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *yentry.Entry) error {
-	//fmt.Printf("getGranularUpdatesFromJSON entry: path: %s, data: %v\n", GnmiPath2XPath(path, true), d)
+	fmt.Printf("getGranularUpdatesFromJSON entry: path: %s, data: %v\n", GnmiPath2XPath(path, true), d)
 	p := DeepCopyGnmiPath(path)
 
 	pathKeys := make(map[string]string)
