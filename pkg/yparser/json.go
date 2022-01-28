@@ -126,7 +126,8 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 					}
 				case map[string]interface{}:
 					newPath := DeepCopyGnmiPath(p)
-					newPath.Elem = append(newPath.GetElem(), &gnmi.PathElem{Name: k})
+					//newPath.Elem = append(newPath.GetElem(), &gnmi.PathElem{Name: k})
+					newPath.Elem = []*gnmi.PathElem{{Name: k}}
 					err := getGranularUpdatesFromJSON(newPath, v, u, rs)
 					if err != nil {
 						return err
