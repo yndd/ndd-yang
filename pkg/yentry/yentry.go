@@ -17,6 +17,8 @@ limitations under the License.
 package yentry
 
 import (
+	"fmt"
+
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/leafref"
@@ -111,6 +113,7 @@ func (e *Entry) GetLeafRef() []*leafref.LeafRef {
 // GetKeys return the list of keys
 func (e *Entry) GetKeys(p *gnmi.Path) []string {
 	if len(p.GetElem()) != 0 {
+		fmt.Printf("entry pelem name: %v\n", p.GetElem()[0].GetName())
 		return e.Children[p.GetElem()[0].GetName()].GetKeys(&gnmi.Path{Elem: p.GetElem()[1:]})
 	} else {
 		return e.GetKey()
