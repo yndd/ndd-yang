@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/openconfig/gnmi/cache"
@@ -233,6 +234,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 		return nil, nil
 	case map[string]interface{}:
 		for k, v := range value {
+			k = strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
 			val, err := json.Marshal(v)
 			if err != nil {
 				return nil, err
@@ -246,6 +248,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 		}
 		// add the keys as data in the last element
 		for k, v := range u.Path.GetElem()[len(u.Path.GetElem())-1].GetKey() {
+			k = strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
 			val, err := json.Marshal(v)
 			if err != nil {
 				return nil, err
@@ -262,6 +265,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 		updates = append(updates, u)
 		//fmt.Printf("Default Type: %v\n", reflect.TypeOf(val))
 		for k, v := range u.Path.GetElem()[len(u.Path.GetElem())-1].GetKey() {
+			k = strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
 			val, err := json.Marshal(v)
 			if err != nil {
 				return nil, err
