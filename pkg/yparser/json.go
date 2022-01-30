@@ -97,7 +97,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 						switch value := vval.(type) {
 						case map[string]interface{}:
 							// gets the keys from the yangschema based on the gnmi path
-							fmt.Printf("pathEleme: %v\n", append(p.GetElem(), &gnmi.PathElem{Name: k}))
+							//fmt.Printf("pathElem: %v\n", append(p.GetElem(), &gnmi.PathElem{Name: k}))
 							keys := rs.GetKeys(&gnmi.Path{
 								Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 							})
