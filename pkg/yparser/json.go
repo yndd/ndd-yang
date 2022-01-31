@@ -229,16 +229,16 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 		}
 		// update for all the values in the container
 		// adds the keys to the path and deletes them from the data/json
-		if len(value) >= 0 {
-			update, err := getUpdatesFromContainer(p, value)
-			if err != nil {
-				return nil, err
-			}
-			u = append(u, update)
-			for _, upd := range u {
-				fmt.Printf("getUpdatesFromJSON update, path: %s, val: %v\n", GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
-			}
+		//if len(value) >= 0 {
+		update, err := getUpdatesFromContainer(p, value)
+		if err != nil {
+			return nil, err
 		}
+		u = append(u, update)
+		for _, upd := range u {
+			fmt.Printf("getUpdatesFromJSON update, path: %s, val: %v\n", GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
+		}
+		//}
 	}
 	return u, nil
 }
