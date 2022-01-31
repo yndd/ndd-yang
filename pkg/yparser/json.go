@@ -265,7 +265,8 @@ func getPathWithKeys(p *gnmi.Path, keys []string, k string, value map[string]int
 
 // getUpdatesFromContainer
 // adds the keys to the path and deletes them from the data/json
-func getUpdatesFromContainer(p *gnmi.Path, value map[string]interface{}) (*gnmi.Update, error) {
+func getUpdatesFromContainer(path *gnmi.Path, value map[string]interface{}) (*gnmi.Update, error) {
+	p := DeepCopyGnmiPath(path)
 	if len(p.GetElem()) > 0 {
 		// if the path contains a key we need to remove the element from the value and add it in the path
 		if len(p.GetElem()[len(p.GetElem())-1].GetKey()) != 0 {
