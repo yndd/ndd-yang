@@ -46,7 +46,7 @@ func GnmiPathToName(path *gnmi.Path) string {
 	return sb.String()
 }
 
-// Xpath2GnmiPath convertss a xpath string to a gnmi path
+// Xpath2GnmiPath converts a xpath string to a gnmi path
 func Xpath2GnmiPath(xpath string, offset int) (path *gnmi.Path) {
 	split := strings.Split(xpath, "/")
 	for i, element := range split {

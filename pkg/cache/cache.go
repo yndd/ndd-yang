@@ -349,20 +349,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				for _, u := range n.GetUpdate() {
-					//fmt.Printf("Notif: %v\n", u)
-					// fp[2:]
-					//fmt.Printf("fp: %v\n", fp)
-					/*
-						if len(fp) < 2 {
-							if data, err = c.addData(data, u.GetPath().GetElem(), fp, u.GetVal()); err != nil {
-								return err
-							}
-						} else {
-							if data, err = c.addData(data, u.GetPath().GetElem(), fp[1:], u.GetVal()); err != nil {
-								return err
-							}
-						}
-					*/
+					
 					// if the last element of the path has a key and the key is a wildcard or is not present
 					// we leave the last element present
 					// if the key is present we delete
