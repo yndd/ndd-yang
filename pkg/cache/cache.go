@@ -15,7 +15,6 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yentry"
-	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Cache struct {
@@ -59,6 +58,7 @@ func (c *Cache) GnmiUpdate(t string, n *gnmi.Notification) error {
 	return c.GetCache().GetTarget(t).GnmiUpdate(n)
 }
 
+/*
 // GetNotificationFromJson provides fine granular notifications from a JSON blob
 func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val interface{}, rs *yentry.Entry) (*gnmi.Notification, error) {
 	c.log.Debug("GetNotificationFromJSON2", "Path", yparser.GnmiPath2XPath(p, true), "Value", val)
@@ -74,7 +74,9 @@ func (c *Cache) GetNotificationFromJSON2(prefix *gnmi.Path, p *gnmi.Path, val in
 		Update:    updates,
 	}, nil
 }
+*/
 
+/*
 func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*gnmi.Update, rs *yentry.Entry) ([]*gnmi.Update, error) {
 	var err error
 	switch value := val.(type) {
@@ -141,6 +143,7 @@ func (c *Cache) getNotificationFromJSON2(path *gnmi.Path, val interface{}, u []*
 	}
 	return u, nil
 }
+*/
 
 // GetNotificationFromJson provides fine granular notifications from a JSON blob
 func (c *Cache) GetNotificationFromJSON(prefix *gnmi.Path, p *gnmi.Path, val interface{}, refPaths []*gnmi.Path) (*gnmi.Notification, error) {
@@ -233,6 +236,14 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 	case nil:
 		return nil, nil
 	case map[string]interface{}:
+		if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
+			p := c.p.DeepCopyGnmiPath(u.GetPath())
+			update := &gnmi.Update{
+				Path: p,
+				Val:  u.GetVal(),
+			}
+			updates = append(updates, update)
+		}
 		for k, v := range value {
 			k = strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
 			val, err := json.Marshal(v)
@@ -349,7 +360,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 		func(_ []string, _ *ctree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				for _, u := range n.GetUpdate() {
-					
+
 					// if the last element of the path has a key and the key is a wildcard or is not present
 					// we leave the last element present
 					// if the key is present we delete
@@ -403,14 +414,14 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 						}
 					}
 
-					if len(p.GetElem()) >= 1 && 
-						p.GetElem()[0].GetName() == "routing-policy" && 
-						p.GetElem()[1].GetName() == "policy"{
-							if len(pathElem) == 0 {
-								fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(pathElem), pathElem[0].GetName(), pathElem[0].GetKey() , data)
-							} else {
-								fmt.Printf("addData, Len: %d, Data: %v\n", len(pathElem), data)
-							}
+					if len(p.GetElem()) >= 1 &&
+						p.GetElem()[0].GetName() == "routing-policy" &&
+						p.GetElem()[1].GetName() == "policy" {
+						if len(pathElem) == 0 {
+							fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(pathElem), pathElem[0].GetName(), pathElem[0].GetKey(), data)
+						} else {
+							fmt.Printf("addData, Len: %d, Data: %v\n", len(pathElem), data)
+						}
 					}
 					if data, err = c.addData(data, pathElem, u.GetVal()); err != nil {
 						return err
