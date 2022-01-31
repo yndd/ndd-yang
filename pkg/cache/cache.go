@@ -237,12 +237,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 		return nil, nil
 	case map[string]interface{}:
 		if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
-			p := c.p.DeepCopyGnmiPath(u.GetPath())
-			update := &gnmi.Update{
-				Path: p,
-				Val:  u.GetVal(),
-			}
-			updates = append(updates, update)
+			updates = append(updates, u)
 		}
 		for k, v := range value {
 			k = strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
