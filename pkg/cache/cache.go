@@ -403,6 +403,15 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 						}
 					}
 
+					if len(p.GetElem()) >= 1 && 
+						p.GetElem()[0].GetName() == "routing-policy" && 
+						p.GetElem()[1].GetName() == "policy"{
+							if len(pathElem) == 0 {
+								fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(pathElem), pathElem[0].GetName(), pathElem[0].GetKey() , data)
+							} else {
+								fmt.Printf("addData, Len: %d, Data: %v\n", len(pathElem), data)
+							}
+					}
 					if data, err = c.addData(data, pathElem, u.GetVal()); err != nil {
 						return err
 					}
@@ -424,7 +433,7 @@ func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, val *gnmi.TypedVa
 	}
 	e := elems[0].GetName()
 	k := elems[0].GetKey()
-	fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(elems), e, k, d)
+	//fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(elems), e, k, d)
 	if len(elems)-1 == 0 {
 		// last element
 		if len(k) == 0 {
@@ -453,7 +462,7 @@ func (c *Cache) addData(d interface{}, elems []*gnmi.PathElem, val *gnmi.TypedVa
 func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
 	// initialize the data
-	fmt.Printf("addContainer QueryPathElems: %v pathElem: %s val: %v\n", elems, e, val)
+	//fmt.Printf("addContainer QueryPathElems: %v pathElem: %s val: %v\n", elems, e, val)
 	/*
 		if len(qelems) > 0 && qelems[0] == e {
 			// ignore the data
@@ -478,7 +487,7 @@ func (c *Cache) addContainer(d interface{}, e string, elems []*gnmi.PathElem, va
 
 func (c *Cache) addList(d interface{}, e string, k map[string]string, elems []*gnmi.PathElem, val *gnmi.TypedValue) (interface{}, error) {
 	var err error
-	fmt.Printf("addList pathElem: %s, key: %v d: %v\n", e, k, d)
+	//fmt.Printf("addList pathElem: %s, key: %v d: %v\n", e, k, d)
 	// lean approach -> since we know the query should return paths that match the original query we can assume we match the path
 	/*
 		if len(qelems) > 1 {
