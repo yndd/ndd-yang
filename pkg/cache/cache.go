@@ -237,7 +237,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update, has
 	case nil:
 		return nil, nil
 	case map[string]interface{}:
-		if len(value) == 0 && len(u.GetPath().GetElem()) > 1 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
+		if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
 			// only insert the empty entries if the pathelem does not contain a key
 			if !hasKey {
 				update := &gnmi.Update{
