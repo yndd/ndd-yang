@@ -162,12 +162,14 @@ func (t *Tree) terminalAdd(value interface{}) error {
 		case map[string]interface{}:
 			fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH\n")
 			return nil
-			/*
-				if len(v) == 0 {
-					fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH\n")
-					return nil
-				}
-			*/
+		/*
+			if len(v) == 0 {
+				fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH\n")
+				return nil
+			}
+		*/
+		default:
+			fmt.Printf("ADDED LEAF IN CACHE Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
 		}
 	}
 	// NEW CODE ADDED ABOVE
@@ -193,7 +195,7 @@ func (t *Tree) intermediateAdd(path []string, value interface{}) error {
 		br = b[path[0]]
 		// NEW CODE
 	case *pb.Notification:
-		return fmt.Errorf("intermediateAdd attempted to add value %#v at path %q which is already a leaf with path %s value %#v", value, path, yparser.GnmiPath2XPath(b.GetUpdate()[0].GetPath(), true), b.GetUpdate()[0].GetVal())
+		return fmt.Errorf("intermediateAdd attempted to add value %#v at path %q which is already a leaf with path %s value %v", value, path, yparser.GnmiPath2XPath(b.GetUpdate()[0].GetPath(), true), b.GetUpdate()[0].GetVal())
 	default:
 		return fmt.Errorf("intermediateAdd attempted to add value %#v at path %q which is already a leaf with value %#v", value, path, t.leafBranch)
 	}
