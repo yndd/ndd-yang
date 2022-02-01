@@ -156,6 +156,7 @@ func (t *Tree) terminalAdd(value interface{}) error {
 				
 			}
 		}
+		return nil
 	}
 	// NEW CODE ADDED
 	if _, ok := t.leafBranch.(branch); ok {
