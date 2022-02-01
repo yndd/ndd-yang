@@ -422,7 +422,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 						}
 					}
 
-					if len(p.GetElem()) >= 1 &&
+					if len(p.GetElem()) > 1 &&
 						p.GetElem()[0].GetName() == "routing-policy" &&
 						p.GetElem()[1].GetName() == "policy" {
 						if len(pathElem) == 0 {
