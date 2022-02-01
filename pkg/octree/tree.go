@@ -161,6 +161,7 @@ func (t *Tree) terminalAdd(value interface{}) error {
 		switch val.(type) {
 		case map[string]interface{}:
 			fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
+			t.leafBranch = nil
 			return nil
 		/*
 			if len(v) == 0 {
