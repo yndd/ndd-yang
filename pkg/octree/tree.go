@@ -195,7 +195,11 @@ func (t *Tree) intermediateAdd(path []string, value interface{}) error {
 		br = b[path[0]]
 		// NEW CODE
 	case *pb.Notification:
-		return fmt.Errorf("intermediateAdd attempted to add value %#v at path %q which is already a leaf with path %s value %v", value, path, yparser.GnmiPath2XPath(b.GetUpdate()[0].GetPath(), true), b.GetUpdate()[0].GetVal())
+		val, err := yparser.GetValue(b.GetUpdate()[0].GetVal())
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("intermediateAdd attempted to add value %#v at path %q which is already a leaf with path %s value %v", value, path, yparser.GnmiPath2XPath(b.GetUpdate()[0].GetPath(), true), val)
 	default:
 		return fmt.Errorf("intermediateAdd attempted to add value %#v at path %q which is already a leaf with value %#v", value, path, t.leafBranch)
 	}
