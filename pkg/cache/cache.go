@@ -238,23 +238,19 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update, has
 		return nil, nil
 	case map[string]interface{}:
 		if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
-			p := c.p.DeepCopyGnmiPath(u.GetPath())
-			if len(p.GetElem()) > 1 {
-				// only insert the empty entries if the pathelem does not contain a key
-				if !hasKey {
-					update := &gnmi.Update{
-						Path: &gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]},
-						Val:  u.GetVal(),
-					}
-					updates = append(updates, update)
-					// debug
-					fmt.Printf("{INSERTED EMPTY UPDATE: PATH: %s, VALUE: %v\n",
-						yparser.GnmiPath2XPath(u.GetPath(), true),
-						u.GetVal(),
-					)
+			// only insert the empty entries if the pathelem does not contain a key
+			if !hasKey {
+				update := &gnmi.Update{
+					Path: u.GetPath(),
+					Val:  u.GetVal(),
 				}
+				updates = append(updates, update)
+				// debug
+				fmt.Printf("{INSERTED EMPTY UPDATE: PATH: %s, VALUE: %v\n",
+					yparser.GnmiPath2XPath(u.GetPath(), true),
+					u.GetVal(),
+				)
 			}
-
 		}
 		for k, v := range value {
 			k = strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
