@@ -15,6 +15,7 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yentry"
+	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Cache struct {
@@ -239,11 +240,17 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 		if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
 			p := c.p.DeepCopyGnmiPath(u.GetPath())
 			if len(p.GetElem()) > 1 {
-				update := &gnmi.Update{
-					Path: &gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]},
-					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: []byte(p.GetElem()[len(p.GetElem())-1].GetName())}},
-				}
-				updates = append(updates, update)
+				fmt.Printf("{POTENTIAL UPDATE: PATH: %s, VALUE: %v\n",
+					yparser.GnmiPath2XPath(&gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]}, true),
+					[]byte(p.GetElem()[len(p.GetElem())-1].GetName()),
+				)
+				/*
+					update2 := &gnmi.Update{
+						Path: &gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]},
+						Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: []byte(p.GetElem()[len(p.GetElem())-1].GetName())}},
+					}
+					updates = append(updates, update)
+				*/
 			}
 
 		}
