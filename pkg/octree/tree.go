@@ -160,7 +160,7 @@ func (t *Tree) terminalAdd(value interface{}) error {
 		}
 		switch val.(type) {
 		case map[string]interface{}:
-			fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH\n")
+			fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
 			return nil
 		/*
 			if len(v) == 0 {
@@ -169,7 +169,7 @@ func (t *Tree) terminalAdd(value interface{}) error {
 			}
 		*/
 		default:
-			fmt.Printf("ADDED LEAF IN CACHE Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
+			fmt.Printf("ADDED LEAF IN CACHE -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
 		}
 	}
 	// NEW CODE ADDED ABOVE
