@@ -78,7 +78,7 @@ func newBranch(path []string, value interface{}, pathElem string) *Tree {
 			switch val.(type) {
 			case map[string]interface{}:
 				fmt.Printf("AVOID ADDING NOTIFICATION TO NEWBRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
-				return &Tree{leafBranch: branch{path[0]: newBranch([]string{pathElem},  value, "")}}
+				return &Tree{leafBranch: branch{pathElem: &Tree{leafBranch: value}}}
 			}
 		}
 		// NEW CODE ADDED ABOVE
