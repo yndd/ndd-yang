@@ -242,7 +242,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 			if len(p.GetElem()) > 1 {
 				update := &gnmi.Update{
 					Path: &gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]},
-					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: []byte(p.GetElem()[len(p.GetElem())-1].GetName())}},
+					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: p.GetElem()[len(p.GetElem())-1].GetName()}},
 				}
 				updates = append(updates, update)
 				// debug
