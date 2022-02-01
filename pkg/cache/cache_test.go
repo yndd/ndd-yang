@@ -116,6 +116,7 @@ func TestDynamicUpdates(t *testing.T) {
 	}
 }
 
+/*
 func TestGetNotificationFromUpdate(t *testing.T) {
 
 	target := "dev1"
@@ -181,6 +182,7 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 		},
 	}
 	c := New([]string{target})
+
 	for i, tt := range tests {
 		n, err := c.GetNotificationFromUpdate(prefix, tt.inp)
 		if err != nil {
@@ -191,7 +193,9 @@ func TestGetNotificationFromUpdate(t *testing.T) {
 			fmt.Printf("Update: %v\n", u)
 		}
 	}
+
 }
+*/
 
 func TestGetJson(t *testing.T) {
 	target := "dev1"

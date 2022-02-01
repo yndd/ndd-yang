@@ -15,7 +15,6 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yentry"
-	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Cache struct {
@@ -237,22 +236,27 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 	case nil:
 		return nil, nil
 	case map[string]interface{}:
-		if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
-			p := c.p.DeepCopyGnmiPath(u.GetPath())
-			if len(p.GetElem()) > 1 {
-				update := &gnmi.Update{
-					Path: &gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]},
-					Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: p.GetElem()[len(p.GetElem())-1].GetName()}},
+		/*
+			if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
+				p := c.p.DeepCopyGnmiPath(u.GetPath())
+				if len(p.GetElem()) > 1 {
+					// only insert the empty entries if the pathelem does not contain a key
+					if len(rs.GetKeys(p)) == 0 {
+						update := &gnmi.Update{
+							Path: &gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]},
+							Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: p.GetElem()[len(p.GetElem())-1].GetName()}},
+						}
+						updates = append(updates, update)
+						// debug
+						fmt.Printf("{POTENTIAL UPDATE: PATH: %s, VALUE: %v\n",
+							yparser.GnmiPath2XPath(u.GetPath(), true),
+							u.GetVal(),
+						)
+					}
 				}
-				updates = append(updates, update)
-				// debug
-				fmt.Printf("{POTENTIAL UPDATE: PATH: %s, VALUE: %v\n",
-					yparser.GnmiPath2XPath(u.GetPath(), true),
-					u.GetVal(),
-				)
-			}
 
-		}
+			}
+		*/
 		for k, v := range value {
 			k = strings.Split(k, ":")[len(strings.Split(k, ":"))-1]
 			val, err := json.Marshal(v)
