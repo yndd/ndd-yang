@@ -71,6 +71,17 @@ func (l *Leaf) Update(val interface{}) {
 
 func newBranch(path []string, value interface{}) *Tree {
 	if len(path) == 0 {
+		// NEW CODE ADDED BELOW
+		switch v := value.(type) {
+		case *pb.Notification:
+			val, _ := yparser.GetValue(v.GetUpdate()[0].GetVal())
+			switch val.(type) {
+			case map[string]interface{}:
+				fmt.Printf("AVOID ADDING NOTIFICATION TO NEWBRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
+				return &Tree{leafBranch: branch{}}
+			}
+		}
+		// NEW CODE ADDED ABOVE
 		return &Tree{leafBranch: value}
 	}
 	return &Tree{leafBranch: branch{path[0]: newBranch(path[1:], value)}}
@@ -161,7 +172,6 @@ func (t *Tree) terminalAdd(value interface{}) error {
 		switch val.(type) {
 		case map[string]interface{}:
 			fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
-			t.leafBranch = nil
 			return nil
 		/*
 			if len(v) == 0 {
