@@ -9,7 +9,7 @@ import (
 
 	"github.com/openconfig/gnmi/path"
 	"github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/yndd/ndd-yang/octree"
+	"github.com/yndd/ndd-yang/pkg/octree"
 )
 
 //{"level":"debug","ts":1633674399.5347052,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]","Value":"json_ietf_val:\"{\\\"address-allocation-strategy\\\":\\\"first-address\\\",\\\"admin-state\\\":\\\"enable\\\"}\""}

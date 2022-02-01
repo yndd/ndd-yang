@@ -29,7 +29,7 @@ import (
 	"github.com/openconfig/gnmi/metadata"
 	"github.com/openconfig/gnmi/path"
 	"github.com/openconfig/gnmi/value"
-	"github.com/yndd/ndd-yang/octree"
+	"github.com/yndd/ndd-yang/pkg/octree"
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 
