@@ -244,7 +244,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update, has
 				if !hasKey {
 					update := &gnmi.Update{
 						Path: &gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]},
-						Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_StringVal{StringVal: p.GetElem()[len(p.GetElem())-1].GetName()}},
+						Val:  u.GetVal(),
 					}
 					updates = append(updates, update)
 					// debug
