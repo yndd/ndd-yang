@@ -161,7 +161,7 @@ func (t *Tree) terminalAdd(value interface{}) error {
 		switch v := val.(type) {
 		case map[string]interface{}:
 			if len(v) == 0 {
-				fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH")
+				fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH\n")
 				return nil
 			}
 		}
