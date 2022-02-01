@@ -7,15 +7,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openconfig/gnmi/ctree"
 	"github.com/openconfig/gnmi/path"
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/ndd-yang/octree"
 )
 
 //{"level":"debug","ts":1633674399.5347052,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]","Value":"json_ietf_val:\"{\\\"address-allocation-strategy\\\":\\\"first-address\\\",\\\"admin-state\\\":\\\"enable\\\"}\""}
 //{"level":"debug","ts":1633674399.5347154,"logger":"ipam","msg":"Create Fine Grane Updates","resource":"ipam-default-ipprefix-isl-ipv4","Resource":"ipam-default-ipprefix-isl-ipv4","Path":"/ipam/tenant[name=default]/network-instance[name=default]/ip-prefix[prefix=100.64.0.0/16]/tag[key=purpose]","Value":"json_ietf_val:\"{\\\"value\\\":\\\"isl\\\"}\""}
 
-func Callback(n *ctree.Leaf) {
+func Callback(n *octree.Leaf) {
 	switch v := n.Value().(type) {
 	case *gnmi.Notification:
 		fmt.Printf("Cache change notification, Alias: %v, Prefix: %v, Path: %v, Value: %v\n", v.GetAlias(), path.ToStrings(v.GetPrefix(), true), path.ToStrings(v.GetUpdate()[0].GetPath(), true), v.GetUpdate()[0].GetVal())

@@ -8,18 +8,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openconfig/gnmi/cache"
-	"github.com/openconfig/gnmi/ctree"
 	"github.com/openconfig/gnmi/path"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
+	"github.com/yndd/ndd-yang/occache"
+	"github.com/yndd/ndd-yang/octree"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yentry"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Cache struct {
-	c   *cache.Cache
+	c   *occache.Cache
 	p   *parser.Parser
 	log logging.Logger
 }
@@ -41,7 +41,7 @@ func WithParser(l logging.Logger) Option {
 
 func New(t []string, opts ...Option) *Cache {
 	c := &Cache{
-		c: cache.New(t),
+		c: occache.New(t),
 	}
 
 	for _, opt := range opts {
@@ -51,7 +51,7 @@ func New(t []string, opts ...Option) *Cache {
 	return c
 }
 
-func (c *Cache) GetCache() *cache.Cache {
+func (c *Cache) GetCache() *occache.Cache {
 	return c.c
 }
 
@@ -326,7 +326,7 @@ func (c *Cache) QueryAll(t string, prefix *gnmi.Path, p *gnmi.Path) ([]*gnmi.Not
 	}
 	//pp := path.ToStrings(fp, true)
 	if err := c.c.Query(t, fp,
-		func(_ []string, _ *ctree.Leaf, n interface{}) error {
+		func(_ []string, _ *octree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				notifications = append(notifications, n)
 			}
@@ -345,7 +345,7 @@ func (c *Cache) Query(t string, prefix *gnmi.Path, p *gnmi.Path) (*gnmi.Notifica
 	}
 	//pp := path.ToStrings(fp, true)
 	if err := c.c.Query(t, fp,
-		func(_ []string, _ *ctree.Leaf, n interface{}) error {
+		func(_ []string, _ *octree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				notification = n
 			}
@@ -365,7 +365,7 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 	var data interface{}
 	//pp := path.ToStrings(p, true)
 	if err := c.c.Query(t, fp,
-		func(_ []string, _ *ctree.Leaf, n interface{}) error {
+		func(_ []string, _ *octree.Leaf, n interface{}) error {
 			if n, ok := n.(*gnmi.Notification); ok {
 				for _, u := range n.GetUpdate() {
 
