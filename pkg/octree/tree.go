@@ -23,6 +23,9 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	pb "github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type branch map[string]*Tree
@@ -148,17 +151,22 @@ func (t *Tree) slowAdd(path []string, value interface{}) error {
 func (t *Tree) terminalAdd(value interface{}) error {
 	defer t.mu.Unlock()
 	t.mu.Lock()
-	// NEW CODE ADDED
+	// NEW CODE ADDED BELOW
 	switch v := value.(type) {
-	case map[string]interface{}:
-		if len(v) == 0 {
-			if _, ok := t.leafBranch.(branch); !ok {
-				
+	case *pb.Notification:
+		val, err := yparser.GetValue(v.GetUpdate()[0].GetVal())
+		if err != nil {
+			return err
+		}
+		switch v := val.(type) {
+		case map[string]interface{}:
+			if len(v) == 0 {
+				fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH")
+				return nil
 			}
 		}
-		return nil
 	}
-	// NEW CODE ADDED
+	// NEW CODE ADDED ABOVE
 	if _, ok := t.leafBranch.(branch); ok {
 		return fmt.Errorf("attempted to add a leaf in place of a branch")
 	}
