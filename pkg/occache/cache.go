@@ -452,7 +452,9 @@ func (t *Target) gnmiUpdate(n *pb.Notification) (*octree.Leaf, error) {
 		// contain *pb.Notification. Thus, need type assertion here.
 		old, ok := oldval.Value().(*pb.Notification)
 		if !ok {
-			return nil, fmt.Errorf("corrupt schema with collision for path %q, got %T", path, oldval.Value())
+			// NEW CODE
+			return nil, nil
+			//return nil, fmt.Errorf("corrupt schema with collision for path %q, got %T", path, oldval.Value())
 		}
 		switch {
 		case n.GetTimestamp() < old.GetTimestamp():
