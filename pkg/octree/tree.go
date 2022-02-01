@@ -69,7 +69,7 @@ func (l *Leaf) Update(val interface{}) {
 	l.leafBranch = val
 }
 
-func newBranch(path []string, value interface{}) *Tree {
+func newBranch(path []string, value interface{}, pathElem string) *Tree {
 	if len(path) == 0 {
 		// NEW CODE ADDED BELOW
 		switch v := value.(type) {
@@ -78,13 +78,13 @@ func newBranch(path []string, value interface{}) *Tree {
 			switch val.(type) {
 			case map[string]interface{}:
 				fmt.Printf("AVOID ADDING NOTIFICATION TO NEWBRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
-				return &Tree{leafBranch: branch{}}
+				return &Tree{leafBranch: branch{pathElem: &Tree{}}}
 			}
 		}
 		// NEW CODE ADDED ABOVE
 		return &Tree{leafBranch: value}
 	}
-	return &Tree{leafBranch: branch{path[0]: newBranch(path[1:], value)}}
+	return &Tree{leafBranch: branch{path[0]: newBranch(path[1:], value, "")}}
 }
 
 // isBranch assumes the calling function holds a lock on t.
@@ -150,7 +150,7 @@ func (t *Tree) slowAdd(path []string, value interface{}) error {
 		// reader/writer lock exchange.
 		br := b[path[0]]
 		if br == nil {
-			br = newBranch(path[1:], value)
+			br = newBranch(path[1:], value, path[0])
 			b[path[0]] = br
 		}
 		return br.Add(path[1:], value)
