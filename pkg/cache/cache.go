@@ -242,7 +242,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update) (*g
 			if len(p.GetElem()) > 1 {
 				fmt.Printf("{POTENTIAL UPDATE: PATH: %s, VALUE: %v\n",
 					yparser.GnmiPath2XPath(&gnmi.Path{Elem: p.GetElem()[:len(p.GetElem())-1]}, true),
-					[]byte(p.GetElem()[len(p.GetElem())-1].GetName()),
+					p.GetElem()[len(p.GetElem())-1].GetName(),
 				)
 				/*
 					update2 := &gnmi.Update{
