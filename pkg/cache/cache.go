@@ -422,18 +422,21 @@ func (c *Cache) GetJson(t string, prefix *gnmi.Path, p *gnmi.Path, rs *yentry.En
 						}
 					}
 
-					if len(p.GetElem()) > 1 &&
-						p.GetElem()[0].GetName() == "routing-policy" &&
-						p.GetElem()[1].GetName() == "policy" {
-						if len(pathElem) == 0 {
-							fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(pathElem), pathElem[0].GetName(), pathElem[0].GetKey(), data)
-						} else {
-							fmt.Printf("addData, Len: %d, Data: %v\n", len(pathElem), data)
+					/*
+						if len(p.GetElem()) > 1 &&
+							p.GetElem()[0].GetName() == "routing-policy" &&
+							p.GetElem()[1].GetName() == "policy" {
+							if len(pathElem) == 0 {
+								fmt.Printf("addData, Len: %d, Elem: %s, Key: %v, Data: %v\n", len(pathElem), pathElem[0].GetName(), pathElem[0].GetKey(), data)
+							} else {
+								fmt.Printf("addData, Len: %d, Data: %v\n", len(pathElem), data)
+							}
 						}
-					}
+					*/
 					if data, err = c.addData(data, pathElem, u.GetVal()); err != nil {
 						return err
 					}
+
 					//fmt.Printf("data: %v\n", data)
 
 				}
