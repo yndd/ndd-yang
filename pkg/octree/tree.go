@@ -144,7 +144,7 @@ func (t *Tree) slowAdd(path []string, value interface{}) error {
 		}
 		return br.Add(path[1:], value)
 	default:
-		return fmt.Errorf("attempted to add value %#v at path %q which is already a leaf with value %#v", value, path, t.leafBranch)
+		return fmt.Errorf("slowAdd attempted to add value %#v at path %q which is already a leaf with value %#v", value, path, t.leafBranch)
 	}
 }
 
@@ -188,7 +188,7 @@ func (t *Tree) intermediateAdd(path []string, value interface{}) error {
 	case branch:
 		br = b[path[0]]
 	default:
-		return fmt.Errorf("attempted to add value %#v at path %q which is already a leaf with value %#v", value, path, t.leafBranch)
+		return fmt.Errorf("intermediateAdd attempted to add value %#v at path %q which is already a leaf with value %#v", value, path, t.leafBranch)
 	}
 	if br == nil {
 		// Exchange the reader lock on t for a writer lock to add new node(s) to the
