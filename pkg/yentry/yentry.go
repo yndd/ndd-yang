@@ -170,7 +170,7 @@ func (e *Entry) GetHierarchicalResourcesLocal(root bool, p *gnmi.Path, cp *gnmi.
 	}
 	// only return the first elem, since protocol/bgp and protocol/isis return 2 elements but the protocol pathElem is what matters here
 	for _, path := range hierPaths {
-		path.Elem = path.Elem[:0]
+		path.Elem = path.Elem[:1]
 	}
 	return hierPaths
 }
