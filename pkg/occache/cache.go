@@ -450,11 +450,12 @@ func (t *Target) gnmiUpdate(n *pb.Notification) (*octree.Leaf, error) {
 	if oldval := t.t.GetLeaf(path); oldval != nil {
 		// An update with corrupt data is possible to visit a node that does not
 		// contain *pb.Notification. Thus, need type assertion here.
+		// NEW APPROACH -> GIVEN WE ALLOW INSERTION OF A BRANCH WITHOUT DATA WE DONT CREATE AN ERROR HERE
 		old, ok := oldval.Value().(*pb.Notification)
 		if !ok {
 			// NEW CODE TBD
-			//return nil, nil
-			return nil, fmt.Errorf("corrupt schema with collision for path %q, got %T", path, oldval.Value())
+			return nil, nil
+			//return nil, fmt.Errorf("corrupt schema with collision for path %q, got %T", path, oldval.Value())
 		}
 		switch {
 		case n.GetTimestamp() < old.GetTimestamp():
