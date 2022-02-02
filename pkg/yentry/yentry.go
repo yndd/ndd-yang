@@ -188,3 +188,31 @@ func (e *Entry) Register(p *gnmi.Path) {
 		e.Resources = append(e.Resources, p)
 	}
 }
+
+// GetParentDependency returns the parent dependency path
+// 1. p is used to walk the yang tree, it gets decremented along the way until it reach 0 pathElem
+// 2. rp is original root path
+// 3. lastBoundaryPathElem is the last boundary element found along the tree
+func (e *Entry) GetParentDependency(p, rp *gnmi.Path, lastBoundaryPathElem string) *gnmi.Path {
+	if len(p.GetElem()) != 0 {
+		// continue finding the root of the resource we want to get the data from
+		if e.ResourceBoundary {
+			lastBoundaryPathElem = e.Name
+		}
+		return e.Children[p.GetElem()[0].GetName()].GetParentDependency(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, lastBoundaryPathElem)
+	} else {
+		pdPath := &gnmi.Path{}
+		// walk over the original rootPath and add all pathelement until we reach the lastBoundaryPathElem
+		for _, pe := range rp.GetElem() {
+			pdPath.Elem = append(pdPath.Elem, &gnmi.PathElem{
+				Name: pe.GetName(),
+				Key:  pe.GetKey(),
+			})
+			if pe.GetName() == lastBoundaryPathElem {
+				return pdPath
+			}
+		}
+	}
+	// we should never come here
+	return &gnmi.Path{}
+}
