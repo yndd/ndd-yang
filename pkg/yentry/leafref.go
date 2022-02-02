@@ -186,7 +186,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 		for n, x2 := range x1 {
 			switch x3 := x2.(type) {
 			case map[string]interface{}:
-				fmt.Printf("resolveLeafRefsWithKey2 yentry n: %d, lrp: %s\n", n, GnmiPath2XPath(p, true))
+				fmt.Printf("resolveLeafRefsWithKey2 yentry n: %d, lrp: %s\n", n, GnmiPath2XPath(lrp, true))
 				if n > 0 {
 					resolution.ResolvedLeafRefs = append(resolution.ResolvedLeafRefs, rlrOrig)
 					lridx++
@@ -202,6 +202,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 					}
 				} else {
 					if findKey(lrp, x3) {
+						fmt.Printf("key found\n")
 						if len(lrp.GetElem()) == 2 {
 							// end of the leafref with leaf
 							resolution.ResolvedLeafRefs[lridx].LocalPath = &gnmi.Path{Elem: append(resolution.ResolvedLeafRefs[lridx].LocalPath.GetElem(), lrp.GetElem()[1])}
@@ -266,6 +267,7 @@ func deepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 	fmt.Printf("findKey: path %s, data: %v\n", GnmiPath2XPath(p, true), x)
 	for keyName, keyValue := range p.GetElem()[0].GetKey() {
+		fmt.Printf("findKey: keyName %s, keyValue: %s\n", keyName, keyValue)
 		if v, ok := x[keyName]; !ok {
 			return false
 		} else {
