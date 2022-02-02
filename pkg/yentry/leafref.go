@@ -274,6 +274,7 @@ func deepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 
 func insertKeyValueInLeafRef(p *gnmi.Path, x map[string]interface{}, resolution *leafref.Resolution, lridx int) {
 	// gather the keyValues from the data
+	fmt.Printf("insertKeyValueInLeafRef: path: %s, key: %v, data: %v \n", GnmiPath2XPath(p, true), p.GetElem()[0].GetKey(), x)
 	keys := make(map[string]string)
 	for keyName := range p.GetElem()[0].GetKey() {
 		if v, ok := x[keyName]; !ok {
