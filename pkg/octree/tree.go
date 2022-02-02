@@ -77,13 +77,14 @@ func newBranch(path []string, value interface{}, pathElem string) *Tree {
 			val, _ := yparser.GetValue(v.GetUpdate()[0].GetVal())
 			switch val.(type) {
 			case map[string]interface{}:
-				fmt.Printf("AVOID ADDING NOTIFICATION TO NEWBRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
+				//fmt.Printf("AVOID ADDING NOTIFICATION TO NEWBRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
 				return &Tree{leafBranch: branch{pathElem: &Tree{leafBranch: value}}}
 			}
 		}
 		// NEW CODE ADDED ABOVE
 		return &Tree{leafBranch: value}
 	}
+	// UPDATED WITH ADDITIONAL PARAMETER
 	return &Tree{leafBranch: branch{path[0]: newBranch(path[1:], value, "")}}
 }
 
@@ -150,6 +151,7 @@ func (t *Tree) slowAdd(path []string, value interface{}) error {
 		// reader/writer lock exchange.
 		br := b[path[0]]
 		if br == nil {
+			// NEW CODE -> PASS PREVIOUS ELEMENT IN NEW BRANCH
 			br = newBranch(path[1:], value, path[0])
 			b[path[0]] = br
 		}
@@ -171,7 +173,7 @@ func (t *Tree) terminalAdd(value interface{}) error {
 		}
 		switch val.(type) {
 		case map[string]interface{}:
-			fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
+			//fmt.Printf("AVOID ADDING NOTIFICATION TO BRANCH -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
 			return nil
 		/*
 			if len(v) == 0 {
@@ -179,8 +181,8 @@ func (t *Tree) terminalAdd(value interface{}) error {
 				return nil
 			}
 		*/
-		default:
-			fmt.Printf("ADDED LEAF IN CACHE -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
+		//default:
+		//	fmt.Printf("ADDED LEAF IN CACHE -> Path: %s, Value: %v\n", yparser.GnmiPath2XPath(v.GetUpdate()[0].GetPath(), true), val)
 		}
 	}
 	// NEW CODE ADDED ABOVE
