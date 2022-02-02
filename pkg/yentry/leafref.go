@@ -277,7 +277,7 @@ func insertKeyValueInLeafRef(p *gnmi.Path, x map[string]interface{}, resolution 
 	fmt.Printf("insertKeyValueInLeafRef: path: %s, key: %v, data: %v \n", GnmiPath2XPath(p, true), p.GetElem()[0].GetKey(), x)
 	keys := make(map[string]string)
 	for keyName := range p.GetElem()[0].GetKey() {
-		if v, ok := x[keyName]; !ok {
+		if v, ok := x[keyName]; ok {
 			switch x := v.(type) {
 			case string:
 				keys[keyName] = string(x)
@@ -290,13 +290,13 @@ func insertKeyValueInLeafRef(p *gnmi.Path, x map[string]interface{}, resolution 
 			}
 		}
 	}
-	for _, pe := range resolution.ResolvedLeafRefs[lridx].LocalPath.GetElem() {
+	path := deepCopyGnmiPath(resolution.ResolvedLeafRefs[lridx].LocalPath)
+	for _, pe := range path.GetElem() {
 		if pe.GetName() == p.GetElem()[0].GetName() {
 			pe.Key = keys
 		}
 	}
-	
-	
+	resolution.ResolvedLeafRefs[lridx].LocalPath = path
 }
 
 func findKey(p *gnmi.Path, x map[string]interface{}) bool {
