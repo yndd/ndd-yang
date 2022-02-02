@@ -201,24 +201,28 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 						}
 					}
 				} else {
-					if findKey(lrp, x3) {
-						fmt.Printf("key found\n")
-						if len(lrp.GetElem()) == 2 {
-							// end of the leafref with leaf
-							resolution.ResolvedLeafRefs[lridx].LocalPath = &gnmi.Path{Elem: append(resolution.ResolvedLeafRefs[lridx].LocalPath.GetElem(), lrp.GetElem()[1])}
-							if x, ok := isDataPresent(lrp, x2, 1); ok {
-								if value, ok := getStringValue(x); ok {
-									resolution.ResolvedLeafRefs[lridx].Value = value
-									resolution.ResolvedLeafRefs[lridx].Resolved = true
+					// continue; remove the pathElem from the leafref
+					e.Children[lrp.GetElem()[1].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x2, resolution, lridx)
+					/*
+						if findKey(lrp, x3) {
+							fmt.Printf("key found\n")
+							if len(lrp.GetElem()) == 2 {
+								// end of the leafref with leaf
+								resolution.ResolvedLeafRefs[lridx].LocalPath = &gnmi.Path{Elem: append(resolution.ResolvedLeafRefs[lridx].LocalPath.GetElem(), lrp.GetElem()[1])}
+								if x, ok := isDataPresent(lrp, x2, 1); ok {
+									if value, ok := getStringValue(x); ok {
+										resolution.ResolvedLeafRefs[lridx].Value = value
+										resolution.ResolvedLeafRefs[lridx].Resolved = true
+									}
+									// data type nok
 								}
-								// data type nok
+								// resolution failed
+							} else {
+								// continue; remove the pathElem from the leafref
+								e.Children[lrp.GetElem()[1].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x2, resolution, lridx)
 							}
-							// resolution failed
-						} else {
-							// continue; remove the pathElem from the leafref
-							e.Children[lrp.GetElem()[1].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x2, resolution, lridx)
 						}
-					}
+					*/
 				}
 			default:
 				// resolution failed
