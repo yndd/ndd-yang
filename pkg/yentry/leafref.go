@@ -307,7 +307,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 				// data element exists
 				if len(pathElemKey) != 0 {
 					// when a key is present, check if one entry matches
-					//fmt.Printf("IsPathPresent: dat present with key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
+					fmt.Printf("IsPathPresent: dat present with key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
 					switch x1 := x.(type) {
 					case []interface{}:
 						for _, v := range x1 {
