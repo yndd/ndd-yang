@@ -139,6 +139,7 @@ func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{
 						}
 					} else {
 						// continue; remove the pathElem from the leafref
+						fmt.Printf("entry name: %s\n", e.Name)
 						for _, child := range e.Children {
 							fmt.Printf("child name: %s\n", child.Name)
 						}
@@ -204,7 +205,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 						}
 					}
 				} else {
-					e.Children[lrp.GetElem()[1].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x2, resolution, lridx)
+					e.Children[lrp.GetElem()[0].GetName()].ResolveLocalLeafRefs(p, &gnmi.Path{Elem: lrp.GetElem()[1:]}, x2, resolution, lridx)
 					/*
 						if findKey(lrp, x3) {
 						fmt.Printf("key found\n")
