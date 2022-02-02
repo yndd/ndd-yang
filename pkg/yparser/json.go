@@ -236,10 +236,10 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 		}
 		u = append(u, update)
 		/*
-		for _, upd := range u {
-			fmt.Printf("getUpdatesFromJSON update, path: %s, val: %v\n", GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
-		}
-		//}
+			for _, upd := range u {
+				fmt.Printf("getUpdatesFromJSON update, path: %s, val: %v\n", GnmiPath2XPath(upd.GetPath(), true), upd.GetVal())
+			}
+			//}
 		*/
 	}
 	return u, nil

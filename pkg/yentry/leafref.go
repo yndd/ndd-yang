@@ -26,7 +26,6 @@ import (
 	"github.com/yndd/ndd-yang/pkg/leafref"
 )
 
-
 // Returns all leafRefs for a given resource
 // 1. p is the path of the root resource
 // 2. cp is the current path that extends to find the hierarchical resources once p is found
@@ -265,6 +264,7 @@ func deepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 }
 
 func findKey(p *gnmi.Path, x map[string]interface{}) bool {
+	fmt.Printf("findKey: path %s, data: %v", *p, x)
 	for keyName, keyValue := range p.GetElem()[0].GetKey() {
 		if v, ok := x[keyName]; !ok {
 			return false
@@ -291,9 +291,9 @@ func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 }
 
 func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 interface{}) bool {
-	//fmt.Printf("IsPathPresent: rootpath: %s, remotePath: %s, value: %s\n", GnmiPath2XPath(p, true), GnmiPath2XPath(rp, true), value)
-	//fmt.Printf("IsPathPresent: data: %v\n", x1)
-	//fmt.Printf("IsPathPresent: len: %v\n", len(p.GetElem()))
+	fmt.Printf("IsPathPresent: rootpath: %s, remotePath: %s, value: %s\n", GnmiPath2XPath(p, true), GnmiPath2XPath(rp, true), value)
+	fmt.Printf("IsPathPresent: data: %v\n", x1)
+	fmt.Printf("IsPathPresent: len: %v\n", len(p.GetElem()))
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
 		return e.Children[p.GetElem()[0].GetName()].IsPathPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
@@ -327,7 +327,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 					}
 				} else {
 					// data element exists without keys
-					//fmt.Printf("IsPathPresent: dat present without key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
+					fmt.Printf("IsPathPresent: dat present without key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
 					if len(rp.GetElem()) == 1 {
 						// check if the value matches, if so remote leafRef was found
 						if value == "" {
