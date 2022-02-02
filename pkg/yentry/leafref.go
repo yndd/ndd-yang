@@ -116,8 +116,8 @@ func (e *Entry) ResolveLocalLeafRefs(p *gnmi.Path, lrp *gnmi.Path, x1 interface{
 		// continue finding the root of the resource we want to get the data from
 		e.Children[p.GetElem()[0].GetName()].ResolveLocalLeafRefs(&gnmi.Path{Elem: p.GetElem()[1:]}, lrp, x1, resolution, lridx)
 	} else {
-		//fmt.Printf("ResolveLocalLeafRefs yentry: lridx: %d, path: %s, leafrefpath: %s\n", lridx, GnmiPath2XPath(p, true), GnmiPath2XPath(lrp, true))
-		//fmt.Printf("ResolveLocalLeafRefs yentry: data: %v\n", x1)
+		fmt.Printf("ResolveLocalLeafRefs yentry: lridx: %d, path: %s, leafrefpath: %s\n", lridx, GnmiPath2XPath(p, true), GnmiPath2XPath(lrp, true))
+		fmt.Printf("ResolveLocalLeafRefs yentry: data: %v\n", x1)
 		// check length is for protection
 		if len(lrp.GetElem()) >= 1 {
 			// append the leafref pathElem to the resolved leafref
