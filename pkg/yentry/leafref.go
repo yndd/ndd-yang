@@ -195,6 +195,7 @@ func (e *Entry) resolveLeafRefsWithKey(p *gnmi.Path, lrp *gnmi.Path, x interface
 					resolution.ResolvedLeafRefs = append(resolution.ResolvedLeafRefs, rlrOrig)
 					lridx++
 				}
+				insertKeyValueInLeafRef(lrp, x3, resolution, lridx)
 				if len(lrp.GetElem()) == 2 {
 					fmt.Printf("resolveLeafRefsWithKey3 yentry len=2, value: %v\n", x3[lrp.GetElem()[1].GetName()])
 					// e.g. lrp will have endpoints[node-name=,interface-name=]/node-name
@@ -271,6 +272,32 @@ func deepCopyGnmiPath(in *gnmi.Path) *gnmi.Path {
 	return out
 }
 
+func insertKeyValueInLeafRef(p *gnmi.Path, x map[string]interface{}, resolution *leafref.Resolution, lridx int) {
+	// gather the keyValues from the data
+	keys := make(map[string]string)
+	for keyName := range p.GetElem()[0].GetKey() {
+		if v, ok := x[keyName]; !ok {
+			switch x := v.(type) {
+			case string:
+				keys[keyName] = string(x)
+			case uint32:
+				keys[keyName] = strconv.Itoa(int(x)) 
+			case float64:
+				keys[keyName] = fmt.Sprintf("%.0f", x) 
+			default:
+				keys[keyName] = ""
+			}
+		}
+	}
+	for _, pe := range resolution.ResolvedLeafRefs[lridx].LocalPath.GetElem() {
+		if pe.GetName() == p.GetElem()[0].GetName() {
+			pe.Key = keys
+		}
+	}
+	
+	
+}
+
 func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 	fmt.Printf("findKey: path %s, data: %v\n", GnmiPath2XPath(p, true), x)
 	for keyName, keyValue := range p.GetElem()[0].GetKey() {
@@ -300,9 +327,9 @@ func findKey(p *gnmi.Path, x map[string]interface{}) bool {
 }
 
 func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 interface{}) bool {
-	fmt.Printf("IsPathPresent: rootpath: %s, remotePath: %s, value: %s\n", GnmiPath2XPath(p, true), GnmiPath2XPath(rp, true), value)
-	fmt.Printf("IsPathPresent: data: %v\n", x1)
-	fmt.Printf("IsPathPresent: len: %v\n", len(p.GetElem()))
+	//fmt.Printf("IsPathPresent: rootpath: %s, remotePath: %s, value: %s\n", GnmiPath2XPath(p, true), GnmiPath2XPath(rp, true), value)
+	//fmt.Printf("IsPathPresent: data: %v\n", x1)
+	//fmt.Printf("IsPathPresent: len: %v\n", len(p.GetElem()))
 	if len(p.GetElem()) != 0 {
 		// continue finding the root of the resource we want to get the data from
 		return e.Children[p.GetElem()[0].GetName()].IsPathPresent(&gnmi.Path{Elem: p.GetElem()[1:]}, rp, value, x1)
@@ -316,7 +343,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 				// data element exists
 				if len(pathElemKey) != 0 {
 					// when a key is present, check if one entry matches
-					fmt.Printf("IsPathPresent: dat present with key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
+					//fmt.Printf("IsPathPresent: data present with key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
 					switch x1 := x.(type) {
 					case []interface{}:
 						for _, v := range x1 {
@@ -336,7 +363,7 @@ func (e *Entry) IsPathPresent(p *gnmi.Path, rp *gnmi.Path, value string, x1 inte
 					}
 				} else {
 					// data element exists without keys
-					fmt.Printf("IsPathPresent: dat present without key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
+					//fmt.Printf("IsPathPresent: data present without key remotePath: %s, data: %v\n", GnmiPath2XPath(rp, true), x)
 					if len(rp.GetElem()) == 1 {
 						// check if the value matches, if so remote leafRef was found
 						if value == "" {
