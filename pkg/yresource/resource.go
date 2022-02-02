@@ -21,11 +21,12 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/ndd-yang/pkg/leafref"
+	"github.com/yndd/ndd-yang/pkg/yentry"
 )
 
 type Resource struct {
-	Log      logging.Logger
-	RootPath []*gnmi.Path
+	Log          logging.Logger
+	DeviceSchema *yentry.Entry
 }
 
 func (r *Resource) WithLogging(log logging.Logger) {
