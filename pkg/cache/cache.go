@@ -15,7 +15,6 @@ import (
 	"github.com/yndd/ndd-yang/pkg/octree"
 	"github.com/yndd/ndd-yang/pkg/parser"
 	"github.com/yndd/ndd-yang/pkg/yentry"
-	"github.com/yndd/ndd-yang/pkg/yparser"
 )
 
 type Cache struct {
@@ -239,6 +238,7 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update, has
 	case map[string]interface{}:
 		if len(value) == 0 { // this covers an empty map[string]interface{} e.g. routing-policy/policy/action/accept map[string]interface{}
 			// only insert the empty entries if the pathelem does not contain a key
+			// This allows to insert a container without leafs. Only allows for containers without keys
 			if !hasKey {
 				update := &gnmi.Update{
 					Path: u.GetPath(),
@@ -246,10 +246,12 @@ func (c *Cache) GetNotificationFromUpdate(prefix *gnmi.Path, u *gnmi.Update, has
 				}
 				updates = append(updates, update)
 				// debug
-				fmt.Printf("{INSERTED EMPTY UPDATE: PATH: %s, VALUE: %v\n",
-					yparser.GnmiPath2XPath(u.GetPath(), true),
-					u.GetVal(),
-				)
+				/*
+					fmt.Printf("INSERTED EMPTY UPDATE: PATH: %s, VALUE: %v\n",
+						yparser.GnmiPath2XPath(u.GetPath(), true),
+						u.GetVal(),
+					)
+				*/
 			}
 		}
 		for k, v := range value {
