@@ -246,7 +246,7 @@ func isRemoteLeafRefExternal(rootPath, remotePath *gnmi.Path) bool {
 // buildLocalRemotePath provides a relative path to the rootpath with the data filled out
 func buildLocalRemotePath(rootPath, remotePath *gnmi.Path, value string) *gnmi.Path {
 	// cut the rootpath to get a relative path to the resource as remotePath
-	newPath := &gnmi.Path{Elem: remotePath.GetElem()[(len(rootPath.GetElem()) - 1):]}
+	newPath := &gnmi.Path{Elem: remotePath.GetElem()[len(rootPath.GetElem()):]}
 	// add value to path
 	return addValue2Path(newPath, value)
 }
