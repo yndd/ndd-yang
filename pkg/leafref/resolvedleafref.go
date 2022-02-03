@@ -18,15 +18,15 @@ package leafref
 
 import "github.com/openconfig/gnmi/proto/gnmi"
 
-
 type Resolution struct {
 	ResolvedLeafRefs []*ResolvedLeafRef // holds all the resolved leafRefs if they get resolved
 }
 
 type ResolvedLeafRef struct {
- 	*LeafRef
-	Value      string     `json:"value,omitempty"`
-	Resolved   bool       `json:"resolved,omitempty"`
+	*LeafRef
+	Value    string `json:"value,omitempty"`
+	Resolved bool   `json:"resolved,omitempty"`
+	External bool   `json:"external,omitempty"`
 }
 
 func (in *ResolvedLeafRef) DeepCopy() (out *ResolvedLeafRef) {

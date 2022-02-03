@@ -195,6 +195,7 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 					// e.g. /topolopgy[name=y]/node[name=x]
 					// the topology part will come from the rootpath, while the node part is coming from the rleafref resolution
 					//fmt.Printf("resolvedLeafRef external rootPath: %s\n", GnmiPath2XPath(rootPath, true))
+					resolvedLeafRef.External = true
 					remotePath = buildExternalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
 					//fmt.Printf("resolvedLeafRef external remotePath: %s\n", GnmiPath2XPath(remotePath, true))
 					//fmt.Printf("resolvedLeafRef external data: %s\n", x2)
@@ -202,6 +203,7 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 					found = rs.IsPathPresent(&gnmi.Path{}, remotePath, resolvedLeafRef.Value, x2)
 				} else {
 					// local leafref
+					resolvedLeafRef.External = false
 					remotePath = buildLocalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
 					// find remote leafRef with original rootpath and the global config data
 					found = rs.IsPathPresent(rootPath, remotePath, resolvedLeafRef.Value, x1)
