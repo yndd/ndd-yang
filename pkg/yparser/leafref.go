@@ -198,8 +198,8 @@ func ValidateLeafRef(rootPath *gnmi.Path, x1, x2 interface{}, definedLeafRefs []
 					//fmt.Printf("resolvedLeafRef external rootPath: %s\n", GnmiPath2XPath(rootPath, true))
 					external = true
 					remotePath = buildExternalRemotePath(rootPath, leafRef.RemotePath, resolvedLeafRef.Value)
-					//fmt.Printf("resolvedLeafRef external remotePath: %s\n", GnmiPath2XPath(remotePath, true))
-					//fmt.Printf("resolvedLeafRef external data: %s\n", x2)
+					fmt.Printf("resolvedLeafRef external remotePath: %s\n", GnmiPath2XPath(remotePath, true))
+					fmt.Printf("resolvedLeafRef external data: %s\n", x2)
 					// find remote leafRef with rootpath: / and the global config data
 					found = rs.IsPathPresent(&gnmi.Path{}, remotePath, resolvedLeafRef.Value, x2)
 				} else {
