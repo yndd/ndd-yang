@@ -68,6 +68,9 @@ func (c *Container) GetNamespace() string {
 }
 
 func (c *Container) GetPrefixName() string {
+	if c.Prefix == nil {
+		return ""
+	}
 	return c.Prefix.Name
 }
 
