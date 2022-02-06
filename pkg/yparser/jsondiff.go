@@ -214,8 +214,20 @@ func CompareJSONData(t, s []byte) ([]Operation, error) {
 					// check if the value differs
 					if v1 != v2 {
 						// the data differs
-						fmt.Printf("Path OperationTypeUpdate value differs v1: %v, v2: %v, type v1: %v, type v2: %v\n", v1, v2, reflect.TypeOf(v1), reflect.TypeOf(v2))
-						operations = append(operations, Operation{Type: OperationTypeUpdate, Path: k1, Value: v1})
+						// there is a case where in yang an element can have 2 types: string and uint8 e.g. vlan-id (any or value)
+						if reflect.TypeOf(v1) != reflect.TypeOf(v2) {
+							switch vv2 := v2.(type) {
+							case float64:
+								if fmt.Sprintf("%.0f", vv2) != v1 {
+									operations = append(operations, Operation{Type: OperationTypeUpdate, Path: k1, Value: v1})
+									fmt.Printf("Path OperationTypeUpdate value differs v1: %v, v2: %v, type v1: %v, type v2: %v\n", v1, v2, reflect.TypeOf(v1), reflect.TypeOf(v2))
+								}
+							}
+						} else {
+							operations = append(operations, Operation{Type: OperationTypeUpdate, Path: k1, Value: v1})
+							fmt.Printf("Path OperationTypeUpdate value differs v1: %v, v2: %v, type v1: %v, type v2: %v\n", v1, v2, reflect.TypeOf(v1), reflect.TypeOf(v2))
+						}
+
 					}
 				}
 			}
