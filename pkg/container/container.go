@@ -40,9 +40,10 @@ type Container struct {
 
 type ContainerOption func(c *Container)
 
-func NewContainer(e *yang.Entry, namespace string, readOnly, resourceBoundary bool, prev *Container, opts ...ContainerOption) *Container {
+func NewContainer(e *yang.Entry, namespace, moduleName string, readOnly, resourceBoundary bool, prev *Container, opts ...ContainerOption) *Container {
 	c := &Container{
 		Name:             e.Name,
+		Module:           moduleName,
 		Namespace:        namespace,
 		Prefix:           e.Prefix,
 		ReadOnly:         readOnly,

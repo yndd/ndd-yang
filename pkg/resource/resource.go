@@ -119,7 +119,7 @@ func NewResource(parent *Resource, opts ...Option) *Resource {
 		e := &yang.Entry{
 			Name: "root",
 		}
-		r.RootContainer = container.NewContainer(e, "", false, false, nil)
+		r.RootContainer = container.NewContainer(e, "", "", false, false, nil)
 	}
 
 	for _, o := range opts {
