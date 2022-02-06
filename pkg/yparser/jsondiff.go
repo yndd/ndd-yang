@@ -68,7 +68,7 @@ func FindResourceDelta(updatesx1, updatesx2 []*gnmi.Update) ([]*gnmi.Path, []*gn
 		}
 		// path not found we should create it
 		if !found {
-			//fmt.Printf("path not found in the intended data data x1: %s\n", *p.ConfigGnmiPathToXPath(updatex2.Path, true))
+			fmt.Printf("path not found in the intended data data x1: %s\n", GnmiPath2XPath(updatex2.Path, true))
 			deletes = append(deletes, updatex2.Path)
 		}
 	}
@@ -81,8 +81,8 @@ func FindResourceDelta(updatesx1, updatesx2 []*gnmi.Update) ([]*gnmi.Path, []*gn
 				found = true
 				//fmt.Printf("path x1: %s\n", *p.ConfigGnmiPathToXPath(updatex1.Path, true))
 				//fmt.Printf("path x2: %s\n", *p.ConfigGnmiPathToXPath(updatex2.Path, true))
-				//fmt.Printf("Spec Data: %v\n", string(updatex1.Value))
-				//fmt.Printf("Resp Data: %v\n", string(updatex2.Value))
+				//fmt.Printf("Spec Data: %v\n", updatex1.GetVal())
+				//fmt.Printf("Resp Data: %v\n", updatex2.GetVal())
 				x1, err := GetValue(updatex1.Val)
 				if err != nil {
 					return nil, nil, err
@@ -208,11 +208,13 @@ func CompareJSONData(t, s []byte) ([]Operation, error) {
 			for k1, v1 := range xx1 {
 				if v2, ok := xx2[k1]; !ok {
 					// the element does not exist
+					fmt.Printf("Path OperationTypeUpdate element does not exist: xx2: %v, k1: %v, v1: %v\n", xx2, k1, v1)
 					operations = append(operations, Operation{Type: OperationTypeUpdate, Path: k1, Value: v1})
 				} else {
 					// check if the value differs
 					if v1 != v2 {
 						// the data differs
+						fmt.Printf("Path OperationTypeUpdate value differs v1: %v, v2: %v, type v1: %v, type v2: %v\n", v1, v2, reflect.TypeOf(v1), reflect.TypeOf(v2))
 						operations = append(operations, Operation{Type: OperationTypeUpdate, Path: k1, Value: v1})
 					}
 				}
@@ -246,7 +248,7 @@ func CompareJSONData(t, s []byte) ([]Operation, error) {
 		}
 	default:
 		// this is not an object but a string or float or integer instead
-		//fmt.Printf("CompareJSONData Default, type x1: %v, type x2: %v", reflect.TypeOf(x1), reflect.TypeOf(x2))
+		fmt.Printf("CompareJSONData Default, type x1: %v, type x2: %v", reflect.TypeOf(x1), reflect.TypeOf(x2))
 		// check if the value differs
 		if x1 != x2 {
 			// the data differs
