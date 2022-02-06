@@ -69,7 +69,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 			}
 			u.upds = append(u.upds, &gnmi.Update{
 				Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
-				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+				Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: value}},
 			})
 			//fmt.Printf("getGranularUpdatesFromJSON key: path: %s, data:%v\n", GnmiPath2XPath(u.upds[len(u.upds)-1].Path, true), u.upds[len(u.upds)-1].Val)
 		}
@@ -122,7 +122,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 						}
 						u.upds = append(u.upds, &gnmi.Update{
 							Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
-							Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+							Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: value}},
 						})
 					}
 				case map[string]interface{}:
@@ -141,7 +141,7 @@ func getGranularUpdatesFromJSON(path *gnmi.Path, d interface{}, u *updates, rs *
 					}
 					u.upds = append(u.upds, &gnmi.Update{
 						Path: &gnmi.Path{Elem: append(p.GetElem(), &gnmi.PathElem{Name: k})},
-						Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: value}},
+						Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: value}},
 					})
 					//fmt.Printf("getGranularUpdatesFromJSON default: path: %s, data:%v\n", GnmiPath2XPath(u.upds[len(u.upds)-1].Path, true), u.upds[len(u.upds)-1].Val)
 				}
@@ -207,7 +207,7 @@ func getUpdatesFromJSON(p *gnmi.Path, d interface{}, u []*gnmi.Update, rs *yentr
 						Path: &gnmi.Path{
 							Elem: append(p.GetElem(), &gnmi.PathElem{Name: k}),
 						},
-						Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
+						Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: v}},
 					})
 				}
 			case map[string]interface{}:
@@ -295,7 +295,7 @@ func getUpdatesFromContainer(path *gnmi.Path, value map[string]interface{}) (*gn
 	}
 	return &gnmi.Update{
 		Path: p,
-		Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: v}},
+		Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: v}},
 	}, nil
 }
 
