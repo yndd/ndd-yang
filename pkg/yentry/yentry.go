@@ -27,6 +27,9 @@ import (
 type Entry struct {
 	Log              logging.Logger
 	Name             string
+	Namespace        string
+	Prefix           string
+	Module           string
 	Key              []string
 	Parent           *Entry
 	Children         map[string]*Entry
@@ -88,6 +91,18 @@ type EntryInitFunc func(parent *Entry, opts ...EntryOption) *Entry
 
 func (e *Entry) GetName() string {
 	return e.Name
+}
+
+func (e *Entry) GetNamespace() string {
+	return e.Namespace
+}
+
+func (e *Entry) GetPrefix() string {
+	return e.Prefix
+}
+
+func (e *Entry) GetModule() string {
+	return e.Module
 }
 
 func (e *Entry) GetKey() []string {
