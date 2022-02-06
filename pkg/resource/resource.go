@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/openconfig/goyang/pkg/yang"
 	"github.com/stoewer/go-strcase"
 	"github.com/yndd/ndd-yang/pkg/container"
 	"github.com/yndd/ndd-yang/pkg/parser"
@@ -115,7 +116,10 @@ func NewResource(parent *Resource, opts ...Option) *Resource {
 	}
 	// rootResource
 	if parent == nil {
-		r.RootContainer = container.NewContainer("root", false, false, nil)
+		e := &yang.Entry{
+			Name: "root",
+		}
+		r.RootContainer = container.NewContainer(e, "", false, false, nil)
 	}
 
 	for _, o := range opts {

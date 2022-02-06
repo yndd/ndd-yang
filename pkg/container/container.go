@@ -20,11 +20,15 @@ import (
 	"strings"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/openconfig/goyang/pkg/yang"
 	"github.com/yndd/ndd-yang/pkg/leafref"
 )
 
 type Container struct {
 	Name             string             `json:"name,omitempty"`
+	Namespace        string             `json:"namespace,omitempty"`
+	Prefix           *yang.Value        `json:"prefix,omitempty"`
+	Module           string             `json:"module,omitempty"`
 	ReadOnly         bool               `json:"read-only,omitempty"`
 	HasState         bool               `json:"state-child,omitempty"`
 	Entries          []*Entry           `json:"entries,omitempty"`
@@ -36,9 +40,11 @@ type Container struct {
 
 type ContainerOption func(c *Container)
 
-func NewContainer(n string, readOnly, resourceBoundary bool, prev *Container, opts ...ContainerOption) *Container {
-	e := &Container{
-		Name:             n,
+func NewContainer(e *yang.Entry, namespace string, readOnly, resourceBoundary bool, prev *Container, opts ...ContainerOption) *Container {
+	c := &Container{
+		Name:             e.Name,
+		Namespace:        namespace,
+		Prefix:           e.Prefix,
 		ReadOnly:         readOnly,
 		Entries:          make([]*Entry, 0),
 		Prev:             prev,
@@ -47,14 +53,26 @@ func NewContainer(n string, readOnly, resourceBoundary bool, prev *Container, op
 	}
 
 	for _, o := range opts {
-		o(e)
+		o(c)
 	}
 
-	return e
+	return c
 }
 
 func (c *Container) GetName() string {
 	return c.Name
+}
+
+func (c *Container) GetNamespace() string {
+	return c.Namespace
+}
+
+func (c *Container) GetPrefixName() string {
+	return c.Prefix.Name
+}
+
+func (c *Container) GetModuleName() string {
+	return c.Module
 }
 
 func (c *Container) GetReadOnly() bool {
@@ -186,4 +204,8 @@ func (c *Container) UpdateHasState2ParentContainers() {
 		c.Prev.SetHasState()
 		c.Prev.UpdateHasState2ParentContainers()
 	}
+}
+
+func (c *Container) SetModule(m string) {
+	c.Module = m
 }
