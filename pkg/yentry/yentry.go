@@ -36,6 +36,7 @@ type Entry struct {
 	ResourceBoundary bool
 	LeafRefs         []*leafref.LeafRef
 	Resources        []*gnmi.Path
+	Defaults         map[string]string
 }
 
 type EntryOption func(*Entry)
@@ -123,6 +124,10 @@ func (e *Entry) GetResourceBoundary() bool {
 
 func (e *Entry) GetLeafRef() []*leafref.LeafRef {
 	return e.LeafRefs
+}
+
+func (e *Entry) GetDefaults() map[string]string {
+	return e.Defaults
 }
 
 // GetKeys return the list of keys
