@@ -282,6 +282,7 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		entry.EnumString += "`" + enum + "`;"
 	}
 	if entry.EnumString != "" {
+		fmt.Printf("enumString: %s, prefix: %s namespace: %s\n", entry.EnumString, e.Prefix.Name, e.Namespace().Name)
 		entry.EnumString = strings.TrimRight(entry.EnumString, ";")
 	}
 
@@ -295,9 +296,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		}
 	*/
 	/*
-	if strings.Contains(entry.Type, "decimal64") {
-		fmt.Printf("e.Name: %s, entry.Type: %s\n", e.Name, entry.Type)
-	}
+		if strings.Contains(entry.Type, "decimal64") {
+			fmt.Printf("e.Name: %s, entry.Type: %s\n", e.Name, entry.Type)
+		}
 	*/
 
 	entry.ReadOnly = e.ReadOnly()
