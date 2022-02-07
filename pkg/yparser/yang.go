@@ -282,7 +282,7 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		entry.EnumString += "`" + enum + "`;"
 	}
 	if entry.EnumString != "" {
-		fmt.Printf("enumString: %s, prefix: %s namespace: %s\n", entry.EnumString, e.Prefix.Name, e.Namespace().Name)
+		//fmt.Printf("enumString: %s, prefix: %s namespace: %s\n", entry.EnumString, e.Prefix.Name, e.Namespace().Name)
 		entry.EnumString = strings.TrimRight(entry.EnumString, ";")
 	}
 

@@ -32,6 +32,7 @@ type Container struct {
 	ReadOnly         bool               `json:"read-only,omitempty"`
 	HasState         bool               `json:"state-child,omitempty"`
 	Entries          []*Entry           `json:"entries,omitempty"`
+	Defaults         map[string]string  `json:"defaults,omitempty"`
 	Children         []*Container       `json:"children,omitempty"`
 	Prev             *Container         `json:"prev,omitempty"`
 	ResourceBoundary bool               `json:"resourceBoundry,omitempty"`
@@ -48,6 +49,7 @@ func NewContainer(e *yang.Entry, namespace, moduleName string, readOnly, resourc
 		Prefix:           e.Prefix,
 		ReadOnly:         readOnly,
 		Entries:          make([]*Entry, 0),
+		Defaults:         make(map[string]string),
 		Prev:             prev,
 		Children:         make([]*Container, 0),
 		ResourceBoundary: resourceBoundary,
@@ -85,6 +87,10 @@ func (c *Container) GetReadOnly() bool {
 
 func (c *Container) GetEntries() []*Entry {
 	return c.Entries
+}
+
+func (c *Container) GetDefaults() map[string]string {
+	return c.Defaults
 }
 
 func (c *Container) GetKeyType(name string) string {
@@ -212,4 +218,8 @@ func (c *Container) UpdateHasState2ParentContainers() {
 
 func (c *Container) SetModule(m string) {
 	c.Module = m
+}
+
+func (c *Container) SetDefault(entryName, defaultString string) {
+	c.Defaults[entryName] = defaultString
 }
