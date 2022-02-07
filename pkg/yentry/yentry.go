@@ -144,6 +144,23 @@ func (e *Entry) GetKeys(p *gnmi.Path) []string {
 	}
 }
 
+func (e *Entry) GetDefault(p *gnmi.Path) string {
+	// WE Go the the end of the path except for the last Entry
+	if len(p.GetElem()) != 1 {
+		// TODO DO we need to put protection in here?
+		if _, ok := e.Children[p.GetElem()[0].GetName()]; ok {
+			return e.Children[p.GetElem()[0].GetName()].GetDefault(&gnmi.Path{Elem: p.GetElem()[1:]})
+		}
+		fmt.Printf("invalid entry request in yentry: name: %s, pathElem: %v\n", e.Name, p.GetElem())
+		return ""
+	} else {
+		if def, ok := e.Defaults[p.GetElem()[0].GetName()]; ok {
+			return def
+		}
+		return ""
+	}
+}
+
 // GetHierarchicalResourcesRemote returns the hierarchical paths of a resource
 // 1. p is the path of the root resource
 // 2. cp is the current path that extends to find the hierarchical resources once p is found
