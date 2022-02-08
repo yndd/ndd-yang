@@ -144,12 +144,12 @@ func (e *Entry) GetKeys(p *gnmi.Path) []string {
 	}
 }
 
-func (e *Entry) GetDefault(p *gnmi.Path) string {
+func (e *Entry) GetPathDefault(p *gnmi.Path) string {
 	// WE Go the the end of the path except for the last Entry
 	if len(p.GetElem()) != 1 {
 		// TODO DO we need to put protection in here?
 		if _, ok := e.Children[p.GetElem()[0].GetName()]; ok {
-			return e.Children[p.GetElem()[0].GetName()].GetDefault(&gnmi.Path{Elem: p.GetElem()[1:]})
+			return e.Children[p.GetElem()[0].GetName()].GetPathDefault(&gnmi.Path{Elem: p.GetElem()[1:]})
 		}
 		fmt.Printf("invalid entry request in yentry: name: %s, pathElem: %v\n", e.Name, p.GetElem())
 		return ""
@@ -158,6 +158,20 @@ func (e *Entry) GetDefault(p *gnmi.Path) string {
 			return def
 		}
 		return ""
+	}
+}
+
+// gets the path defaults within the container
+func (e *Entry) GetPathDefaults(p *gnmi.Path) map[string]string {
+	if len(p.GetElem()) != 0 {
+		// TODO DO we need to put protection in here?
+		if _, ok := e.Children[p.GetElem()[0].GetName()]; ok {
+			return e.Children[p.GetElem()[0].GetName()].GetPathDefaults(&gnmi.Path{Elem: p.GetElem()[1:]})
+		}
+		fmt.Printf("invalid entry request in yentry: name: %s, pathElem: %v\n", e.Name, p.GetElem())
+		return make(map[string]string)
+	} else {
+		return e.GetDefaults()
 	}
 }
 
