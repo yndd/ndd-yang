@@ -394,7 +394,12 @@ func CleanConfig(x1 map[string]interface{}) map[string]interface{} {
 				// avoids splitting ipv6 addresses
 				x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
 			} else {
-				x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = strings.Split(x3, ":")[len(strings.Split(x3, ":"))-1]
+				// if there are more ":" in the string it is likely an esi or mac address
+				if len(strings.Split(x3, ":")) <= 2 {
+					x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = strings.Split(x3, ":")[len(strings.Split(x3, ":"))-1]
+				} else {
+					x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
+				}
 			}
 		case float64:
 			x2[strings.Split(k1, ":")[len(strings.Split(k1, ":"))-1]] = x3
