@@ -282,18 +282,36 @@ func buildExternalRemotePath(rootPath, remotePath *gnmi.Path, value string) *gnm
 }
 
 func addValue2Path(p *gnmi.Path, value string) *gnmi.Path {
-	// for interface.subinterface we have a special handling where the value is seperated by a ethernet-1/1.4
-	// the part before the dot represents the interface value in the key and the 2nd part represents the subinterface index
-	// not sure how generic this is
-	split := strings.Split(value, ".")
-	n := 0
+	// check how many unknown keys exists in the path
+	emptyKeys := 0
 	for _, pathElem := range p.GetElem() {
 		if len(pathElem.GetKey()) != 0 {
-			for k := range pathElem.GetKey() {
-				pathElem.GetKey()[k] = split[n]
-				n++
+			emptyKeys++
+		}
+	}
+	if emptyKeys > 1 {
+		// for interface.subinterface we have a special handling where the value is seperated by a ethernet-1/1.4
+		// the part before the dot represents the interface value in the key and the 2nd part represents the subinterface index
+		// not sure how generic this is
+		split := strings.Split(value, ".")
+		n := 0
+		for _, pathElem := range p.GetElem() {
+			if len(pathElem.GetKey()) != 0 {
+				for k := range pathElem.GetKey() {
+					pathElem.GetKey()[k] = split[n]
+					n++
+				}
+			}
+		}
+	} else {
+		for _, pathElem := range p.GetElem() {
+			if len(pathElem.GetKey()) != 0 {
+				for k := range pathElem.GetKey() {
+					pathElem.GetKey()[k] = value
+				}
 			}
 		}
 	}
+
 	return p
 }
