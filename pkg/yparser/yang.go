@@ -187,7 +187,13 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 	}
 	// update the Type to reflect the reference to the proper struct
 	if entry.Prev != nil {
-		entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName() + "-" + strings.ReplaceAll(e.Name, "-", ""))
+		// special case for the first entry in the full schema we use the same pointer for previous and next
+		if entry.Prev == entry.Next {
+			entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName())
+		} else {
+			entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName() + "-" + strings.ReplaceAll(e.Name, "-", ""))
+		}
+		
 	}
 
 	if e.ListAttr != nil {
