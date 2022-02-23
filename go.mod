@@ -6,7 +6,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/karimra/gnmic v0.18.0
 	github.com/openconfig/gnmi v0.0.0-20210707145734-c69a5df04b53
-	github.com/openconfig/goyang v0.2.9
+	github.com/openconfig/goyang v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/stoewer/go-strcase v1.2.0
 	github.com/wI2L/jsondiff v0.1.0

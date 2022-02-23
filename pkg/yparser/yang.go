@@ -240,18 +240,18 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		// AND CONTEXT. E.g. allow-icmp-redirect in sros is only supported in management context; gre-termination in a primary
 		// interface is not supported in all circumstances in sros, etc etc
 		// SEEMS BETER TO NOT USE UT WITH PROVIDERS
-		if e.Default != "" {
+		if len(e.Default) != 0 {
 			// if there is a default parameter and the entry type is a int, we will try to convert
 			// it and if it does not work we dont initialize the default
 			switch {
 			case strings.Contains(entry.Type, "int"):
 				// e.g. we can have rdnss-lifetime which has a default of infinite but it is an int32
-				if _, err := strconv.Atoi(e.Default); err == nil {
-					entry.Default = e.Default
+				if _, err := strconv.Atoi(e.Default[0]); err == nil {
+					entry.Default = e.Default[0]
 				}
 				// if the conversion does not succeed we dont initialize a default
 			default:
-				entry.Default = e.Default
+				entry.Default = e.Default[0]
 			}
 			//fmt.Printf("Default: Type: %s, Default: %s\n", entry.Type, entry.Default)
 		}
