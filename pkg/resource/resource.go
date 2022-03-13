@@ -309,7 +309,6 @@ func (r *Resource) GetAbsoluteName() string {
 		// by removing the dash we get a difference when mapping to uppercamelcase
 		name := strings.ReplaceAll(entry.Name, "-", "")
 		//name = strings.ReplaceAll(name, "ethernetsegment", "esi")
-		name = strings.ReplaceAll(name, "ethernetsegment", "esi")
 		pathElem := &gnmi.PathElem{
 			Name: name,
 			Key:  entry.GetKey(),

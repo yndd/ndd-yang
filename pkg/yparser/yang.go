@@ -86,18 +86,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 
 	entry.NameSpace = e.Namespace().Name
 
-	/*
-		if e.Name == "port-binding" {
-			fmt.Printf("port-binding: choice: %#v Identities: %#v, Other: %#v\n", e.IsChoice(), e.Identities, e.Exts)
-
-		}
-
-		fmt.Printf("Element Name %s, ContainerKey %s\n", e.Name, containerKey)
-		if e.Name == "instance" {
-			fmt.Printf("instance key: %#v\n", e.Key)
-
-		}
-	*/
+	if e.Name == "bgp-instance" {
+		fmt.Printf("bgp-instance: type: %s kind: %s\n", GetTypeName(e) , GetTypeKind(e))
+	}
 
 	// process mandatory attribute
 	switch e.Mandatory {
@@ -149,6 +140,7 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 			entry.Type = "string"
 			entry.Union = true
 			for _, t := range e.Type.Type {
+				fmt.Printf("Union: %s, Type: %s", e.Name, t.Root.Kind.String())
 				entry.Type = t.Root.Kind.String()
 				if entry.Type == "enumeration" ||
 					entry.Type == "leafref" ||
@@ -193,7 +185,7 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 		} else {
 			entry.Type = strcase.UpperCamelCase(entry.Prev.GetFullName() + "-" + strings.ReplaceAll(e.Name, "-", ""))
 		}
-		
+
 	}
 
 	if e.ListAttr != nil {
