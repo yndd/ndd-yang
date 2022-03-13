@@ -119,9 +119,9 @@ func WithKeyType(s string) Option {
 */
 
 func NewEntry(n string, opts ...EntryOption) *Entry {
-	if n == "ethernet-segment" {
-		n = "esi"
-	}
+	//if n == "ethernet-segment" {
+	//	n = "esi"
+	//}
 	e := &Entry{
 		Name:    n,
 		Next:    nil,
