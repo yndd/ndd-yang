@@ -19,6 +19,7 @@ package container
 import (
 	"strings"
 
+	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/goyang/pkg/yang"
 )
 
@@ -42,6 +43,8 @@ type Entry struct {
 	KeyBool       bool           `json:"keyBool,omitempty"`
 	NameSpace     string         `json:"namespace,omitempty"`
 	ListAttr      *yang.ListAttr `json:"listAttr,omitempty"`
+	LeafRef       bool           `json:"leafref,omitempty"`
+	RemotePath    *gnmi.Path     `json:"remote-path,omitempty"`
 }
 
 // Option can be used to manipulate Options.
@@ -209,4 +212,9 @@ func (e *Entry) GetNamespace() string {
 
 func (e *Entry) GetListAttr() *yang.ListAttr {
 	return e.ListAttr
+}
+
+func (e *Entry) AddLeafref(remotePath *gnmi.Path) {
+	e.LeafRef = true
+	e.RemotePath = remotePath
 }
