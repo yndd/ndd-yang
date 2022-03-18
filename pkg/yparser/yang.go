@@ -86,9 +86,9 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 
 	entry.NameSpace = e.Namespace().Name
 
-	if e.Name == "id" {
-		fmt.Printf("id: type: %s kind: %s, yangEntry: %#v\n", GetTypeName(e), GetTypeKind(e), e)
-	}
+	//if e.Name == "id" {
+	//	fmt.Printf("id: type: %s kind: %s, yangEntry: %#v\n", GetTypeName(e), GetTypeKind(e), e)
+	//}
 
 	// process mandatory attribute
 	switch e.Mandatory {
@@ -140,7 +140,7 @@ func CreateContainerEntry(e *yang.Entry, next, prev *container.Container, contai
 			entry.Type = "string"
 			entry.Union = true
 			for _, t := range e.Type.Type {
-				fmt.Printf("Union: %s, Type: %s\n", e.Name, t.Root.Kind.String())
+				//fmt.Printf("Union: %s, Type: %s\n", e.Name, t.Root.Kind.String())
 				entry.Type = t.Root.Kind.String()
 				if entry.Type == "enumeration" ||
 					entry.Type == "leafref" ||
